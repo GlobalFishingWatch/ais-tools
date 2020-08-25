@@ -1,4 +1,0 @@
-libais
-Click==7.0
-gpxpy
-pytest
