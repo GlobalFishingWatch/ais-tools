@@ -3,9 +3,14 @@ import unittest
 from ais_tools import aivdm
 
 
+NMEA = [
+    '\\c:1577762601537,s:sdr-experiments,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49'
+]
+
+
 class TestAIVDM(unittest.TestCase):
     def test_decode_message(self):
-        line = '\\c:1577762601537,s:sdr-experiments,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49'
+        line = NMEA[0]
         actual = aivdm.decode_message(line)
         expected = {"tagblock_timestamp": 1577762601.537, "tagblock_station": "sdr-experiments",
                     "tagblock_T": "2019-12-30 22.23.21", "nmea": "!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49",
@@ -15,3 +20,6 @@ class TestAIVDM(unittest.TestCase):
                     "special_manoeuvre": 0, "spare": 0, "raim": False, "sync_state": 0, "slot_timeout": 5,
                     "received_stations": 29}
         self.assertDictEqual(actual, expected)
+
+    def test_decode_stream(self):
+        assert len(list(aivdm.decode_stream(NMEA))) == len(NMEA)

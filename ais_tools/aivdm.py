@@ -3,11 +3,16 @@ Tools for decoding AIS messages in AIVDM format
 """
 
 import json
+from datetime import datetime
+
 import ais as libais
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from ais import stream as libais_stream
+
+
+TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
 
 def safe_tagblock_timestamp(line):
@@ -34,14 +39,38 @@ def safe_tagblock_timestamp(line):
     return 0
 
 
+def tagblock_t(dt):
+    return dt.strftime(TAGBLOCK_T_FORMAT)
+
+
+def compute_checksum(sentence):
+    """Compute the NMEA checksum for a payload."""
+    c = 0
+    for char in sentence:
+        c ^= ord(char)
+    checksum_str = '%02x' % c
+    return checksum_str.upper()
+
+
+def tagblock(station, timestamp=None, add_tagblock_t=True):
+    dt = timestamp or datetime.utcnow()
+    params = dict(
+        c=round(dt.timestamp()*1000),
+        s=station,
+        T=tagblock_t(dt)
+    )
+    param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
+    checksum = compute_checksum(param_str)
+    return '{}*{}'.format(param_str, checksum)
+
+
 def decode_message(line):
 
-    msg = dict()
+    msg = dict(nmea=line)
 
     try:
         tagblock, nmea = libais_stream.parseTagBlock(line)
         msg.update(tagblock)
-        msg['nmea'] = nmea
 
         if not libais_stream.checksum.isChecksumValid(nmea):
             raise libais.DecodeError('Invalid checksum')
