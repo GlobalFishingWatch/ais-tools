@@ -1,0 +1,6 @@
+# Function dependencies, for example:
+# package>=version
+
+flask_api
+google-cloud-pubsub
+ais-tools@git+https://github.com/GlobalFishingWatch/ais-tools@ddaaaea705f9d78fe2940a8b639ef224deae077c
