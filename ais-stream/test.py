@@ -37,6 +37,12 @@ def pubsub_client():
     return mock_client
 
 
+@pytest.fixture(scope="function", autouse=True)
+def bigquery_client():
+    mock_client = Mock()
+    return mock_client
+
+
 def test_nmea(env_vars, pubsub_client):
 
     data = {'nmea': 'NMEA_MESSAGE', 'source': 'source'}
@@ -102,3 +108,15 @@ def test_decode(capsys, env_vars, pubsub_context, pubsub_client, message, log_ou
         assert kwargs['source'] == message.get('source', env_vars['DEFAULT_SOURCE'])
         actual_subset = {k: v for k, v in json.loads(kwargs['data']).items() if k in pubsub_output}
         assert actual_subset == pubsub_output
+
+
+def test_bqstore(capsys, env_vars, pubsub_context, bigquery_client):
+    message = dict()
+    event = {'data': base64.b64encode(json.dumps(message).encode())}
+    decode.handle_event(event, pubsub_context, pubsub_client)
+    out, err = capsys.readouterr()
+
+    assert 'NOT' in out
+
+    bigquery_client.get_table.assert_called_once()
+    bigquery_client.get_table.assert_called_with(env_vars['BIGQUERY_TABLE'])
