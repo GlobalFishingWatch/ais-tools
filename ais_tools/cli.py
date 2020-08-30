@@ -21,7 +21,7 @@ def cli():
 def cloud_stream(input, url, source, overwrite):
     messages = message.message_stream(input, source, overwrite)
     for res, msg in cloud.message_to_http_stream(messages, url=url):
-        pass
+        print(res.text, res.status_code)
 
 
 @cli.command(

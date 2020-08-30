@@ -4,4 +4,4 @@
 flask_api
 google-cloud-pubsub
 google-cloud-bigquery
-ais-tools@git+https://github.com/GlobalFishingWatch/ais-tools@564685202c4b2338d30b49413a32c23334f0fc9c
+ais-tools@git+https://github.com/GlobalFishingWatch/ais-tools@1b9b504ba582cf0dd92c675061889642d8065ea2
