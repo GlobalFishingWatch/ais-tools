@@ -31,5 +31,6 @@ def handle_event(event, context, pubsub_client):
         print(message_out)
 
     except Exception as e:
-        print("Message decode failed - {}: {}".format(e.__class__.__name__, str(e)))
         print(message_in or data_in or '<empty message>')
+        print("Message decode failed - {}: {}".format(e.__class__.__name__, str(e)))
+        raise

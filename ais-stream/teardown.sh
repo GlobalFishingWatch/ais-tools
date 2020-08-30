@@ -12,6 +12,9 @@ echo "  * ${DECODE_PUBSUB_SUBSCRIPTION}"
 echo "DELETE these cloud functions"
 echo "  * ${NMEA_CLOUDFUNC}"
 echo "  * ${DECODE_CLOUDFUNC}"
+echo "DELETE these bigquery tables"
+echo "  * ${BIGQUERY_TABLE}"
+echo ""
 read -p "Are you sure? (y/n)" -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]
@@ -28,3 +31,5 @@ gcloud pubsub topics delete ${DECODE_PUBSUB_TOPIC}
 
 gcloud functions delete --quiet ${NMEA_CLOUDFUNC}
 gcloud functions delete --quiet ${DECODE_CLOUDFUNC}
+
+bq rm ${BIGQUERY_TABLE}

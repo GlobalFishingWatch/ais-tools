@@ -15,4 +15,9 @@ gcloud pubsub subscriptions create \
   --topic=${DECODE_PUBSUB_TOPIC} \
   --topic-project=${GCP_PROJECT}
 
+bq mk --dataset  ${BIGQUERY_DATASET}
+bq mk --table \
+  ${BIGQUERY_TABLE} \
+  ${THIS_SCRIPT_DIR}/bigquery-schema.json
+
 ${THIS_SCRIPT_DIR}/deploy.sh

@@ -15,13 +15,19 @@ def handle_event(event, context, bigquery_client):
         message = json.loads(data_in)
 
         table = bigquery_client.get_table(table_name)
+        schema_fields = {f.name for f in table.schema}
+        extra_fields = {k: v for k, v in message.items() if k not in schema_fields}
+        if extra_fields:
+            message = {k: v for k, v in message.items() if k not in extra_fields}
+            message['extra'] = json.dumps(extra_fields)
+
         errors = bigquery_client.insert_rows(table, [message])
-        if len(errors) > 0:
-            for e in errors:
-                print(e)
-        else:
-            print("message inserted to {}".format(table_name))
+        if errors:
+            raise Exception(errors)
+
+        print("Message insert to {} succeeded".format(table_name))
 
     except Exception as e:
-        print("Message insert to {} failed - {}: {}".format(table_name, e.__class__.__name__, str(e)))
         print(message or data_in or '<empty message>')
+        print("Message insert to {} failed - {}: {}".format(table_name, e.__class__.__name__, str(e)))
+        raise

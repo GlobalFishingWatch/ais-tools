@@ -26,3 +26,14 @@ gcloud functions deploy ${DECODE_CLOUDFUNC} \
   --set-env-vars DEFAULT_SOURCE=${DEFAULT_SOURCE} \
   --service-account=${SERVICE_ACCOUNT} \
   --source=${THIS_SCRIPT_DIR}
+
+
+echo "Deploying cloud function from ${THIS_SCRIPT_DIR} to ${BIGQUERY_CLOUDFUNC}"
+gcloud functions deploy ${BIGQUERY_CLOUDFUNC} \
+  --entry-point=ais_stream_bqstore_pubsub \
+  --runtime=python37 \
+  --trigger-topic=$(echo ${DECODE_PUBSUB_TOPIC} | cut -f4 -d/)  \
+  --set-env-vars BIGQUERY_TABLE=${BIGQUERY_TABLE//:/.} \
+  --set-env-vars DEFAULT_SOURCE=${DEFAULT_SOURCE} \
+  --service-account=${SERVICE_ACCOUNT} \
+  --source=${THIS_SCRIPT_DIR}

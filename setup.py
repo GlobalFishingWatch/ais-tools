@@ -15,7 +15,8 @@ package = __import__('ais_tools')
 DEPENDENCIES = [
     "libais",
     "Click==7.0",
-    "gpxpy"
+    "gpxpy",
+    "requests"
 ]
 
 DEV_DEPENDENCIES = [

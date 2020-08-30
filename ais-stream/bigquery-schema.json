@@ -1,0 +1,32 @@
+[
+ {
+   "description": "NMEA coded ais message string as received from the source",
+   "name": "nmea",
+   "type": "STRING",
+   "mode": "REQUIRED"
+ },
+ {
+   "description": "Source system that supplied the message",
+   "name": "source",
+   "type": "STRING",
+   "mode": "REQUIRED"
+ },
+ {
+   "description": "Decode error message",
+   "name": "error",
+   "type": "STRING",
+   "mode": "NULLABLE"
+ },
+ {
+   "description": "MMSI",
+   "name": "mmsi",
+   "type": "STRING",
+   "mode": "NULLABLE"
+ },
+ {
+   "description": "Extra fields stored as JSON",
+   "name": "extra",
+   "type": "STRING",
+   "mode": "NULLABLE"
+ }
+]

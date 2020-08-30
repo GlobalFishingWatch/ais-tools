@@ -1,11 +1,13 @@
 import pytest
 import unittest
 from unittest.mock import Mock
+from unittest.mock import PropertyMock
 import json
 import base64
 
 import nmea
 import decode
+import bqstore
 
 # NB: cannot test main.py because it imports google.cloud.pubsub_v1 on load, which requires auth
 # so put all the functionality into separate modules and test them
@@ -16,6 +18,7 @@ def env_vars(monkeypatch):
     env_vars = dict(
         NMEA_PUBSUB_TOPIC="NMEA_PUBSUB_TOPIC",
         DECODE_PUBSUB_TOPIC="DECODE_PUBSUB_TOPIC",
+        BIGQUERY_TABLE="BIGQUERY_TABLE",
         DEFAULT_SOURCE='DEFAULT_SOURCE'
     )
     for k, v in env_vars.items():
@@ -39,7 +42,20 @@ def pubsub_client():
 
 @pytest.fixture(scope="function", autouse=True)
 def bigquery_client():
-    mock_client = Mock()
+
+    # Need to do this little trick to mock the 'name' attribute of a schema field
+    # see https://docs.python.org/3/library/unittest.mock.html#mock-names-and-the-name-attribute
+    def mock_with_name(name):
+        mock = Mock()
+        mock.name = name
+        return mock
+
+    schema_fields = ['nmea', 'source']
+    schema = [mock_with_name(name) for name in schema_fields]
+    table = Mock(schema=schema)
+    attrs = {'insert_rows.return_value': [], 'get_table.return_value': table}
+    mock_client = Mock(**attrs)
+
     return mock_client
 
 
@@ -70,7 +86,8 @@ def test_nmea_empty(pubsub_client):
 def test_decode_empty(capsys, pubsub_context, pubsub_client):
     event = {}
 
-    decode.handle_event(event, pubsub_context, pubsub_client)
+    with pytest.raises(json.JSONDecodeError):
+        decode.handle_event(event, pubsub_context, pubsub_client)
     out, err = capsys.readouterr()
     assert 'JSONDecodeError' in out
 
@@ -87,7 +104,13 @@ def test_decode_empty(capsys, pubsub_context, pubsub_client):
 )
 def test_decode(capsys, env_vars, pubsub_context, pubsub_client, message, log_output, pubsub_output):
     event = {'data': base64.b64encode(json.dumps(message).encode())}
-    decode.handle_event(event, pubsub_context, pubsub_client)
+
+    if pubsub_output is None:
+        with pytest.raises(Exception):
+            decode.handle_event(event, pubsub_context, pubsub_client)
+    else:
+        decode.handle_event(event, pubsub_context, pubsub_client)
+
     out, err = capsys.readouterr()
 
     print(out)
@@ -110,13 +133,25 @@ def test_decode(capsys, env_vars, pubsub_context, pubsub_client, message, log_ou
         assert actual_subset == pubsub_output
 
 
-def test_bqstore(capsys, env_vars, pubsub_context, bigquery_client):
-    message = dict()
+@pytest.mark.parametrize(
+    "message,expected",
+    [
+        ({}, {}),
+        ({'nmea': '!AIVDM1234567*89'}, {'nmea': '!AIVDM1234567*89'}),
+        ({'nmea': '!AIVDM1234567*89', 'not_in_schema': 'value'},
+         {'nmea': '!AIVDM1234567*89', 'extra': '{"not_in_schema": "value"}'}),
+    ]
+)
+def test_bqstore(capsys, env_vars, pubsub_context, bigquery_client, message, expected):
     event = {'data': base64.b64encode(json.dumps(message).encode())}
-    decode.handle_event(event, pubsub_context, pubsub_client)
+    bqstore.handle_event(event, pubsub_context, bigquery_client)
     out, err = capsys.readouterr()
 
-    assert 'NOT' in out
+    assert 'succeeded' in out
 
     bigquery_client.get_table.assert_called_once()
     bigquery_client.get_table.assert_called_with(env_vars['BIGQUERY_TABLE'])
+
+    bigquery_client.insert_rows.assert_called_once()
+    name, args, kwargs = bigquery_client.insert_rows.mock_calls[0]
+    assert args[1] == [expected]
