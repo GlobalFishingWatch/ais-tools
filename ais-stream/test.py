@@ -1,7 +1,5 @@
 import pytest
-import unittest
 from unittest.mock import Mock
-from unittest.mock import PropertyMock
 import json
 import base64
 

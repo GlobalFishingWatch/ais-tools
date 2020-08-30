@@ -1,32 +1,347 @@
 [
- {
+  {
    "description": "NMEA coded ais message string as received from the source",
    "name": "nmea",
    "type": "STRING",
    "mode": "REQUIRED"
- },
- {
+  },
+  {
    "description": "Source system that supplied the message",
    "name": "source",
    "type": "STRING",
    "mode": "REQUIRED"
- },
- {
+  },
+  {
    "description": "Decode error message",
    "name": "error",
-   "type": "STRING",
-   "mode": "NULLABLE"
- },
- {
-   "description": "MMSI",
-   "name": "mmsi",
-   "type": "STRING",
-   "mode": "NULLABLE"
- },
- {
+   "type": "STRING"
+  },
+  {
+    "name": "ais_version",
+    "type": "INTEGER"
+  },
+  {
+    "name": "assigned_mode",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "aton_status",
+    "type": "INTEGER"
+  },
+  {
+    "name": "aton_type",
+    "type": "INTEGER"
+  },
+  {
+    "name": "band_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "callsign",
+    "type": "STRING"
+  },
+  {
+    "name": "cog",
+    "type": "FLOAT"
+  },
+  {
+    "name": "commstate_cs_fill",
+    "type": "INTEGER"
+  },
+  {
+    "name": "commstate_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "day",
+    "type": "INTEGER"
+  },
+  {
+    "name": "destination",
+    "type": "STRING"
+  },
+  {
+    "description": "distance to bow in meters",
+    "name": "dim_a",
+    "type": "INTEGER"
+  },
+  {
+    "description": "distance to stern in meters",
+    "name": "dim_b",
+    "type": "INTEGER"
+  },
+  {
+    "description": "distance to port side in meters",
+    "name": "dim_c",
+    "type": "INTEGER"
+  },
+  {
+    "description": "distance to starboard side in meters",
+    "name": "dim_d",
+    "type": "INTEGER"
+  },
+  {
+    "name": "display_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "draught",
+    "type": "FLOAT"
+  },
+  {
+    "name": "dsc_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "dte",
+    "type": "INTEGER"
+  },
+  {
+    "name": "eta_day",
+    "type": "INTEGER"
+  },
+  {
+    "name": "eta_hour",
+    "type": "INTEGER"
+  },
+  {
+    "name": "eta_minute",
+    "type": "INTEGER"
+  },
+  {
+    "name": "eta_month",
+    "type": "INTEGER"
+  },
+  {
+    "name": "fix_type",
+    "type": "INTEGER"
+  },
+  {
+    "name": "gnss",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "hour",
+    "type": "INTEGER"
+  },
+  {
+    "name": "id",
+    "type": "INTEGER"
+  },
+  {
+    "name": "imo_num",
+    "type": "INTEGER"
+  },
+  {
+    "name": "keep_flag",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "m22_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "minute",
+    "type": "INTEGER"
+  },
+  {
+    "name": "mmsi",
+    "type": "INTEGER"
+  },
+  {
+    "name": "mode_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "month",
+    "type": "INTEGER"
+  },
+  {
+    "name": "name",
+    "type": "STRING"
+  },
+  {
+    "name": "nav_status",
+    "type": "INTEGER"
+  },
+  {
+    "name": "off_pos",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "part_num",
+    "type": "INTEGER"
+  },
+  {
+    "name": "position_accuracy",
+    "type": "INTEGER"
+  },
+  {
+    "name": "raim",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "received_stations",
+    "type": "INTEGER"
+  },
+  {
+    "name": "repeat_indicator",
+    "type": "INTEGER"
+  },
+  {
+    "name": "reservations",
+    "type": "STRING"
+  },
+  {
+    "name": "rot_over_range",
+    "type": "BOOLEAN"
+  },
+  {
+    "name": "rot",
+    "type": "FLOAT"
+  },
+  {
+    "name": "second",
+    "type": "INTEGER"
+  },
+  {
+    "name": "slot_increment",
+    "type": "INTEGER"
+  },
+  {
+    "name": "slot_number",
+    "type": "INTEGER"
+  },
+  {
+    "name": "slot_offset",
+    "type": "INTEGER"
+  },
+  {
+    "name": "slot_timeout",
+    "type": "INTEGER"
+  },
+  {
+    "name": "slots_to_allocate",
+    "type": "INTEGER"
+  },
+  {
+    "name": "sog",
+    "type": "FLOAT"
+  },
+  {
+    "name": "spare",
+    "type": "INTEGER"
+  },
+  {
+    "name": "spare2",
+    "type": "INTEGER"
+  },
+  {
+    "name": "spare3",
+    "type": "INTEGER"
+  },
+  {
+    "name": "special_manoeuvre",
+    "type": "INTEGER"
+  },
+  {
+    "name": "sync_state",
+    "type": "INTEGER"
+  },
+  {
+    "name": "tagblock_channel",
+    "type": "STRING"
+  },
+  {
+    "name": "tagblock_groupsize",
+    "type": "INTEGER"
+  },
+  {
+    "name": "tagblock_id",
+    "type": "INTEGER"
+  },
+  {
+    "name": "tagblock_q",
+    "type": "STRING"
+  },
+  {
+    "name": "tagblock_sentence",
+    "type": "INTEGER"
+  },
+  {
+    "name": "tagblock_station",
+    "type": "STRING"
+  },
+  {
+    "name": "tagblock_T",
+    "type": "STRING"
+  },
+  {
+    "name": "tagblock_timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "name": "timestamp",
+    "type": "INTEGER"
+  },
+  {
+    "name": "transmission_ctl",
+    "type": "INTEGER"
+  },
+  {
+    "name": "true_heading",
+    "type": "INTEGER"
+  },
+  {
+    "name": "type_and_cargo",
+    "type": "INTEGER"
+  },
+  {
+    "name": "unit_flag",
+    "type": "INTEGER"
+  },
+  {
+    "name": "utc_hour",
+    "type": "INTEGER"
+  },
+  {
+    "name": "utc_min",
+    "type": "INTEGER"
+  },
+  {
+    "name": "utc_spare",
+    "type": "INTEGER"
+  },
+  {
+    "name": "uuid",
+    "type": "STRING"
+  },
+  {
+    "name": "vendor_id",
+    "type": "STRING"
+  },
+  {
+    "name": "virtual_aton",
+    "type": "BOOLEAN"
+  },
+  {
+    "description": "longitude",
+    "name": "x",
+    "type": "FLOAT"
+  },
+  {
+    "description": "latitude",
+    "name": "y",
+    "type": "FLOAT"
+  },
+  {
+    "name": "year",
+    "type": "INTEGER"
+  },
+  {
    "description": "Extra fields stored as JSON",
    "name": "extra",
    "type": "STRING",
    "mode": "NULLABLE"
- }
+  }
 ]

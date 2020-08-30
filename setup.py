@@ -16,7 +16,7 @@ DEPENDENCIES = [
     "libais",
     "Click==7.0",
     "gpxpy",
-    "requests"
+    "requests",
 ]
 
 DEV_DEPENDENCIES = [
@@ -44,5 +44,9 @@ setup(
     url=package.__source__,
     version=package.__version__,
     zip_safe=True,
-    dependency_links=DEPENDENCY_LINKS
+    dependency_links=DEPENDENCY_LINKS,
+    entry_points='''
+        [console_scripts]
+        ais_tools=ais_tools.cli:cli
+    ''',
 )
