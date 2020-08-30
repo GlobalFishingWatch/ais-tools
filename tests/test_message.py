@@ -48,7 +48,7 @@ def test_add_source(msg, source, overwrite, expected):
     ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, {'nmea': '!AVIDM123', 'uuid': 'a40aa816-9e5b-5d39-bed4-eecf791af8e1'}),
 ])
 def test_add_uuid(msg, overwrite, expected):
-    assert message.add_uuid(msg, overwrite) == expected
+    assert message._add_uuid(msg, overwrite) == expected
 
     repeat = 3
     messages = list(message.add_uuid_stream(it.repeat(msg, repeat), overwrite))
@@ -104,31 +104,3 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
         assert m.get('uuid') == expected
 
 
-# @pytest.mark.parametrize("msg", [
-#     ({}),
-#     ({'nmea': '!AVIDM123'}),
-#     ({'nmea': '!AVIDM123', 'source': 'unchanged'}),
-#     ({'nmea': '!AVIDM123', 'source': 'unchanged', 'uuid': 'unchanged'}),
-#     ('!AVIDM123'),
-#     ('{"nmea": "!AVIDM123"}')
-#     ])
-# @pytest.mark.parametrize("overwrite", [True, False])
-# @pytest.mark.parametrize("source", [None, 'new_source'])
-# @pytest.mark.parametrize("add_uuid", [True, False])
-# @pytest.mark.parametrize("repeat", [0, 1, 2])
-# def test_message_stream(msg, overwrite, source, add_uuid, repeat):
-#     m = msg.copy() if isinstance(msg, dict) else msg
-#     messages = message.message_stream(
-#         it.repeat(m, repeat),
-#         source=source,
-#         add_uuid=add_uuid,
-#         overwrite=overwrite)
-#     messages = list(messages)
-#     assert len(messages) == repeat
-#     if source and (overwrite or ('source' not in msg)):
-#         source_expected = source
-#     else:
-#         source_expected = msg.get('source')
-#
-#     for m in messages:
-#         assert m.get('source') == source_expected

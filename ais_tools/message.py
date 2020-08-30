@@ -70,22 +70,26 @@ def message_uuid(message):
     return str(GFW_UUID(GFW_UUID.SOURCE, message.get('source', ''), message.get('nmea', '')))
 
 
-def add_uuid(message, overwrite=False):
+def _add_uuid(message, overwrite=False):
     if message.get('uuid') is None or overwrite:
         message['uuid'] = message_uuid(message)
     return message
 
 
 def add_uuid_stream(messages, overwrite=False):
-    for m in map(add_uuid, messages, it.repeat(overwrite)):
+    for m in map(_add_uuid, messages, it.repeat(overwrite)):
         yield m
 
 
-def message_stream(messages, source=None, add_uuid=False, overwrite=False):
-    messages = as_dict_stream(messages)
+def as_message(message, source=None, add_uuid=False, overwrite=False):
+    message = as_dict(message)
     if source:
-        messages = add_source_stream(messages, source, overwrite)
+        message = add_source(message, source, overwrite)
     if add_uuid:
-        messages = add_uuid_stream(messages, overwrite)
-    for m in messages:
+        message = _add_uuid(message, overwrite)
+    return message
+
+
+def message_stream(messages, source=None, add_uuid=False, overwrite=False):
+    for m in map(as_message, messages, it.repeat(source), it.repeat(add_uuid), it.repeat(overwrite)):
         yield m

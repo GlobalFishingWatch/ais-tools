@@ -19,7 +19,7 @@ def cli():
 @click.option('-o', '--overwrite', is_flag=True,
               help="replace any source value that already exists in the input stream")
 def cloud_stream(input, url, source, overwrite):
-    messages = message.message_stream(input)
+    messages = message.message_stream(input, source, overwrite)
     for res, msg in cloud.message_to_http_stream(messages, url=url):
         pass
 
