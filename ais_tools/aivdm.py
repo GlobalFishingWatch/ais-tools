@@ -64,6 +64,19 @@ def tagblock(station, timestamp=None, add_tagblock_t=True):
     return '{}*{}'.format(param_str, checksum)
 
 
+def decode_nmea_body(body, pad):
+    try:
+        return libais.decode(body, pad)
+    except libais.DecodeError as e:
+        # Special case for issue #1 - some type 24 messages have incorrect length
+
+        if str(e) == 'Ais24: AIS_ERR_BAD_BIT_COUNT' and len(body) == 27:
+            body = body + '0'
+        else:
+            raise
+    return libais.decode(body, pad)
+
+
 def decode_message(line):
 
     msg = dict(nmea=line)
@@ -82,7 +95,7 @@ def decode_message(line):
         body = fields[5]
         pad = int(nmea.split('*')[0][-1])
         # print(body, pad)
-        msg.update(libais.decode(body, pad))
+        msg.update(decode_nmea_body(body, pad))
 
     except libais.DecodeError as e:
         msg['error'] = str(e)
