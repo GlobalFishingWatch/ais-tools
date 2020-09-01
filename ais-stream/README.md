@@ -2,15 +2,38 @@
 
 A collection of tools for streaming AIS in Google Cloud Platform
 
-## Testing
+## Testing 
+
+This will test the cloud function code (local unit tests only)
 
 ```console
-pytest test.py
+pytest
 ```
 
-## Deploy to cloud functions
+## Deploy to GCP
+First make a copy of config-template.sh and update the default values
+```console
+cp config-template.sh config.sh
+nano config.sh
+```
+
+Now install everything into GCP with 
+```console
+./setup.py
+```
+
+This will create pubsub topics, a bigquery dataset and table, and deploy the cloud functions
+
+If you modify the cloud function code, you can re-deploy them with
 ```console
 ./deploy.sh
+```
+
+To tear down the deployment, use
+
+```console
+# WARNING: THIS WILL DELETE EVERYTHING!
+./teardown.sh
 ```
 
 ## Architecture/Flow

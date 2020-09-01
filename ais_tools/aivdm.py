@@ -4,6 +4,7 @@ Tools for decoding AIS messages in AIVDM format
 
 import json
 from datetime import datetime
+from collections import defaultdict
 
 import ais as libais
 import warnings
@@ -111,3 +112,55 @@ def decode_stream(lines):
 def format_messages(messages, fmt):
     for msg in messages:
         yield json.dumps(msg)
+
+
+def combine_multipart_messages(lines, max_time_window=2, max_message_window=1000):
+    buffer = defaultdict(list)
+
+    for index, line in enumerate(lines):
+        tagblock, nmea = libais_stream.parseTagBlock(line)
+        fields = nmea.split(',')
+        now = datetime.utcnow().timestamp()
+        total_parts = int(fields[1])
+        if total_parts == 1:
+            # this is a single part part message, so nothing to do, just pass it out
+            yield line
+        else:
+            part_num = int(fields[2])
+            key = (total_parts, tagblock.get('tagblock_station'), fields[3], fields[4], tagblock.get('tagblock_group', {}).get('id'))
+            part = dict(part_num=part_num, line=line, index=index, time_in=now)
+
+            print (key)
+            buffered_part_nums = set(part['part_num'] for part in buffer[key])
+            if part_num in buffered_part_nums:
+                # already another message part with this part_num in the buffer, so flush out the buffer
+                for part in sorted(buffer[key], key=lambda x: x['part_num']):
+                    yield part['line']
+                buffer[key] = [part]
+            elif buffered_part_nums.union({part_num}) == set(range(1, total_parts + 1)):
+                # found all the parts.   Concatenate them and send the combined line out
+                buffer[key].append(part)
+                yield ''.join([part['line'] for part in sorted(buffer[key], key=lambda x:x['part_num'])])
+                del buffer[key]
+            else:
+                buffer[key].append(part)
+
+        # flush old lines from the buffer
+        flush_keys = set()
+        flush_time = now - max_time_window
+        flush_index = index - max_message_window
+
+        # find any keys that have parts that are too old
+        for key, parts in buffer.items():
+            if any(part['time_in'] < flush_time or part['index'] < flush_index for part in parts):
+                flush_keys.add(key)
+
+        for key in flush_keys:
+            for part in buffer[key]:
+                yield ''.join([part['line'] for part in sorted(buffer[key], key=lambda x:x['part_num'])])
+            del buffer[key]
+
+    # input stream ended, so flush whatever is left in the buffer
+    for key, part in buffer.items():
+        yield ''.join([part['line'] for part in sorted(buffer[key], key=lambda x: x['part_num'])])
+

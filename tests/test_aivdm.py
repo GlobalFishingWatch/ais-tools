@@ -1,5 +1,5 @@
-import unittest
 import pytest
+import re
 
 from ais_tools import aivdm
 
@@ -30,3 +30,54 @@ def test_bad_bitcount_type_24():
     actual = aivdm.decode_message(nmea)
     assert actual.get('error') is None
     assert actual.get('name') == 'DAKUWAQA@@@@@@@@@@@@'
+
+
+def test_multipart_singleton():
+    nmea = ['!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49']
+    combined = list(aivdm.combine_multipart_messages(nmea))
+    assert len(combined) == 1
+    assert combined == nmea
+
+@pytest.mark.parametrize("nmea", [
+    (['\\g:1-2-1561,s:rORBCOMM000,c:1598653784,T:2020-08-28 22.29.44*39\\!AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E',
+        '\\g:2-2-1561,s:rORBCOMM000,c:1598653784,T:2020-08-28 22.29.44*3a\\!AIVDM,2,2,1,B,00000000000,2*26']),
+    (['\\t:1,g:1-2-1561,s:station1*00\\!AIVDM,2,1,1,B,@*00',
+        '\\t:2,g:2-2-1561,s:station1*00\\!AIVDM,2,2,1,B,@*00']),
+    (['\\t:1*00\\!AIVDM,2,1,7,A,@*00',
+      '\\t:2*00\\!AIVDM,2,2,7,A,@*00']),
+    (['!AIVDM,2,1,7,A,@*00',
+      '!AIVDM,2,2,7,A,@*00']),
+])
+def test_multipart_pairs(nmea):
+    combined = list(aivdm.combine_multipart_messages(nmea))
+    assert len(combined) == 1
+    assert combined == [''.join(nmea)]
+
+    combined = list(aivdm.combine_multipart_messages(reversed(nmea)))
+    assert len(combined) == 1
+    assert combined == [''.join(nmea)]
+
+
+def test_multipart_mixed():
+    nmea = [
+        '\\t:1,s:station1*00\\!AIVDM,1,1,1,A,@*00',
+        '\\t:2.1,g:1-2-001,s:station1*00\\!AIVDM,2,1,1,B,@*00',
+        '\\t:3,s:station1*00\\!AIVDM,1,1,1,A,@*00',
+        '\\t:2.2,g:2-2-001,s:station1*00\\!AIVDM,2,2,1,B,@*00',
+        '\\t:4,s:station1*00\\!AIVDM,1,1,1,A,@*00',
+        '\\t:5.2*00\\!AIVDM,2,2,5,B,@*00',
+        '\\t:6,s:station1*00\\!AIVDM,1,1,1,A,@*00',
+        '\\t:8.2*00\\!AIVDM,2,2,8,A,@*00',
+        '\\t:7.1*00\\!AIVDM,2,1,7,B,@*00',
+        '\\t:5.1*00\\!AIVDM,2,1,5,B,@*00',
+        '\\t:7.2*00\\!AIVDM,2,2,7,B,@*00'
+    ]
+
+    lines = list(aivdm.combine_multipart_messages(nmea))
+    actual = [re.findall(r'\\t:([0-9][.]?[0-9]?)', line) for line in lines]
+    actual = [a if len(a) > 1 else a[0] for a in actual]
+    print(actual)
+    expected = ['1', '3', ['2.1', '2.2'], '4', '6', ['5.1', '5.2'], ['7.1', '7.2'], '8.2']
+    assert actual == expected
+
+
