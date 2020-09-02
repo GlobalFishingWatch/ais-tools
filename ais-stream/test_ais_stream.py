@@ -94,9 +94,9 @@ def test_decode_empty(capsys, pubsub_context, pubsub_client):
     "message,log_output,pubsub_output",
     [
         ({}, 'missing nmea field', None),
-        ({'nmea': '!AIVDM1234567*89'}, ['!AIVDM', 'DEFAULT_SOURCE'], {'source': 'DEFAULT_SOURCE'}),
-        ({'nmea': '!AIVDM1234567*89', 'source': 'my_source'}, 'my_source', {'source': 'my_source'}),
-        ({'nmea': '!AIVDM1234567*89'}, ['failed'], {'error': 'Invalid checksum'}),
+        ({'nmea': '!AIVDM,1,1,1,A,@,0*57'}, ['!AIVDM', 'DEFAULT_SOURCE'], {'source': 'DEFAULT_SOURCE'}),
+        ({'nmea': '!AIVDM,1,1,1,A,@,0*57', 'source': 'my_source'}, 'my_source', {'source': 'my_source'}),
+        ({'nmea': '!AIVDM,1,1,,A,123456789*00'}, ['failed'], {'error': 'Invalid checksum'}),
         ({'nmea': '!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49'}, ['succeeded'], {"mmsi": 367596940}),
     ]
 )
