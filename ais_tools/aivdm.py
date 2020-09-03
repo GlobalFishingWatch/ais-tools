@@ -8,6 +8,7 @@ from datetime import datetime
 from collections import defaultdict
 
 import ais as libais
+from ais import DecodeError
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -15,6 +16,15 @@ with warnings.catch_warnings():
 
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
+
+
+def checksum(sentence):
+    """Compute the NMEA checksum for a sentence payload."""
+    c = 0
+    for char in sentence:
+        c ^= ord(char)
+    checksum_str = '%02x' % c
+    return checksum_str.upper()
 
 
 def safe_tagblock_timestamp(line):
@@ -45,25 +55,17 @@ def tagblock_t(dt):
     return dt.strftime(TAGBLOCK_T_FORMAT)
 
 
-def compute_checksum(sentence):
-    """Compute the NMEA checksum for a payload."""
-    c = 0
-    for char in sentence:
-        c ^= ord(char)
-    checksum_str = '%02x' % c
-    return checksum_str.upper()
-
-
 def tagblock(station, timestamp=None, add_tagblock_t=True):
     dt = timestamp or datetime.utcnow()
     params = dict(
         c=round(dt.timestamp()*1000),
         s=station,
-        T=tagblock_t(dt)
     )
+    if add_tagblock_t:
+        params['T'] = tagblock_t(dt)
     param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
-    checksum = compute_checksum(param_str)
-    return '{}*{}'.format(param_str, checksum)
+    c = checksum(param_str)
+    return '{}*{}'.format(param_str, c)
 
 
 def validate_field_types(msg):
@@ -134,10 +136,10 @@ def expand_nmea(line):
     return tagblock, body, pad
 
 
-def safe_decode_message(line):
+def safe_decode(line):
     msg = {}
     try:
-        msg = decode_message(line)
+        msg = decode(line)
     except libais.DecodeError as e:
         msg = dict(
             nmea=line,
@@ -146,13 +148,15 @@ def safe_decode_message(line):
     return msg
 
 
-def decode_message(line):
+def decode(line):
 
     msg = dict(nmea=line)
 
     parts = [expand_nmea(line) for line in split_multipart(line)]
 
-    if len(parts) == 1:
+    if len(parts) == 0:
+        raise DecodeError('No valid AIVDM found in {}'.format(line))
+    elif len(parts) == 1:
         # single part message
         tagblock, body, pad = parts[0]
     else:
@@ -171,6 +175,12 @@ def decode_message(line):
         # pad value comes from the final part
         pad = pads[-1]
 
+    # Check to see if a multipart message is missing some parts, or maybe has extra
+    if len(parts) != tagblock['tagblock_groupsize']:
+        raise DecodeError(
+            'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
+        )
+
     msg.update(tagblock)
     msg.update(decode_nmea_body(body, pad))
     validate_field_types(msg)
@@ -180,7 +190,7 @@ def decode_message(line):
 
 def decode_stream(lines):
     for line in lines:
-        yield decode_message(line)
+        yield decode(line)
 
 
 def split_multipart(line):
@@ -202,7 +212,7 @@ def split_multipart(line):
     elif line.startswith('\\'):
         regex = r'(\\[^\\]+\\![^!\\]+)'
     else:
-        raise ValueError
+        raise libais.DecodeError('no valid AIVDM message detected')
 
     return re.findall(regex, line)
 
@@ -214,7 +224,22 @@ def join_multipart(lines):
     start_chars = {line[0] for line in lines}
     if len(start_chars) == 1 and start_chars.issubset({'\\', '!'}):
         return ''.join(lines)
-    raise ValueError("all lines to be joined must start with the same character, either '\\' or '!'")
+    raise DecodeError("all lines to be joined must start with the same character, either '\\' or '!'")
+
+
+def safe_join_multipart_stream(lines, max_time_window=2, max_message_window=1000):
+    """
+    Same as join_multipart_stream but for any message that cannot decoded, it will just emit
+    that message back out and not raise a DecodeError exception
+    """
+    lines = join_multipart_stream(
+            lines,
+            max_time_window=max_time_window,
+            max_message_window=max_message_window,
+            ignore_decode_errors=True
+            )
+    for line in lines:
+        yield line
 
 
 def join_multipart_stream(lines, max_time_window=2, max_message_window=1000, ignore_decode_errors=False):
@@ -242,9 +267,19 @@ def join_multipart_stream(lines, max_time_window=2, max_message_window=1000, ign
             # this is a single part part message, so nothing to do, just pass it out
             yield line
         else:
-            # part_num = int(fields[2])
+            # make a key for matching message parts
+            # - tagblock_groupsize is the number of parts we are looking for
+            # - tagblock_station is the source of the message and may not have a value
+            # - tagblock_id is a sequence number that is the same for all message parts, but it is not unique
+            # - tagblock_channel is the AIS RF channel (either A or B) that was used for transmission
             key = (tagblock.get('tagblock_groupsize'), tagblock.get('tagblock_station'),
                    tagblock.get('tagblock_id'), tagblock.get('tagblock_channel'))
+
+            # pack up the message part
+            # - tagblock_sentence is the index of this part relative to the other parts, where the first part is 1
+            # - line is the nmea that was passed in
+            # - index is the index of this part in the stream - needed to flush old messages
+            # - time_in is the time this part was added to the buffer  - needed to flush old messages
             part = dict(part_num=tagblock['tagblock_sentence'], line=line, index=index, time_in=now)
 
             buffered_part_nums = set(part['part_num'] for part in buffer[key])
@@ -264,7 +299,7 @@ def join_multipart_stream(lines, max_time_window=2, max_message_window=1000, ign
             else:
                 buffer[key].append(part)
 
-        # flush old parts from the buffer
+        # prepare to flush old parts from the buffer
         flush_keys = set()
         flush_time = now - max_time_window
         flush_index = index - max_message_window

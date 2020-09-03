@@ -21,10 +21,6 @@ def test_safe_tagblock_timestamp(line, timestamp):
     assert aivdm.safe_tagblock_timestamp(line) == timestamp
 
 
-# def test_ais_line_parts(line, expected):
-#     tagblock, nmea = decode.ais_line_parts(line)
-#     assert set(expected.items()).issubset(set(tagblock.items()))
-
 @pytest.mark.parametrize("line,expected", [
     ("\\s:rORBCOMM000,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*7B",
         {'tagblock_timestamp': 1509502436, 'tagblock_sentence': 1}),
@@ -45,6 +41,8 @@ def test_expand_nmea(line, expected):
 
 
 @pytest.mark.parametrize("nmea", [
+    '',
+    'invalid',
     '!AIVDM,NOT_AN_INT,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49',
     '!AIVDM,1,1,'
     "\\s:bad-nmea,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*00",
@@ -63,19 +61,20 @@ def test_expand_nmea_fail(nmea):
     ('\\c:1577762601537,s:sdr-experiments,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49',
      {"tagblock_station": "sdr-experiments"}),
 ])
-def test_decode_message(nmea, expected):
-    actual = aivdm.decode_message(nmea)
+def test_decode(nmea, expected):
+    actual = aivdm.decode(nmea)
     actual_subset = {k: v for k, v in actual.items() if k in expected}
     assert actual_subset == expected
 
 
-@pytest.mark.parametrize("nmea", [
-    "!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B",
-    '!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69',
+@pytest.mark.parametrize("nmea,error", [
+    ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
+    ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', 'Type check failed in field spare2.*'),
+     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
 ])
-def test_decode_message_fail(nmea):
-    with pytest.raises(aivdm.libais.DecodeError):
-        aivdm.decode_message(nmea)
+def test_decode_fail(nmea, error):
+    with pytest.raises(aivdm.libais.DecodeError, match=error):
+        aivdm.decode(nmea)
 
 
 def test_decode_stream():
@@ -86,7 +85,7 @@ def test_decode_stream():
 # test for issue #1 Workaround for type 24 with bad bitcount
 def test_bad_bitcount_type_24():
     nmea = '!AIVDM,1,1,,B,H>cSnNP@4eEL544000000000000,0*3E'
-    actual = aivdm.decode_message(nmea)
+    actual = aivdm.decode(nmea)
     assert actual.get('error') is None
     assert actual.get('name') == 'DAKUWAQA@@@@@@@@@@@@'
 
@@ -105,7 +104,7 @@ def test_join_multipart(nmea):
 
 
 def test_join_multipart_fail():
-    with pytest.raises(ValueError):
+    with pytest.raises(aivdm.DecodeError):
         line = aivdm.join_multipart('AIVDM-does-not-start-with-!')
 
 
@@ -119,7 +118,16 @@ def test_split_multipart(nmea):
     assert ''.join(lines) == nmea == aivdm.join_multipart(lines)
 
 
-def test_multipart_singleton():
+@pytest.mark.parametrize("nmea,error", [
+    ('', 'no valid AIVDM message detected'),
+    ('not_nmea', 'no valid AIVDM message detected'),
+])
+def test_split_multipart_fail(nmea, error):
+    with pytest.raises(aivdm.DecodeError, match=error):
+        lines = aivdm.split_multipart(nmea)
+
+
+def test_join_multipart_stream_singleton():
     nmea = ['!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49']
     combined = list(aivdm.join_multipart_stream(nmea))
     assert len(combined) == 1
@@ -136,7 +144,7 @@ def test_multipart_singleton():
     (['!AIVDM,2,1,7,B,@,0*51',
       '!AIVDM,2,2,7,B,@,0*52']),
 ])
-def test_multipart_pairs(nmea):
+def test_join_multipart_stream_pairs(nmea):
     combined = list(aivdm.join_multipart_stream(nmea))
     assert len(combined) == 1
     assert combined == [''.join(nmea)]
@@ -146,7 +154,7 @@ def test_multipart_pairs(nmea):
     assert combined == [''.join(nmea)]
 
 
-def test_multipart_mixed():
+def test_join_multipart_stream_mixed():
     nmea = [
         '\\t:1,s:station1*00\\!AIVDM,1,1,1,A,@,0*57',
         '\\t:2.1,g:1-2-001,s:station1*00\\!AIVDM,2,1,1,B,@,0*57',
@@ -169,7 +177,7 @@ def test_multipart_mixed():
     assert actual == expected
 
 
-def test_multipart_timeout():
+def test_join_multipart_stream_timeout():
     nmea = [
         '\\t:1,s:station1*51\\!AIVDM,1,1,1,A,@,0*57',
         '\\t:2.1,g:1-2-001,s:station1*00\\!AIVDM,2,1,1,B,@,0*57',
