@@ -17,6 +17,7 @@ DEPENDENCIES = [
     "Click==7.0",
     "gpxpy",
     "requests",
+    "bitstring",
 ]
 
 DEV_DEPENDENCIES = [

@@ -2,7 +2,9 @@ import json
 import base64
 
 from config import load_config
-from ais_tools import aivdm
+from ais_tools.aivdm import AIVDM
+
+decoder = AIVDM()
 
 
 def handle_event(event, context, pubsub_client):
@@ -19,7 +21,7 @@ def handle_event(event, context, pubsub_client):
             message_in['source'] = config['DEFAULT_SOURCE']
 
         message_out = message_in
-        message_out.update(aivdm.safe_decode(message_in['nmea']))
+        message_out.update(decoder.safe_decode(message_in['nmea']))
 
         data_out = json.dumps(message_out).encode("utf-8")
         pubsub_client.publish(config['DECODE_PUBSUB_TOPIC'], data=data_out, source=message_out['source'])

@@ -14,6 +14,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from ais import stream as libais_stream
 
+from ais_tools.ais import AISMessageTranscoder
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
@@ -68,129 +69,144 @@ def tagblock(station, timestamp=None, add_tagblock_t=True):
     return '{}*{}'.format(param_str, c)
 
 
-def validate_field_types(msg):
-    """
-    validate data types for some fields which are returned by libais with incorrect types
-    under some error conditions
+class LibaisDecoder:
+    @staticmethod
+    def validate_field_types(msg):
+        """
+        validate data types for some fields which are returned by libais with incorrect types
+        under some error conditions
 
-    This is needed to address a bug in libais mentioned here: https://github.com/schwehr/libais/issues/179
-    """
-    try:
-        int(msg.get('spare2', 0))
-    except TypeError as e:
-        raise libais.DecodeError('Type check failed in field %s (%s)' % ('spare2', str(e)))
+        This is needed to address a bug in libais mentioned here: https://github.com/schwehr/libais/issues/179
+        """
+        try:
+            int(msg.get('spare2', 0))
+        except TypeError as e:
+            raise libais.DecodeError('Type check failed in field %s (%s)' % ('spare2', str(e)))
+        return msg
+
+    @staticmethod
+    def decode_payload(body, pad):
+        res = libais.decode(body, pad)
+        return LibaisDecoder.validate_field_types(res)
 
 
-def _decode(body, pad):
-    res = libais.decode(body, pad)
-    validate_field_types(res)
-    return res
+class AisToolsDecoder:
+    def __init__(self):
+        self.transcoder = AISMessageTranscoder()
+
+    def decode_payload(self, body, pad):
+        aistools_err = None
+        try:
+            return self.transcoder.decode_nmea(body, pad)
+        except DecodeError as e:
+            libais_err = str(e)
+
+        try:
+            return LibaisDecoder.decode_payload(body, pad)
+        except DecodeError as e:
+            raise DecodeError('AISTOOLS ERR: {}  LIBAIS ERR: {}'.format(aistools_err, str(e)))
 
 
-def decode_nmea_body(body, pad):
-    try:
-        return _decode(body, pad)
-    except libais.DecodeError as e:
-        # Special case for issue #1 - some type 24 messages have incorrect length
+class AisToolsEncoder:
+    def __init__(self):
+        self.transcoder = AISMessageTranscoder()
 
-        if str(e) == 'Ais24: AIS_ERR_BAD_BIT_COUNT' and len(body) == 27:
-            body = body + '0'
+    def encode_payload(self, message):
+        return self.transcoder.encode_nmea(message)
+
+
+class AIVDM:
+    def __init__(self, decoder=None, encoder=None):
+        self.decoder = decoder or AisToolsDecoder()
+        self.encoder = encoder or AisToolsEncoder()
+
+    def safe_decode(self, nmea):
+        msg = {}
+        try:
+            msg = self.decode(nmea)
+        except libais.DecodeError as e:
+            msg = dict(
+                nmea=nmea,
+                error=str(e)
+            )
+        return msg
+
+    def decode(self, nmea):
+
+        msg = dict(nmea=nmea)
+        parts = [self.expand_nmea(part) for part in split_multipart(nmea)]
+        if len(parts) == 0:
+            raise DecodeError('No valid AIVDM found in {}'.format(nmea))
+        elif len(parts) == 1:
+            # single part message
+            tagblock, body, pad = parts[0]
         else:
-            raise
+            # multipart message
+            parts = sorted(parts, key=lambda x: x[1]['part_num'])
+            tagblocks, bodys, pads = list(zip(*parts))
 
-    # Try the decode again
-    return _decode(body, pad)
+            # merge the tagblocks, prefer the values in the first message
+            tagblock = {}
+            for t in reversed(tagblocks):
+                tagblock.update(t)
 
+            # concatenate the nmea body elements
+            body = ''.join([body for body in bodys])
 
-def expand_nmea(line):
-    try:
-        tagblock, nmea = libais_stream.parseTagBlock(line)
-    except ValueError as e:
-        raise libais.DecodeError('Failed to parse tagblock (%s) %s' % (str(e), line))
+            # pad value comes from the final part
+            pad = pads[-1]
 
-    nmea = nmea.strip()
-    fields = nmea.split(',')
-    if len(fields) < 6:
-        raise libais.DecodeError('not enough fields in nmea message')
+        # Check to see if a multipart message is missing some parts, or maybe has extra
+        if len(parts) != tagblock['tagblock_groupsize']:
+            raise DecodeError(
+                'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
+            )
 
-    if not libais_stream.checksum.isChecksumValid(nmea):
-        raise libais.DecodeError('Invalid checksum')
+        msg.update(tagblock)
+        msg.update(self.decode_payload(body, pad))
 
-    try:
-        tagblock['tagblock_groupsize'] = int(fields[1])
-        tagblock['tagblock_sentence'] = int(fields[2])
-        if fields[3] != '':
-            tagblock['tagblock_id'] = int(fields[3])
-        tagblock['tagblock_channel'] = fields[4]
-        body = fields[5]
-        pad = int(nmea.split('*')[0][-1])
-    except ValueError:
-        raise libais.DecodeError('Unable to convert field to int in nmea message')
+        return msg
 
-    if 'tagblock_group' in tagblock:
-        tagblock_group = tagblock.get('tagblock_group', {})
-        del tagblock['tagblock_group']
-        group_fields = {'tagblock_' + k: v for k, v in tagblock_group.items()}
-        tagblock.update(group_fields)
+    def decode_stream(self, lines):
+        for line in lines:
+            yield self.decode(line)
 
-    return tagblock, body, pad
+    def decode_payload(self, body, pad):
+        return self.decoder.decode_payload(body, pad)
 
+    @staticmethod
+    def expand_nmea(line):
+        try:
+            tagblock, nmea = libais_stream.parseTagBlock(line)
+        except ValueError as e:
+            raise DecodeError('Failed to parse tagblock (%s) %s' % (str(e), line))
 
-def safe_decode(line):
-    msg = {}
-    try:
-        msg = decode(line)
-    except libais.DecodeError as e:
-        msg = dict(
-            nmea=line,
-            error=str(e)
-        )
-    return msg
+        nmea = nmea.strip()
+        fields = nmea.split(',')
+        if len(fields) < 6:
+            raise DecodeError('not enough fields in nmea message')
 
+        if not libais_stream.checksum.isChecksumValid(nmea):
+            raise DecodeError('Invalid checksum')
 
-def decode(line):
+        try:
+            tagblock['tagblock_groupsize'] = int(fields[1])
+            tagblock['tagblock_sentence'] = int(fields[2])
+            if fields[3] != '':
+                tagblock['tagblock_id'] = int(fields[3])
+            tagblock['tagblock_channel'] = fields[4]
+            body = fields[5]
+            pad = int(nmea.split('*')[0][-1])
+        except ValueError:
+            raise DecodeError('Unable to convert field to int in nmea message')
 
-    msg = dict(nmea=line)
+        if 'tagblock_group' in tagblock:
+            tagblock_group = tagblock.get('tagblock_group', {})
+            del tagblock['tagblock_group']
+            group_fields = {'tagblock_' + k: v for k, v in tagblock_group.items()}
+            tagblock.update(group_fields)
 
-    parts = [expand_nmea(line) for line in split_multipart(line)]
-
-    if len(parts) == 0:
-        raise DecodeError('No valid AIVDM found in {}'.format(line))
-    elif len(parts) == 1:
-        # single part message
-        tagblock, body, pad = parts[0]
-    else:
-        # multipart message
-        parts = sorted(parts, key=lambda x: x[1]['part_num'])
-        tagblocks, bodys, pads = list(zip(*parts))
-
-        # merge the tagblocks, prefer the values in the first message
-        tagblock = {}
-        for t in reversed(tagblocks):
-            tagblock.update(t)
-
-        # concatenate the nmea body elements
-        body = ''.join([body for body in bodys])
-
-        # pad value comes from the final part
-        pad = pads[-1]
-
-    # Check to see if a multipart message is missing some parts, or maybe has extra
-    if len(parts) != tagblock['tagblock_groupsize']:
-        raise DecodeError(
-            'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
-        )
-
-    msg.update(tagblock)
-    msg.update(decode_nmea_body(body, pad))
-    validate_field_types(msg)
-
-    return msg
-
-
-def decode_stream(lines):
-    for line in lines:
-        yield decode(line)
+        return tagblock, body, pad
 
 
 def split_multipart(line):
@@ -254,7 +270,7 @@ def join_multipart_stream(lines, max_time_window=2, max_message_window=1000, ign
 
     for index, line in enumerate(lines):
         try:
-            tagblock, body, pad = expand_nmea(line)
+            tagblock, body, pad = AIVDM.expand_nmea(line)
         except libais.DecodeError:
             if ignore_decode_errors:
                 yield line
@@ -278,7 +294,7 @@ def join_multipart_stream(lines, max_time_window=2, max_message_window=1000, ign
             # pack up the message part
             # - tagblock_sentence is the index of this part relative to the other parts, where the first part is 1
             # - line is the nmea that was passed in
-            # - index is the index of this part in the stream - needed to flush old messages
+            # - index is the index of this line in the stream - needed to flush old messages
             # - time_in is the time this part was added to the buffer  - needed to flush old messages
             part = dict(part_num=tagblock['tagblock_sentence'], line=line, index=index, time_in=now)
 

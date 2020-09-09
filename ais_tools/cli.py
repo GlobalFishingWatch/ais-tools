@@ -26,7 +26,7 @@ def cloud_stream(input, url, source, overwrite):
 
 @cli.command(
     help="Utility for wrapping a stream of raw AIVDM sentences, such as from the output of aisdeco2, "
-     "and prepending a tgblock."
+     "and prepending a tagblock."
      "\n\n"
      "INPUT should be a text stream with one NMEA message per line, and defaults to stdin.  Use '-' to explicitly "
      "use stdin"
@@ -57,5 +57,14 @@ def decode():
 
 
 @cli.command()
-def multiline():
+def join_multiline():
+    click.echo('command not implemented')
+
+
+@cli.command(
+    help="""
+    Stream AIS messages from one source to another, with options for transforming messages as they go
+"""
+)
+def stream():
     click.echo('command not implemented')

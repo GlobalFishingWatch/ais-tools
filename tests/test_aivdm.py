@@ -2,6 +2,7 @@ import pytest
 import re
 
 from ais_tools import aivdm
+from ais_tools.aivdm import AIVDM
 
 
 @pytest.mark.parametrize("line,timestamp", [
@@ -36,7 +37,7 @@ def test_safe_tagblock_timestamp(line, timestamp):
         {'tagblock_station': 'sdr-experiments', 'tagblock_channel': 'A'})
 ])
 def test_expand_nmea(line, expected):
-    tagblock, body, pad = aivdm.expand_nmea(line)
+    tagblock, body, pad = AIVDM.expand_nmea(line)
     assert set(expected.items()).issubset(set(tagblock.items()))
 
 
@@ -53,7 +54,7 @@ def test_expand_nmea(line, expected):
 ])
 def test_expand_nmea_fail(nmea):
     with pytest.raises(aivdm.libais.DecodeError):
-        tagblock, body, pad = aivdm.expand_nmea(nmea)
+        tagblock, body, pad = AIVDM.expand_nmea(nmea)
 
 
 @pytest.mark.parametrize("nmea,expected", [
@@ -62,7 +63,8 @@ def test_expand_nmea_fail(nmea):
      {"tagblock_station": "sdr-experiments"}),
 ])
 def test_decode(nmea, expected):
-    actual = aivdm.decode(nmea)
+    decoder = AIVDM()
+    actual = decoder.decode(nmea)
     actual_subset = {k: v for k, v in actual.items() if k in expected}
     assert actual_subset == expected
 
@@ -73,19 +75,22 @@ def test_decode(nmea, expected):
      ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
 ])
 def test_decode_fail(nmea, error):
+    decoder = AIVDM()
     with pytest.raises(aivdm.libais.DecodeError, match=error):
-        aivdm.decode(nmea)
+        decoder.decode(nmea)
 
 
 def test_decode_stream():
+    decoder = AIVDM()
     nmea = ['\\c:1577762601537,s:sdr-experiments,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49']
-    assert len(list(aivdm.decode_stream(nmea))) == len(nmea)
+    assert len(list(decoder.decode_stream(nmea))) == len(nmea)
 
 
 # test for issue #1 Workaround for type 24 with bad bitcount
 def test_bad_bitcount_type_24():
+    decoder = AIVDM()
     nmea = '!AIVDM,1,1,,B,H>cSnNP@4eEL544000000000000,0*3E'
-    actual = aivdm.decode(nmea)
+    actual = decoder.decode(nmea)
     assert actual.get('error') is None
     assert actual.get('name') == 'DAKUWAQA@@@@@@@@@@@@'
 
@@ -98,7 +103,6 @@ def test_bad_bitcount_type_24():
 def test_join_multipart(nmea):
     print(nmea)
     line = aivdm.join_multipart(nmea)
-    print (line)
     assert line == ''.join(nmea)
     assert aivdm.split_multipart(line) == nmea
 
