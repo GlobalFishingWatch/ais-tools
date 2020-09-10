@@ -1,19 +1,12 @@
-from ais_tools import transcode
 from ais_tools.transcode import MessageTranscoder as Message
-from ais_tools.transcode import DynamicTranscoder
 from ais_tools.transcode import DecodeError
 from ais_tools.transcode import UintTranscoder as Uint
 from ais_tools.transcode import ASCII6Transcoder as ASCII6
 
 
 class AIS24Transcoder(Message):
-    def __init__(self):
-        super().__init__(ais24_fields)
 
-
-class AIS24PartAB(Message):
-    def get_fields(self, message=None):
-        part_num = message.get('part_num', 0)
+    def part_AB_fields(self, part_num):
         if part_num == 0:
             return ais24_part_A_fields
         elif part_num == 1:
@@ -21,76 +14,87 @@ class AIS24PartAB(Message):
         else:
             raise DecodeError('AIS24: unknown part number {}'.format(part_num))
 
+    def encode_fields(self, message):
+        return self.part_AB_fields(message.get('part_num'))
 
-class VendorID(DynamicTranscoder):
-    def __init__(self):
-        self.vendorid_1371_2 = Message(ais24_vendorid_ITU_R_1371_2)
-        self.vendorid_1371_4 = Message(ais24_vendorid_ITU_R_1371_4)
+    def decode_fields(self, bits, message):
+        return self.part_AB_fields(message.get('id', bits[38:40].uint))
 
-    def encoder(self, message):
+
+class VendorID(Message):
+    def __init__(self, vendorid_1371_2, vendorid_1371_4):
+        self.vendorid_1371_2 = vendorid_1371_2
+        self.vendorid_1371_4 = vendorid_1371_4
+
+    def encode_fields(self, message):
         if 'vendor_id' in message:
             return self.vendorid_1371_2
         else:
             return self.vendorid_1371_4
 
-    def decoders(self, message):
-        return [self.vendorid_1371_2, self.vendorid_1371_4]
+    def decode(self, bits, message=None):
+        message = message or {}
+        pos = bits.pos
+        for d in self.vendorid_1371_2:
+            message.update(d.decode(bits, message))
+        bits.pos = pos  # reset read position to read the same bits again for multiple decoders
+        for d in self.vendorid_1371_4:
+            message.update(d.decode(bits, message))
+        return message
 
 
 class DimensionOrMothership(Message):
-    def __init__(self):
+    def __init__(self, dim_fields, mothership_fields):
         super().__init__()
-        self.shipDimension = Message(ais24_part_B_dimension_fields)
-        self.mothershipMMSI = Message(ais24_part_B_mothership_fields)
+        self.dim_fields = dim_fields
+        self.mothership_fields = mothership_fields
 
     def get_fields(self, message=None):
         mmsi = message.get('id')
         if mmsi // 10000000 == 98:
-            return [self.mothershipMMSI]
+            return self.mothership_fields
         else:
-            return [self.shipDimension]
+            return self.dim_fields
 
-
-# COMMON FIELDS
-ais24_fields = [
-    Uint(name='repeat_indicator', nbits=2),
-    Uint(name='mmsi', nbits=30),
-    Uint(name='part_num', nbits=2),
-    AIS24PartAB()
-]
 
 # PART A
 ais24_part_A_fields = [
+    Uint(name='id', nbits=6, default=0),
+    Uint(name='repeat_indicator', nbits=2),
+    Uint(name='mmsi', nbits=30),
+    Uint(name='part_num', nbits=2),
     ASCII6(name='name', nbits=120),
 ]
 
-# PART B
-ais24_vendorid_ITU_R_1371_2 =[
-    ASCII6(name='vendor_id', nbits=42, default='@@@@@@@'),
-]
-
-ais24_vendorid_ITU_R_1371_4 =[
-    ASCII6(name='vendor_id_1371_4', nbits=18, default='@@@'),
-    Uint(name='vendor_model', nbits=4),
-    Uint(name='vendor_serial', nbits=20),
-]
-
-ais24_part_B_dimension_fields = [
-    Uint(name='dim_a', nbits=9),
-    Uint(name='dim_b', nbits=9),
-    Uint(name='dim_c', nbits=6),
-    Uint(name='dim_d', nbits=6),
-]
-
-ais24_part_B_mothership_fields = [
-    Uint(name='mothership_mmsi', nbits=30),
-]
 
 ais24_part_B_fields = [
+    Uint(name='id', nbits=6, default=0),
+    Uint(name='repeat_indicator', nbits=2),
+    Uint(name='mmsi', nbits=30),
+    Uint(name='part_num', nbits=2),
     Uint(name='type_and_cargo', nbits=8),
-    VendorID(),
+    VendorID(
+        [
+            ASCII6(name='vendor_id', nbits=42, default='@@@@@@@'),
+        ],
+        [
+            ASCII6(name='vendor_id_1371_4', nbits=18, default='@@@'),
+            Uint(name='vendor_model', nbits=4),
+            Uint(name='vendor_serial', nbits=20),
+        ],
+    ),
     ASCII6(name='callsign', nbits=42, default='@@@@@@@'),
-    DimensionOrMothership(),
+    DimensionOrMothership(
+        [
+            Uint(name='dim_a', nbits=9),
+            Uint(name='dim_b', nbits=9),
+            Uint(name='dim_c', nbits=6),
+            Uint(name='dim_d', nbits=6),
+        ],
+        [
+            Uint(name='mothership_mmsi', nbits=30),
+        ]
+    ),
     Uint(name='gps_type', nbits=4),
     Uint(name='spare', nbits=2),
 ]

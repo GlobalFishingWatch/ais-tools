@@ -10,31 +10,24 @@ from ais_tools import ais25
 
 
 message_types = {
-    18: [ais18.AIS18Transcoder()],
+    18: ais18.ais18_fields,
     24: [ais24.AIS24Transcoder()],
-    25: [ais25.AIS25Transcoder()],
+    25: ais25.ais25_fields,
 }
 
 
-class AISMessageTypeTranscoder(MessageTranscoder):
+class AISMessageTranscoder(MessageTranscoder):
 
-    def get_fields(self, message=None):
-        msg_type = message.get('id')
+    def message_type_fields(self, msg_type):
         if msg_type not in message_types:
             raise DecodeError('AIS: Unknown message type {}'.format(msg_type))
-        fields = message_types.get(msg_type, [])
-        return fields
+        return message_types.get(msg_type, [])
 
+    def encode_fields(self, message):
+        return self.message_type_fields(message.get('id'))
 
-ais_fields = [
-    Uint(name='id', nbits=6, default=0),
-    AISMessageTypeTranscoder(),
-]
-
-
-class AISMessageTranscoder(MessageTranscoder):
-    def __init__(self):
-        super().__init__(ais_fields)
+    def decode_fields(self, bits, message):
+        return self.message_type_fields(message.get('id', bits[0:6].uint))
 
     def encode_nmea(self, message):
         return bits_to_nmea(byte_align(self.encode(message)))

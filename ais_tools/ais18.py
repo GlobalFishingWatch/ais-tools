@@ -6,11 +6,6 @@ from ais_tools.transcode import Uint10Transcoder as Uint10
 from ais_tools.transcode import LatLonTranscoder as LatLon
 
 
-class AIS18Transcoder(transcode.MessageTranscoder):
-    def __init__(self):
-        super().__init__(ais18_fields)
-
-
 class AIS18CommState(transcode.MessageTranscoder):
     def get_fields(self, message=None):
         unit_flag = message.get('unit_flag', 0)
@@ -41,6 +36,7 @@ class AIS18CommStateSOTDMA(transcode.MessageTranscoder):
 
 
 ais18_fields = [
+    Uint(name='id', nbits=6, default=0),
     Uint(name='repeat_indicator', nbits=2),
     Uint(name='mmsi', nbits=30),
     Uint(name='spare', nbits=8),

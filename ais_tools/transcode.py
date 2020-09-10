@@ -62,15 +62,21 @@ class MessageTranscoder(Transcoder):
     def get_fields(self, message=None):
         return self._fields
 
+    def encode_fields(self, message):
+        return self.get_fields(message)
+
+    def decode_fields(self, bits, message):
+        return self.get_fields(message)
+
     def encode(self, message):
         bits = Bits()
-        for f in self.get_fields(message):
+        for f in self.encode_fields(message):
             bits += f.encode(message)
         return bits
 
     def decode(self, bits, message=None):
         message = message or {}
-        for f in self.get_fields(message):
+        for f in self.decode_fields(bits, message):
             message.update(f.decode(bits, message))
         return message
 
