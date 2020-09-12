@@ -1,10 +1,11 @@
 import pytest
-from ais_tools import message
+from ais_tools.message import Message
+from ais_tools.message import GFW_UUID
 import itertools as it
 
 
 def test_gfw_uuid():
-    assert str(message.GFW_UUID('test')) == 'c3757317-71ed-5251-bec6-fa01f05cb8dc'
+    assert str(GFW_UUID('test')) == 'c3757317-71ed-5251-bec6-fa01f05cb8dc'
 
 
 @pytest.mark.parametrize("msg,expected", [
@@ -13,49 +14,36 @@ def test_gfw_uuid():
     ({'nmea': '!AIVDM1234567*89'}, {'nmea': '!AIVDM1234567*89'}),
     ('{"nmea": "!AIVDM1234567*89"}', {'nmea': '!AIVDM1234567*89'}),
 ])
-def test_as_dict(msg, expected):
-    assert message.as_dict(msg) == expected
+def test_message_construct(msg, expected):
+    assert Message(msg) == expected
 
 
 @pytest.mark.parametrize("msg", [
     42,
     "{not valid JSON}"
 ])
-def test_as_dict_fail(msg):
+def test_message_construct_fail(msg):
     with pytest.raises(ValueError):
-        message.as_dict(msg)
+        Message(msg)
 
 
 @pytest.mark.parametrize("msg,source,overwrite,expected", [
-    ({}, 'source', False, {'source': 'source'}),
-    ({'source': 'old'}, 'new', False, {'source': 'old'}),
-    ({'source': 'old'}, 'new', True, {'source': 'new'}),
+    ({}, 'source', False, {'nmea': '', 'source': 'source'}),
+    ({'source': 'old'}, 'new', False, {'nmea': '', 'source': 'old'}),
+    ({'source': 'old'}, 'new', True, {'nmea': '', 'source': 'new'}),
 ])
 def test_add_source(msg, source, overwrite, expected):
-    assert message.add_source(msg, source, overwrite) == expected
-
-    repeat = 3
-    messages = list(message.add_source_stream(it.repeat(msg, repeat), source, overwrite))
-    assert len(messages) == repeat
-    for m in messages:
-        assert m == expected
+    assert expected == Message(msg).add_source(source, overwrite)
 
 
 @pytest.mark.parametrize("msg,overwrite,expected", [
-    ({}, False, {'uuid': '7b16d688-bafc-55ad-8f2b-ca76c2a4eb4f'}),
+    ({}, False, {'nmea': '', 'uuid': '7b16d688-bafc-55ad-8f2b-ca76c2a4eb4f'}),
     ({'nmea': '!AVIDM123'}, False, {'nmea': '!AVIDM123', 'uuid': 'a40aa816-9e5b-5d39-bed4-eecf791af8e1'}),
     ({'nmea': '!AVIDM123', 'uuid': 'old'}, False, {'nmea': '!AVIDM123', 'uuid': 'old'}),
     ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, {'nmea': '!AVIDM123', 'uuid': 'a40aa816-9e5b-5d39-bed4-eecf791af8e1'}),
 ])
 def test_add_uuid(msg, overwrite, expected):
-    assert message._add_uuid(msg, overwrite) == expected
-
-    repeat = 3
-    messages = list(message.add_uuid_stream(it.repeat(msg, repeat), overwrite))
-    assert len(messages) == repeat
-    for m in messages:
-        assert m == expected
-
+    assert Message(msg).add_uuid(overwrite) == expected
 
 
 @pytest.mark.parametrize("msg", [
@@ -69,7 +57,7 @@ def test_add_uuid(msg, overwrite, expected):
 @pytest.mark.parametrize("repeat", [0, 1, 2])
 def test_message_stream_input_type(msg, repeat):
     m = msg.copy() if isinstance(msg, dict) else msg
-    messages = message.message_stream(it.repeat(m, repeat))
+    messages = Message.stream(it.repeat(m, repeat))
     assert len(list(messages)) == repeat
 
 
@@ -83,8 +71,10 @@ def test_message_stream_source(old_source, new_source, overwrite):
         expected = new_source
     else:
         expected = old_source
-    messages = message.message_stream(messages, source=new_source, overwrite=overwrite)
+    messages = Message.stream(messages)
     for m in messages:
+        if new_source:
+            m.add_source(new_source, overwrite)
         assert m.get('source') == expected
 
 
@@ -99,8 +89,10 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
         expected = '0ce10f94-d475-5f50-826f-23541125f73a'
     else:
         expected = old_uuid
-    messages = message.message_stream(messages, add_uuid=add_uuid, overwrite=overwrite)
+    messages = Message.stream(messages)
     for m in messages:
+        if add_uuid:
+            m.add_uuid(overwrite=overwrite)
         assert m.get('uuid') == expected
 
 

@@ -59,7 +59,7 @@ def bigquery_client():
 
 def test_nmea(env_vars, pubsub_client):
 
-    data = {'nmea': 'NMEA_MESSAGE', 'source': 'source'}
+    data = {'nmea': 'NMEA_MESSAGE', 'source': 'source', 'uuid': 'uuid'}
     request = Mock(get_json=Mock(return_value=data), args=data)
 
     assert 'OK' == nmea.handle_request(request, pubsub_client)

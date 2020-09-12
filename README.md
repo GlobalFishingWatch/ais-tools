@@ -1,19 +1,76 @@
 # ais-tools
 Tools for reading and writing AIS messages
 
+## Multi-sentence messages
+The strategy for handing multi-sentence messages, such as ASI type 5, is to group the sentence parts into a single unit as early as possible in the processing chain.  Ideally this happens at the AIS receiver or at the point when these messages are streaming in real-time and the tagblock with timestamp is added to the !AIVDM payload.
+
+This can be done in a text stream by simply concatenating the sentence parts into a single line of text.  In a JSON encoded message, this can also be done by providing a list in the nmea attribute.
+
+For example:
+
+the following two line message
+```text
+!AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E
+!AIVDM,2,2,1,B,00000000000,2*26
+```
+becomes
+```text
+!AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E!AIVDM,2,2,1,B,00000000000,2*26
+```
+messages with tagblock are also concatenated including the tagblock so
+```text
+\tagblock\!AIVDM_part_one
+\tagblock\!AIVDM_part_two
+```
+becomes
+```text
+\tagblock\!AIVDM_part_one\tagblock\!AIVDM_part_two
+```
+    
 ## Install
 ```console
-pip install git+https://github.com/GlobalFishingWatch/ais-tools
+$ pip install git+https://github.com/GlobalFishingWatch/ais-tools
 ```
 ## Command line usage
 
 ```console
-ais_tools --help
+$ ais_tools --help
 ```
-
+### Decode
 Decode nmea in a file as json to stdout
 ```
-ais_tools decode ./sample/sample.nmea
+$ ais_tools decode ./sample/sample.nmea
+```
+
+### Add tagblock
+Used to add a tagblock to AIVDM messages. this is intended to be used with 
+a real time stream of messages as they are received, for instance from an 
+AIS RF signal decoder of from a udp stream.  The default action is to apply 
+the current timestamp
+
+```console
+$ echo '!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49' | \\
+  ais_tools add-tagblock -s my-station
+```
+
+outputs something like
+
+```console
+\\c:1577762601537,s:my-station,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49
+``` 
+
+### Join Multipart
+  Match up multipart nmea messages
+
+  Takes a stream of nmea text lines and tries to find the matching parts of
+  multi part messages which may not be adjacent in the stream and may come
+  out of order.
+
+  Matched message parts will be concatenated together into a single line
+  using join_multipart() All other messages will come out with no changes
+
+```console
+$ ais_tools join-multipart ./sample/sample.nmea > joined.nmea
 ```
 
 ## Python usage
@@ -45,11 +102,4 @@ pip install -e .\[dev\]
 pytest
 ```
 
-## Multi-sentence messages
-The strategy for handing multi-sentence messages, such as ASI type 5, is to group the sentence parts into a single unit as early as possible in the processing chain.  Ideally this happens at the AIS receiver or at the point when these messages are streaming in real-time and the tagblock with timestamp is added to the !AIVDM payload.
 
-This can be done in a text stream by simply concatenating the sentence parts into a single line of text.  In a JSON encoded message, this can also be done by providing a list in the nmea attribute.
-
-For example:
-
-[TODO: some type 5 messages here]

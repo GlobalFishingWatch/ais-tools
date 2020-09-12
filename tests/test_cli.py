@@ -5,6 +5,7 @@ import re
 
 from ais_tools.cli import add_tagblock
 from ais_tools.cli import decode
+from ais_tools.cli import encode
 from ais_tools.cli import join_multipart
 from ais_tools.tagblock import parseTagBlock
 
@@ -29,6 +30,33 @@ def test_decode():
     assert not result.exception
     msg = json.loads(result.output)
     assert msg['mmsi'] == 985200250
+
+
+def test_decode_fail():
+    runner = CliRunner(mix_stderr=False)
+    input = 'INVALID NMEA'
+    result = runner.invoke(decode, input=input)
+    assert not result.exception
+    assert result.stderr.strip() == 'no valid AIVDM message detected'
+    msg = json.loads(result.output)
+    assert msg['error'] == 'no valid AIVDM message detected'
+
+
+def test_encode():
+    runner = CliRunner()
+    input = '{"id":25, "text": "TEST", "mmsi": 123456789}'
+    result = runner.invoke(encode, input=input)
+    assert not result.exception
+    assert result.output.strip() == '!AIVDM,1,1,,A,I1mg=5@04002PbJP,0*02'
+
+
+def test_encode_fail():
+    runner = CliRunner(mix_stderr=False)
+    input = 'INVALID JSON'
+    result = runner.invoke(encode, input=input)
+    assert not result.exception
+    assert result.stderr.strip() == 'AIS: Unknown message type None'
+    assert result.output.strip() == '!AIVDM,1,1,,A,I00000004000bBAr@0,4*3C'
 
 
 def test_join_multipart():

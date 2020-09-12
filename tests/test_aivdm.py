@@ -3,6 +3,7 @@ import re
 
 from ais_tools import aivdm
 from ais_tools.aivdm import AIVDM
+from ais_tools.message import Message
 
 
 @pytest.mark.parametrize("nmea,expected", [
@@ -28,10 +29,10 @@ def test_decode_fail(nmea, error):
         decoder.decode(nmea)
 
 
-def test_decode_stream():
-    decoder = AIVDM()
-    nmea = ['\\c:1577762601537,s:sdr-experiments,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49']
-    assert len(list(decoder.decode_stream(nmea))) == len(nmea)
+# def test_decode_stream():
+#     decoder = AIVDM()
+#     nmea = ['\\c:1577762601537,s:sdr-experiments,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49']
+#     assert len(list(decoder.decode_stream(nmea))) == len(nmea)
 
 
 # test for issue #1 Workaround for type 24 with bad bitcount
@@ -41,5 +42,15 @@ def test_bad_bitcount_type_24():
     actual = decoder.decode(nmea)
     assert actual.get('error') is None
     assert actual.get('name') == 'DAKUWAQA@@@@@@@@@@@@'
+
+
+def test_encode():
+    encoder = AIVDM()
+    msg = Message(
+        id=25
+    )
+    expected = Message('!AIVDM,1,1,,A,I00000004000,0*5B')
+    assert expected == encoder.encode(msg)
+
 
 
