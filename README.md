@@ -1,3 +1,5 @@
+![Python package](https://github.com/GlobalFishingWatch/ais-tools/workflows/Python%20package/badge.svg)
+
 # ais-tools
 Tools for reading and writing AIS messages
 
