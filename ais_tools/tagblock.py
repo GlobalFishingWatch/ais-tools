@@ -1,14 +1,11 @@
 from datetime import datetime
-import re
 
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from ais import stream as libais_stream
-    from ais.stream import parseTagBlock
-    from ais.stream.checksum import isChecksumValid
+    from ais.stream.checksum import isChecksumValid     # noqa: F401
     from ais.stream.checksum import checksumStr
-    from ais.stream import parseTagBlock
+    from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
@@ -83,4 +80,3 @@ def add_tagblock(tagblock, nmea, overwrite=True):
         tagblock = existing_tagblock
 
     return join_tagblock(tagblock, nmea)
-

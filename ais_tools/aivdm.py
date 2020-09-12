@@ -2,16 +2,8 @@
 Tools for decoding AIS messages in AIVDM format
 """
 
-import json
-import re
-from datetime import datetime
-
 import ais as libais
 from ais import DecodeError
-# import warnings
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore")
-#     from ais import stream as libais_stream
 
 from ais_tools.ais import AISMessageTranscoder
 from ais_tools.nmea import split_multipart
@@ -50,7 +42,7 @@ class AisToolsDecoder:
         try:
             return self.transcoder.decode_nmea(body, pad)
         except DecodeError as e:
-            libais_err = str(e)
+            aistools_err = str(e)
 
         try:
             return LibaisDecoder.decode_payload(body, pad)
@@ -99,7 +91,7 @@ class AIVDM:
             a single-part AIVDM message, with or without prepended tagblock
             or a concatenated set up AIVDM messages that are the set of parts for a multi-part message
         Returns a dict with the passed in nmea string in the "nmea" field and the
-         
+
         raises DecodeError if the message cannot be decoded.
         """
 

@@ -112,7 +112,9 @@ def join_multipart_stream(lines, max_time_window=500, max_message_window=1000, i
                 raise
 
         now = datetime.utcnow().timestamp()
-        if tagblock['tagblock_groupsize'] == 1:
+        total_parts = tagblock['tagblock_groupsize']
+
+        if total_parts == 1:
             # this is a single part part message, so nothing to do, just pass it out
             yield line
         else:
@@ -121,7 +123,7 @@ def join_multipart_stream(lines, max_time_window=500, max_message_window=1000, i
             # - tagblock_station is the source of the message and may not have a value
             # - tagblock_id is a sequence number that is the same for all message parts, but it is not unique
             # - tagblock_channel is the AIS RF channel (either A or B) that was used for transmission
-            key = (tagblock.get('tagblock_groupsize'), tagblock.get('tagblock_station'),
+            key = (total_parts, tagblock.get('tagblock_station'),
                    tagblock.get('tagblock_id'), tagblock.get('tagblock_channel'))
 
             # pack up the message part
@@ -129,24 +131,27 @@ def join_multipart_stream(lines, max_time_window=500, max_message_window=1000, i
             # - line is the nmea that was passed in
             # - index is the index of this line in the stream - needed to flush old messages
             # - time_in is the time this part was added to the buffer  - needed to flush old messages
-            part = dict(part_num=tagblock['tagblock_sentence'], line=line, index=index, time_in=now)
+            new_part_num = tagblock['tagblock_sentence']
+            new_part = dict(part_num=new_part_num, line=line, index=index, time_in=now)
 
-            buffered_part_nums = set(part['part_num'] for part in buffer[key])
-            if part['part_num'] in buffered_part_nums:
+            buffered_parts = buffer[key]
+            part_nums = set(part['part_num'] for part in buffered_parts)
+
+            if new_part_num in part_nums:
                 # already another message part with this part_num in the buffer, so flush out the unmatched parts
-                for part in sorted(buffer[key], key=lambda x: x['index']):
+                for part in sorted(buffered_parts, key=lambda x: x['index']):
                     yield part['line']
                 # replace the slot in the buffer with the new part
-                buffer[key] = [part]
+                buffer[key] = [new_part]
 
-            elif buffered_part_nums.union({tagblock['tagblock_sentence']}) == set(range(1, tagblock['tagblock_groupsize'] + 1)):
+            elif part_nums.union({new_part_num}) == set(range(1, total_parts + 1)):
                 # found all the parts.   Concatenate them in order and send the combined line out
-                buffer[key].append(part)
+                buffer[key].append(new_part)
                 yield ''.join([part['line'] for part in sorted(buffer[key], key=lambda x:x['part_num'])])
                 del buffer[key]
 
             else:
-                buffer[key].append(part)
+                buffer[key].append(new_part)
 
         # prepare to flush old parts from the buffer
         flush_keys = set()
@@ -171,4 +176,3 @@ def join_multipart_stream(lines, max_time_window=500, max_message_window=1000, i
     for key, parts in buffer.items():
         for part in sorted(parts, key=lambda x: x['index']):
             yield part['line']
-

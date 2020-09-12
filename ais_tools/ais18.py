@@ -93,7 +93,3 @@ ais18_commstate_SOTDMA_timeout_2_4_6 = [
 ais18_commstate_SOTDMA_timeout_3_5_7 = [
     Uint(name='received_stations', nbits=14),
 ]
-
-
-
-

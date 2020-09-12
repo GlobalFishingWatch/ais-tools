@@ -98,8 +98,3 @@ ais24_part_B_fields = [
     Uint(name='gps_type', nbits=4),
     Uint(name='spare', nbits=2),
 ]
-
-
-
-
-

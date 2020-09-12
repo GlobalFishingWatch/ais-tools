@@ -34,6 +34,3 @@ def message_to_http(message, url):
 def message_to_http_stream(messages, url):
     for m in map(message_to_http, messages, it.repeat(url)):
         yield m
-
-
-

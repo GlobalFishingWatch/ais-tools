@@ -30,11 +30,3 @@ ais25_fields = [
     Uint(name='text_seq', nbits=11),
     VarASCII6(name='text', default='')
 ]
-
-
-
-
-
-
-
-

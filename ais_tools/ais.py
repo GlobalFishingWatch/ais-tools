@@ -1,6 +1,5 @@
 from ais_tools.transcode import DecodeError
 from ais_tools.transcode import MessageTranscoder
-from ais_tools.transcode import UintTranscoder as Uint
 from ais_tools.transcode import bits_to_nmea
 from ais_tools.transcode import nmea_to_bits
 from ais_tools.transcode import byte_align

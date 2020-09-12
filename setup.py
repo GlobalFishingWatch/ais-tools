@@ -22,7 +22,8 @@ DEPENDENCIES = [
 
 DEV_DEPENDENCIES = [
     'pytest',
-    'pytest-cov'
+    'pytest-cov',
+    'flake8'
 ]
 
 with codecs.open('README.md', encoding='utf-8') as f:

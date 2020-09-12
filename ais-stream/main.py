@@ -20,4 +20,3 @@ def ais_stream_decode_pubsub(event, context):
 
 def ais_stream_bqstore_pubsub(event, context):
     return bqstore.handle_event(event, context, bigquery_client)
-
