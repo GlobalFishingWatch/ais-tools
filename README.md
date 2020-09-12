@@ -1,5 +1,5 @@
 ![build](https://github.com/GlobalFishingWatch/ais-tools/workflows/Python%20package/badge.svg)
-![python](https://img.shields.io/badge/python-3.6+-blue.svg?style=plastic)
+![python](https://img.shields.io/badge/python-3.6+-blue.svg)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # ais-tools
