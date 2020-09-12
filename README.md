@@ -3,7 +3,9 @@
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # ais-tools
-Tools for reading and writing AIS messages
+Tools for encoding and decoding AIS messages
+
+Uses https://github.com/schwehr/libais as the base decoder
 
 ## Multi-sentence messages
 The strategy for handing multi-sentence messages, such as ASI type 5, is to group the sentence parts into a single unit as early as possible in the processing chain.  Ideally this happens at the AIS receiver or at the point when these messages are streaming in real-time and the tagblock with timestamp is added to the !AIVDM payload.
@@ -38,12 +40,12 @@ $ pip install git+https://github.com/GlobalFishingWatch/ais-tools
 ## Command line usage
 
 ```console
-$ ais_tools --help
+$ ais-tools --help
 ```
 ### Decode
 Decode nmea in a file as json to stdout
 ```
-$ ais_tools decode ./sample/sample.nmea
+$ ais-tools decode ./sample/sample.nmea
 ```
 
 ### Add tagblock
@@ -54,7 +56,7 @@ the current timestamp
 
 ```console
 $ echo '!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49' | \\
-  ais_tools add-tagblock -s my-station
+  ais-tools add-tagblock -s my-station
 ```
 
 outputs something like
@@ -74,7 +76,14 @@ outputs something like
   using join_multipart() All other messages will come out with no changes
 
 ```console
-$ ais_tools join-multipart ./sample/sample.nmea > joined.nmea
+$ ais-tools join-multipart ./sample/multi-part.nmea > joined.nmea
+```
+
+### Chaining operations
+To perform multiple operations on a stream of messages, use the pipe operator
+
+```console
+$ ais-tools join-multipart ./sample/multi-part.nmea | ais-tools decode > decoded.nmea
 ```
 
 ## Python usage
@@ -104,7 +113,7 @@ virtualenv venv
 source venv/bin/activate
 pip install -e .\[dev\]
 flake8 . --exclude ./venv/ --max-line-length=127
-pytest
+pytest  --cov=./
 ```
 
 

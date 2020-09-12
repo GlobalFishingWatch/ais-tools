@@ -105,7 +105,7 @@ class AIVDM:
             tagblock, body, pad = parts[0]
         else:
             # multipart message
-            parts = sorted(parts, key=lambda x: x[1]['part_num'])
+            parts = sorted(parts, key=lambda x: x[0]['tagblock_sentence'])
             tagblocks, bodys, pads = list(zip(*parts))
 
             # merge the tagblocks, prefer the values in the first message

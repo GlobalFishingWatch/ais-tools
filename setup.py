@@ -50,6 +50,6 @@ setup(
     dependency_links=DEPENDENCY_LINKS,
     entry_points='''
         [console_scripts]
-        ais_tools=ais_tools.cli:cli
+        ais-tools=ais_tools.cli:cli
     ''',
 )
