@@ -18,6 +18,7 @@ DEPENDENCIES = [
     "gpxpy",
     "requests",
     "bitstring",
+    "Flask-API",
 ]
 
 DEV_DEPENDENCIES = [
