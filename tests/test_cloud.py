@@ -11,5 +11,3 @@ def test_message_to_http():
 
     session.post.assert_called_once()
     session.post.assert_called_with(url, json=message)
-
-

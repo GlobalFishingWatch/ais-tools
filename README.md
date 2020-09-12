@@ -102,6 +102,7 @@ cd ais-tools
 virtualenv venv
 source venv/bin/activate
 pip install -e .\[dev\]
+flake8 . --exclude ./venv/ --max-line-length=127
 pytest
 ```
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 
 import warnings
 with warnings.catch_warnings():
@@ -35,13 +36,13 @@ def safe_tagblock_timestamp(line):
 
 
 def create_tagblock(station, timestamp=None, add_tagblock_t=True):
-    t = timestamp or datetime.utcnow().timestamp()
+    t = timestamp or datetime.now().timestamp()
     params = dict(
         c=round(t*1000),
         s=station,
     )
     if add_tagblock_t:
-        params['T'] = datetime.fromtimestamp(t).strftime(TAGBLOCK_T_FORMAT)
+        params['T'] = datetime.fromtimestamp(t, tz=timezone.utc).strftime(TAGBLOCK_T_FORMAT)
     param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
     return '{}*{}'.format(param_str, checksumStr(param_str))
 

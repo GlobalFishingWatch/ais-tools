@@ -94,5 +94,3 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
         if add_uuid:
             m.add_uuid(overwrite=overwrite)
         assert m.get('uuid') == expected
-
-

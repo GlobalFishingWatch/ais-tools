@@ -11,11 +11,14 @@ from ais_tools.ais import DecodeError
 @pytest.mark.parametrize("line,expected", [
     ("\\s:rORBCOMM000,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*7B",
         {'tagblock_timestamp': 1509502436, 'tagblock_sentence': 1}),
-    ("\\g:1-2-4372,s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*32\\!AIVDM,2,1,2,B,576u>F02>hOUI8AGR20tt<j104p4l62222222216H14@@Hoe0JPEDp1TQH88,0*16",
+    ("\\g:1-2-4372,s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*32"
+     "\\!AIVDM,2,1,2,B,576u>F02>hOUI8AGR20tt<j104p4l62222222216H14@@Hoe0JPEDp1TQH88,0*16",
         {'tagblock_sentence': 1, 'tagblock_groupsize': 2}),
-    ("\\g:2-2-4372,s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*31\\!AIVDM,2,2,2,B,88888888880,2*25",
+    ("\\g:2-2-4372,s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*31"
+     "\\!AIVDM,2,2,2,B,88888888880,2*25",
         {'tagblock_sentence': 2, 'tagblock_groupsize': 2}),
-    ("\\s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*32\\!AIVDM,2,1,2,B,576u>F02>hOUI8AGR20tt<j104p4l62222222216H14@@Hoe0JPEDp1TQH88,0*16",
+    ("\\s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*32"
+     "\\!AIVDM,2,1,2,B,576u>F02>hOUI8AGR20tt<j104p4l62222222216H14@@Hoe0JPEDp1TQH88,0*16",
         {'tagblock_sentence': 1, 'tagblock_groupsize': 2}),
     ("\\s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*31\\!AIVDM,2,2,2,B,88888888880,2*25",
         {'tagblock_sentence': 2, 'tagblock_groupsize': 2}),
@@ -57,7 +60,7 @@ def test_join_multipart(nmea):
 
 def test_join_multipart_fail():
     with pytest.raises(DecodeError):
-        line = join_multipart('AIVDM-does-not-start-with-!')
+        join_multipart('AIVDM-does-not-start-with-!')
 
 
 @pytest.mark.parametrize("nmea", [
@@ -76,7 +79,7 @@ def test_split_multipart(nmea):
 ])
 def test_split_multipart_fail(nmea, error):
     with pytest.raises(DecodeError, match=error):
-        lines = split_multipart(nmea)
+        split_multipart(nmea)
 
 
 def test_join_multipart_stream_singleton():
@@ -87,8 +90,9 @@ def test_join_multipart_stream_singleton():
 
 
 @pytest.mark.parametrize("nmea", [
-    (['\\g:1-2-1561,s:rORBCOMM000,c:1598653784,T:2020-08-28 22.29.44*39\\!AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E',
-        '\\g:2-2-1561,s:rORBCOMM000,c:1598653784,T:2020-08-28 22.29.44*3a\\!AIVDM,2,2,1,B,00000000000,2*26']),
+    (['\\g:1-2-1561,s:rORBCOMM000,c:1598653784,T:2020-08-28 22.29.44*39'
+      '\\!AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E',
+      '\\g:2-2-1561,s:rORBCOMM000,c:1598653784,T:2020-08-28 22.29.44*3a\\!AIVDM,2,2,1,B,00000000000,2*26']),
     (['\\t:1,g:1-2-1561,s:station1*00\\!AIVDM,2,1,1,B,@,0*57',
         '\\t:2,g:2-2-1561,s:station1*00\\!AIVDM,2,2,1,B,@,0*54']),
     (['\\t:1*00\\!AIVDM,2,1,7,B,@,0*51',
@@ -148,5 +152,3 @@ def test_join_multipart_stream_timeout():
     actual = [a if len(a) > 1 else a[0] for a in actual]
     expected = ['1', '3', '4', '6', '2.1', ['7.1', '7.2'], '5.2', '8.2', '5.1', '2.2']
     assert actual == expected
-
-
