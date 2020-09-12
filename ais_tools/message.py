@@ -76,4 +76,4 @@ class Message(dict):
     @classmethod
     def stream(cls, messages):
         for msg in messages:
-            yield Message(msg)
+            yield Message(msg.strip())
