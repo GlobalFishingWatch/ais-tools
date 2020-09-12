@@ -9,7 +9,6 @@ from datetime import timedelta
 from functools import reduce
 
 from gpxpy.gpx import GPXTrackPoint
-from gpxpy.gpx import GPXTrackSegment
 from gpxpy.geo import LocationDelta
 
 KNOTS_TO_METERS_PER_SECOND = 0.514444
@@ -38,11 +37,7 @@ def nmea_checksum(sentence):
     return data, checksum, calc_checksum
 
 
-def generate_gga(time: "datetime",
-                 latitude: "Float",
-                 longitude: "Float",
-                 elevation: "Float"
-                 ):
+def generate_gga(time, latitude, longitude, elevation):
     """
     Generate a single GGA NMEA sentence
     """
@@ -84,8 +79,8 @@ def gpx2nmea(p: "GPXTrackPoint"):
 
 
 def interpolate_line(p1: "GPXTrackPoint", p2: "GPXTrackPoint",
-                     start_time: "datetime", speed_m: "Float",
-                     interval_s: "Float"):
+                     start_time: "datetime", speed_m: "float",
+                     interval_s: "float"):
     """
     interpolate points on a line from p1 to p2, moving at speed (meters/sec)
     with a position every interval seconds
@@ -108,8 +103,8 @@ def interpolate_line(p1: "GPXTrackPoint", p2: "GPXTrackPoint",
         p = next_p
 
 
-def interpolate_circle(center_point: "GPXTrackPoint", radius_m: "Float", total_dist_m: "Float",
-                       start_time: "datetime", speed_m: "Float", interval_s: "Float"):
+def interpolate_circle(center_point: "GPXTrackPoint", radius_m: "float", total_dist_m: "float",
+                       start_time: "datetime", speed_m: "float", interval_s: "float"):
     """Interpolate points on a circular path.  Go around the circle repeatedly until total_dist_m is reached"""
     circumference = math.pi * radius_m * 2
     time_delta = timedelta(seconds=interval_s)
