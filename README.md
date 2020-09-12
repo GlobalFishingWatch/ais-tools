@@ -1,4 +1,5 @@
 ![Python package](https://github.com/GlobalFishingWatch/ais-tools/workflows/Python%20package/badge.svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # ais-tools
 Tools for reading and writing AIS messages
