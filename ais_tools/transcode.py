@@ -45,11 +45,11 @@ def nmea_to_bits(body, pad):
 class Transcoder(ABC):
     @abstractmethod
     def encode(self, message):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def decode(self, bits, message=None):
-        pass
+        raise NotImplementedError
 
 
 class MessageTranscoder(Transcoder):
@@ -78,31 +78,6 @@ class MessageTranscoder(Transcoder):
         message = message or {}
         for f in self.decode_fields(bits, message):
             message.update(f.decode(bits, message))
-        return message
-
-
-class DynamicTranscoder(Transcoder):
-    """
-    determine the transcoder to use based on the content of the message
-    """
-
-    @abstractmethod
-    def encoder(self, message):
-        pass
-
-    @abstractmethod
-    def decoders(self, message):
-        pass
-
-    def encode(self, message):
-        return self.encoder(message).encode(message)
-
-    def decode(self, bits, message=None):
-        message = message or {}
-        pos = bits.pos
-        for d in self.decoders(message):
-            bits.pos = pos  # reset read position to read the same bits again for multiple decoders
-            message.update(d.decode(bits, message))
         return message
 
 
@@ -138,11 +113,11 @@ class FieldTranscoder(Transcoder):
 
     @abstractmethod
     def encode_value(self, value):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def decode_value(self, bits):
-        pass
+        raise NotImplementedError
 
 
 class BitsTranscoder(FieldTranscoder):

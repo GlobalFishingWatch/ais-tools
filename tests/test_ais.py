@@ -69,3 +69,23 @@ def test_ais25(msg):
     print(body, pad)
     actual = t.decode_nmea(body, pad)
     assert msg == {k: v for k, v in actual.items() if k in msg}
+
+
+@pytest.mark.parametrize("body,pad,expected", [
+    ('B:U=ai@09o>61WLb:orRv2010400', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 1}),
+    ('B52T:q@1C6TOpsUj5@??owTQh85G', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 2}),
+    ('B696W<d`0R98PMUHAqvbGwkjh<0=', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 3}),
+    ('B4tOo0000w4o2V9;PIC5cws1l@P1', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 4}),
+    ('B:U8>U@0AG=@4MLddMQraR4P0D00', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 5}),
+    ('B52b:b00:nc34iUbJ;GEowd1hH>b', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 6}),
+    ('B7Oj:n00>bfs5BLHodEaOwW1lL03', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 7}),
+    ('B6:W?VP0027T9d4Ra`kH?wuV1P06', 0, {'unit_flag': 1, 'commstate_flag': 0}),
+    ('B39v<;0008<GnW7gF1WQ3wuQnDmJ', 0, {'unit_flag': 0, 'commstate_flag': 1}),
+    ('B6:DE`00AB2303S>IiE2Cwu3QP06', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 0}),
+    ('B42OJB@000OKsg5nMAH03wuUkP06', 0, {'unit_flag': 1, 'commstate_flag': 1}),
+])
+def test_ais18(body, pad, expected):
+    t = AISMessage()
+    msg = t.decode_nmea(body, pad)
+    actual = {k: v for k, v in msg.items() if k in expected}
+    assert actual == expected
