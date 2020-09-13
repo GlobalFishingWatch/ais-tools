@@ -8,13 +8,12 @@ import posixpath as pp
 import uuid
 
 
-class GFW_UUID:
+class UUID:
     """
-    ported from https://github.com/GlobalFishingWatch/pipe-tools
+    Create a UUID from a set of args
     """
 
-    UUID_URL_BASE = '//globalfishingwatch.org'
-    SOURCE = 'source'
+    UUID_URL_BASE = 'ais-tools'
 
     def __init__(self, *args):
         self.uuid = self.create_uuid(*args)
@@ -43,6 +42,7 @@ class Message(dict):
             elif isinstance(message, dict):
                 self.update(message)
             elif isinstance(message, str):
+                message = message.strip()
                 if message[0] == '{':
                     # looks like json, try to parse it
                     self.update(json.loads(message))
@@ -62,11 +62,7 @@ class Message(dict):
         return self
 
     def create_uuid(self):
-        """
-        using this the same way as in https://github.com/GlobalFishingWatch/pipe-orbcomm so it should
-        generate the same uuid given the same NMEA string and source='orbcomm'
-        """
-        return str(GFW_UUID(GFW_UUID.SOURCE, self.get('source', ''), self.get('nmea', '')))
+        return str(UUID(self.get('source', 'ais-tools'), self.get('nmea', '')))
 
     def add_uuid(self, overwrite=False):
         if self.get('uuid') is None or overwrite:
@@ -76,4 +72,4 @@ class Message(dict):
     @classmethod
     def stream(cls, messages):
         for msg in messages:
-            yield Message(msg.strip())
+            yield Message(msg)
