@@ -8,6 +8,10 @@ from ais import DecodeError
 
 @pytest.mark.parametrize("body,pad,ignore", [
     ('B>cSnNP006Vuqd5aC;?Q3wVQjFLr', 0, {}),
+    ('B5O3hLP00H`fAd4naG6E3wR5oP06', 0, {'cog', 'sog', 'commstate_cs_fill'}),
+    ('B6:`hQ@0021M<;T=IQ:FWwR61P06', 0, {'cog', 'commstate_cs_fill'}),
+    ('B39J`I0000?Dql7gCSwQ3wWQjE2b', 0, {}),
+    ('B6:k??@0021FQ5SBI0q`GwpSQP06', 0, {'cog'}),
     ('H>cSnNTU7B=40058qpmjhh000004', 0, {'vendor_id', 'spare'}),
     ('H>cSnNP@4eEL544000000000000', 2, {}),
     ('I0000027FtlE01000VNJ;0`:h`0', 2, {}),
