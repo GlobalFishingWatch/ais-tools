@@ -224,4 +224,4 @@ class LatLonTranscoder(FieldTranscoder):
         return Bits(int=round(value * 600000), length=self.nbits)
 
     def decode_value(self, bits):
-        return bits.int / 600000.0
+        return round(bits.int / 600000.0, 6)
