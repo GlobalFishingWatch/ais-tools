@@ -1,11 +1,11 @@
 import pytest
 from ais_tools.message import Message
-from ais_tools.message import GFW_UUID
+from ais_tools.message import UUID
 import itertools as it
 
 
-def test_gfw_uuid():
-    assert str(GFW_UUID('test')) == 'c3757317-71ed-5251-bec6-fa01f05cb8dc'
+def test_uuid():
+    assert str(UUID('test')) == '4e782d81-81ae-5eab-93eb-ddb536abd3da'
 
 
 @pytest.mark.parametrize("msg,expected", [
@@ -37,10 +37,10 @@ def test_add_source(msg, source, overwrite, expected):
 
 
 @pytest.mark.parametrize("msg,overwrite,expected", [
-    ({}, False, {'nmea': '', 'uuid': '7b16d688-bafc-55ad-8f2b-ca76c2a4eb4f'}),
-    ({'nmea': '!AVIDM123'}, False, {'nmea': '!AVIDM123', 'uuid': 'a40aa816-9e5b-5d39-bed4-eecf791af8e1'}),
+    ({}, False, {'nmea': '', 'uuid': '02638ec7-57a1-513b-9a77-bf1e9ab8168e'}),
+    ({'nmea': '!AVIDM123'}, False, {'nmea': '!AVIDM123', 'uuid': 'a12758f1-dc54-5441-a3ff-10018331c665'}),
     ({'nmea': '!AVIDM123', 'uuid': 'old'}, False, {'nmea': '!AVIDM123', 'uuid': 'old'}),
-    ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, {'nmea': '!AVIDM123', 'uuid': 'a40aa816-9e5b-5d39-bed4-eecf791af8e1'}),
+    ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, {'nmea': '!AVIDM123', 'uuid': 'a12758f1-dc54-5441-a3ff-10018331c665'}),
 ])
 def test_add_uuid(msg, overwrite, expected):
     assert Message(msg).add_uuid(overwrite) == expected
@@ -86,7 +86,7 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
     messages = [{'nmea': '!AVIDM123', 'source': 'test', 'uuid': old_uuid}]
 
     if add_uuid and (overwrite or old_uuid is None):
-        expected = '0ce10f94-d475-5f50-826f-23541125f73a'
+        expected = '84ce1423-6ae0-5db6-b55a-11c28bb3a7b4'
     else:
         expected = old_uuid
     messages = Message.stream(messages)
