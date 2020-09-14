@@ -7,32 +7,33 @@ from ais_tools.transcode import LatLonTranscoder as LatLon
 
 
 class AIS18CommState(transcode.MessageTranscoder):
-    def get_fields(self, message=None):
-        unit_flag = message.get('unit_flag', 0)
-        commstate_flag = message.get('commstate_flag', 0)
 
-        if unit_flag == 0:
-            if commstate_flag == 0:
-                return ais18_commstate_SOTDMA
-            else:
-                return ais18_commstate_ITDMA
-        else:
+    def commstate_fields (self, unit_flag, commstate_flag, slot_timeout):
+        if unit_flag:
             return ais18_commstate_CS
-
-
-class AIS18CommStateSOTDMA(transcode.MessageTranscoder):
-    def get_fields(self, message=None):
-        slot_timeout = message.get('slot_timeout', 0)
-        if slot_timeout == 0:
-            return ais18_commstate_SOTDMA_timeout_0
-        elif slot_timeout == 1:
-            return ais18_commstate_SOTDMA_timeout_1
-        elif slot_timeout in (2, 4, 6):
-            return ais18_commstate_SOTDMA_timeout_2_4_6
-        elif slot_timeout in (3, 5, 7):
-            return ais18_commstate_SOTDMA_timeout_3_5_7
+        elif commstate_flag:
+            return ais18_commstate_ITDMA
         else:
-            raise DecodeError('AIS18: unknown slot_timeout value {}'.format(slot_timeout))
+            if slot_timeout == 0:
+                return ais18_commstate_SOTDMA_timeout_0
+            elif slot_timeout == 1:
+                return ais18_commstate_SOTDMA_timeout_1
+            elif slot_timeout in (2, 4, 6):
+                return ais18_commstate_SOTDMA_timeout_2_4_6
+            elif slot_timeout in (3, 5, 7):
+                return ais18_commstate_SOTDMA_timeout_3_5_7
+            else:
+                raise DecodeError('AIS18: unknown slot_timeout value {}'.format(slot_timeout))
+
+    def encode_fields(self, message):
+        return self.commstate_fields (message.get('unit_flag'), message.get('commstate_flag'), message.get('slot_timeout'))
+
+    def decode_fields(self, bits, message):
+        return self.commstate_fields(
+            message.get('unit_flag', bits[141:142].uint),
+            message.get('commstate_flag', bits[148:149].uint),
+            message.get('slot_timeout', bits[151:154].uint),
+        )
 
 
 ais18_fields = [
@@ -70,26 +71,29 @@ ais18_commstate_ITDMA = [
     Uint(name='keep_flag', nbits=1),
 ]
 
-ais18_commstate_SOTDMA = [
-    Uint(name='sync_state', nbits=2),
-    Uint(name='slot_timeout', nbits=3),
-    AIS18CommStateSOTDMA()
-]
 
 ais18_commstate_SOTDMA_timeout_0 = [
+    Uint(name='sync_state', nbits=2),
+    Uint(name='slot_timeout', nbits=3),
     Uint(name='slot_offset', nbits=14),
 ]
 
 ais18_commstate_SOTDMA_timeout_1 = [
+    Uint(name='sync_state', nbits=2),
+    Uint(name='slot_timeout', nbits=3),
     Uint(name='utc_hour', nbits=5),
     Uint(name='utc_min', nbits=7),
     Uint(name='utc_spare', nbits=2),
 ]
 
 ais18_commstate_SOTDMA_timeout_2_4_6 = [
+    Uint(name='sync_state', nbits=2),
+    Uint(name='slot_timeout', nbits=3),
     Uint(name='slot_number', nbits=14),
 ]
 
 ais18_commstate_SOTDMA_timeout_3_5_7 = [
+    Uint(name='sync_state', nbits=2),
+    Uint(name='slot_timeout', nbits=3),
     Uint(name='received_stations', nbits=14),
 ]

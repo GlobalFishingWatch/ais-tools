@@ -18,7 +18,7 @@ class AIS24Transcoder(Message):
         return self.part_AB_fields(message.get('part_num'))
 
     def decode_fields(self, bits, message):
-        return self.part_AB_fields(message.get('id', bits[38:40].uint))
+        return self.part_AB_fields(message.get('part_num', bits[38:40].uint))
 
 
 class VendorID(Message):
