@@ -80,3 +80,24 @@ def test_var_ascii6(value, expected):
     msg = {'a': value}
     actual = t.decode(t.encode(msg))
     assert actual['a'] == expected
+
+
+@pytest.mark.parametrize("bits,cls,nbits", [
+    ('0b0101', transcode.BitsTranscoder, 10),
+    ('0b0000', transcode.IntTranscoder, 10),
+])
+def test_decode_fail(bits, cls, nbits):
+    t = cls('a', nbits)
+    bits = transcode.Bits(bits)
+    with pytest.raises(transcode.DecodeError, match='Cannot read {} bits'.format(nbits)):
+        t.decode(bits)
+
+
+@pytest.mark.parametrize("value,cls,nbits", [
+    ('abc', transcode.ASCII6Transcoder, 10),
+])
+def test_encode_fail(value, cls, nbits):
+    msg = {'a': value}
+    t = cls('a', nbits)
+    with pytest.raises(transcode.DecodeError, match='invalid ASCII6 character'):
+        t.encode(msg)

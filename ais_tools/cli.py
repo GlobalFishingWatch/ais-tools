@@ -1,6 +1,7 @@
 import click
 import json
 
+import ais_tools
 from ais_tools import message
 from ais_tools import cloud
 from ais_tools.aivdm import AIVDM
@@ -10,9 +11,17 @@ from ais_tools.nmea import join_multipart_stream
 from ais_tools.message import Message
 
 
-@click.group()
-def cli():
-    pass
+@click.group(invoke_without_command=True)
+# @click.group()
+@click.option('-v', '--version', is_flag=True, help='Display version number and exit')
+@click.pass_context
+def cli(ctx, version):
+    if version:
+        click.echo('Version: {}'.format(ais_tools.__version__))
+
+    # invoked without a command
+    elif ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
 
 @cli.command(
