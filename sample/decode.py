@@ -1,5 +1,6 @@
 import json
 from ais_tools.aivdm import AIVDM
+from ais_tools.message import Message
 
 
 nmea = [
@@ -10,5 +11,6 @@ nmea = [
 
 decoder = AIVDM()
 
-for msg in decoder.decode_stream(nmea):
+for msg in Message.stream(nmea):
+    msg = decoder.decode(msg)
     print(json.dumps(msg))

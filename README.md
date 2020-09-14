@@ -56,8 +56,7 @@ AIS RF signal decoder of from a udp stream.  The default action is to apply
 the current timestamp
 
 ```console
-$ echo '!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49' | \\
-  ais-tools add-tagblock -s my-station
+$ echo '!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49' | ais-tools add-tagblock -s my-station
 ```
 
 outputs something like
@@ -92,7 +91,7 @@ Decode NMEA
 ```python
 import json
 from ais_tools.aivdm import AIVDM
-
+from ais_tools.message import Message
 
 nmea = [
     '\\c:1599239526500,s:sdr-experiments,T:2020-09-04 18.12.06*5D\\!AIVDM,1,1,,A,B>cSnNP00FVur7UaC7WQ3wS1jCJJ,0*73',
@@ -102,9 +101,11 @@ nmea = [
 
 decoder = AIVDM()
 
-for msg in decoder.decode_stream(nmea):
+for msg in Message.stream(nmea):
+    msg = decoder.decode(msg)
     print(json.dumps(msg))
 ```
+
 ## Developing
 
 ```console
