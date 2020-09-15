@@ -40,6 +40,7 @@ def test_expand_nmea(line, expected):
     "\\s:missing-tagblock-checksum,q:u,c:1509502436,T:2017-11-01 02.13.56\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*00",
     "\\s:missing_field_delimiter,q:u,c1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*7B",
     "\\s:bad_group,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,BAD,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*0D",
+    "\\s:missing_checksum,q:u,c:1509502436,T:2017-11-01 02.13.56\\!AIVDM,BAD,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*0D",
 ])
 def test_expand_nmea_fail(nmea):
     with pytest.raises(DecodeError):
