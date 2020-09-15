@@ -189,10 +189,6 @@
     "type": "INTEGER"
   },
   {
-    "name": "reservations",
-    "type": "STRING"
-  },
-  {
     "name": "rot_over_range",
     "type": "BOOLEAN"
   },

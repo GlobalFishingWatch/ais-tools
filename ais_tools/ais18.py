@@ -2,6 +2,7 @@ from ais_tools import transcode
 from ais_tools.transcode import DecodeError
 from ais_tools.transcode import BitsTranscoder
 from ais_tools.transcode import UintTranscoder as Uint
+from ais_tools.transcode import BooleanTranscoder as Bool
 from ais_tools.transcode import Uint10Transcoder as Uint10
 from ais_tools.transcode import LatLonTranscoder as LatLon
 
@@ -55,7 +56,7 @@ ais18_fields = [
     Uint(name='band_flag', nbits=1),
     Uint(name='m22_flag', nbits=1),
     Uint(name='mode_flag', nbits=1),
-    Uint(name='raim', nbits=1),
+    Bool(name='raim', nbits=1),
     Uint(name='commstate_flag', nbits=1),
     AIS18CommState()
 ]
@@ -68,7 +69,7 @@ ais18_commstate_ITDMA = [
     Uint(name='sync_state', nbits=2),
     Uint(name='slot_increment', nbits=13),
     Uint(name='slots_to_allocate', nbits=3),
-    Uint(name='keep_flag', nbits=1),
+    Bool(name='keep_flag', nbits=1),
 ]
 
 

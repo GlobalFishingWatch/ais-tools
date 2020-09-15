@@ -146,6 +146,18 @@ class UintTranscoder(FieldTranscoder):
         return bits.uint
 
 
+class BooleanTranscoder(FieldTranscoder):
+    def __init__(self, name, nbits=1, default=None):
+        assert (nbits == 1)
+        super().__init__(name, nbits, default)
+
+    def encode_value(self, value):
+        return Bits(bool=value)
+
+    def decode_value(self, bits):
+        return bits.bool
+
+
 class ASCII6Transcoder(FieldTranscoder):
     default_value = ''
 

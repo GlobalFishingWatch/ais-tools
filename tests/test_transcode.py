@@ -32,6 +32,7 @@ def test_nmea_to_bits(body, pad):
     ('0101', transcode.BitsTranscoder, 4),
     (-7, transcode.IntTranscoder, 4),
     (3, transcode.UintTranscoder, 4),
+    (True, transcode.BooleanTranscoder, 1),
     ('ABCD', transcode.ASCII6Transcoder, 24),
     (234.5, transcode.Uint10Transcoder, 12),
     (45.6789, transcode.LatLonTranscoder, 27),
