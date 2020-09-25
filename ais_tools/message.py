@@ -43,9 +43,15 @@ class Message(dict):
                 self.update(message)
             elif isinstance(message, str):
                 message = message.strip()
-                if message[0] == '{':
+                if len(message) == 0:
+                    pass
+                elif message[0] == '{':
                     # looks like json, try to parse it
-                    self.update(json.loads(message))
+                    try:
+                        self.update(json.loads(message))
+                    except json.JSONDecodeError as e:
+                        # Nope - not JSON.  Giving up...
+                        self.update(dict(nmea=message, error="JSONDecodeError: {}".format(str(e))))
                 else:
                     # assume it's an NMEA string and pack it up in a dict
                     self.update(dict(nmea=message))

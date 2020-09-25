@@ -20,11 +20,19 @@ def test_message_construct(msg, expected):
 
 @pytest.mark.parametrize("msg", [
     42,
-    "{not valid JSON}"
+    ['!AIVDM'],
 ])
 def test_message_construct_fail(msg):
     with pytest.raises(ValueError):
         Message(msg)
+
+
+@pytest.mark.parametrize("msg", [
+    "{not valid JSON}",
+    "{field:value}",
+])
+def test_message_construct_bad_json(msg):
+    assert Message(msg)['error'].startswith('JSONDecodeError')
 
 
 @pytest.mark.parametrize("msg,source,overwrite,expected", [

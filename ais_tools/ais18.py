@@ -9,7 +9,7 @@ from ais_tools.transcode import LatLonTranscoder as LatLon
 
 class AIS18CommState(transcode.MessageTranscoder):
 
-    def commstate_fields (self, unit_flag, commstate_flag, slot_timeout):
+    def commstate_fields(self, unit_flag, commstate_flag, slot_timeout):
         if unit_flag:
             return ais18_commstate_CS
         elif commstate_flag:
@@ -27,7 +27,7 @@ class AIS18CommState(transcode.MessageTranscoder):
                 raise DecodeError('AIS18: unknown slot_timeout value {}'.format(slot_timeout))
 
     def encode_fields(self, message):
-        return self.commstate_fields (message.get('unit_flag'), message.get('commstate_flag'), message.get('slot_timeout'))
+        return self.commstate_fields(message.get('unit_flag'), message.get('commstate_flag'), message.get('slot_timeout'))
 
     def decode_fields(self, bits, message):
         return self.commstate_fields(

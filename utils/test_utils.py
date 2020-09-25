@@ -63,4 +63,3 @@ class TestGenerateNMEA(unittest.TestCase):
         assert (seg.get_points_no() == 11)
         assert (seg.get_duration() == 100)
         assert (math.isclose(seg.length_2d(), total_dist_m, rel_tol=0.05))
-

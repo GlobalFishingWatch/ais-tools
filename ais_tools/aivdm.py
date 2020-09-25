@@ -89,7 +89,7 @@ class AIVDM:
         """
         Decode a single line of nmea that contains:
             a single-part AIVDM message, with or without prepended tagblock
-            or a concatenated set up AIVDM messages that are the set of parts for a multi-part message
+            or a concatenated set of AIVDM messages that make up the parts for a multi-part message
         Returns a dict with the passed in nmea string in the "nmea" field and the
 
         raises DecodeError if the message cannot be decoded.
