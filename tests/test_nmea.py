@@ -111,6 +111,21 @@ def test_join_multipart_stream_pairs(nmea):
     assert combined == [''.join(nmea)]
 
 
+@pytest.mark.parametrize("nmea", [
+    (['\\g:1-2-1786,s:MAEROSPACE-C,c:1516060792*31'
+      '\\!AIVDM,2,1,6,B,55R;bN02>brS<D=6220pt8hF0t4f222222222216BHGC84HC0Gm5p2j28888,0*56',
+      '\\g:2-2-1786*55\\!AIVDM,2,2,6,B,88888888880,2*21']),
+])
+def test_join_multipart_stream_station_id_mismatch(nmea):
+    combined = list(join_multipart_stream(nmea, use_station_id=True))
+    assert len(combined) == 2
+    assert combined == nmea
+
+    combined = list(join_multipart_stream(nmea, use_station_id=False))
+    assert len(combined) == 1
+    assert combined == [''.join(nmea)]
+
+
 def test_join_multipart_stream_mixed():
     nmea = [
         '\\t:1,s:station1*00\\!AIVDM,1,1,1,A,@,0*57',
