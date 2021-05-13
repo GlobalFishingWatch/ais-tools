@@ -153,3 +153,24 @@ def test_bqstore(capsys, env_vars, pubsub_context, bigquery_client, message, exp
     bigquery_client.insert_rows.assert_called_once()
     name, args, kwargs = bigquery_client.insert_rows.mock_calls[0]
     assert args[1] == [expected]
+
+
+def test_bqstore_schema_mismatch(capsys, env_vars, pubsub_context, bigquery_client):
+    fail_return_val = [{'index': 0, 'errors': [{'reason': 'invalid'}]}]
+    success_return_val = []
+    bigquery_client.insert_rows.side_effect = [fail_return_val, success_return_val]
+    message = {'nmea': '!AIVDM', 'schema_mismatch': 1}
+    event = {'data': base64.b64encode(json.dumps(message).encode())}
+    bqstore.handle_event(event, pubsub_context, bigquery_client)
+    out, err = capsys.readouterr()
+
+    assert 'mismatch' in out
+
+    expected = {'nmea': '!AIVDM',
+                'source': '',
+                'uuid': '',
+                'error': "Schema mismatch error on insert [{'index': 0, 'errors': [{'reason': 'invalid'}]}]",
+                'extra': json.dumps(message)}
+    assert len(bigquery_client.insert_rows.mock_calls) == 2
+    name, args, kwargs = bigquery_client.insert_rows.mock_calls[1]
+    assert args[1] == [expected]

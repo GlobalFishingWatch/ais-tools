@@ -23,6 +23,21 @@ def handle_event(event, context, bigquery_client):
 
         errors = bigquery_client.insert_rows(table, [message])
         if errors:
+            # handle schema mismatch - pack everything up into extra and try again
+            if errors[0]['errors'][0]['reason'] == 'invalid':
+                err_msg = "Schema mismatch error on insert {}".format(errors)
+                print(err_msg)
+                print("Retry with message content in 'extra'")
+
+                message = {'nmea': str(message.get('nmea', '')),
+                           'source': str(message.get('source', '')),
+                           'uuid': str(message.get('uuid', '')),
+                           'error': err_msg,
+                           'extra': data_in}
+
+                # Try the insert again
+                errors = bigquery_client.insert_rows(table, [message])
+        if errors:
             raise Exception(errors)
 
         print("Message insert to {} succeeded".format(table_name))
