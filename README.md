@@ -52,7 +52,7 @@ $ ais-tools decode ./sample/sample.nmea
 ### Add tagblock
 Used to add a tagblock to AIVDM messages. this is intended to be used with 
 a real time stream of messages as they are received, for instance from an 
-AIS RF signal decoder of from a udp stream.  The default action is to apply 
+AIS RF signal decoder of\r from a udp stream.  The default action is to apply 
 the current timestamp
 
 ```console
