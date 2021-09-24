@@ -1,7 +1,9 @@
 # Function dependencies, for example:
 # package>=version
 
-flask_api
-google-cloud-pubsub
-google-cloud-bigquery
+# flask_api
+# google-cloud-pubsub
+# google-cloud-bigquery
+apache-beam[gcp]
 ais-tools@git+https://github.com/GlobalFishingWatch/ais-tools@v0.1.2-alpha
+# pipe-tools@git+https://github.com/GlobalFishingWatch/pipe-tools@v3.1.2
