@@ -13,7 +13,7 @@ from ais import DecodeError
     ('B6:`hQ@0021M<;T=IQ:FWwR61P06', 0, {'commstate_cs_fill'}),
     ('B39J`I0000?Dql7gCSwQ3wWQjE2b', 0, {}),
     ('B6:k??@0021FQ5SBI0q`GwpSQP06', 0, {}),
-    ('H>cSnNTU7B=40058qpmjhh000004', 0, {'vendor_id', 'spare'}),
+    ('H>cSnNTU7B=40058qpmjhh000004', 0, {'vendor_id', 'spare', 'dim_a', 'dim_b', 'dim_c', 'dim_d'}),
     ('H>cSnNP@4eEL544000000000000', 2, {}),
     ('I0000027FtlE01000VNJ;0`:h`0', 2, {}),
 ])
@@ -39,6 +39,8 @@ def test_nmea_vs_libais(body, pad, ignore):
 @pytest.mark.parametrize("body,pad,expected", [
     ('H>cSnNTU7B=40058qpmjhh000004', 0,
      {'vendor_id': 'GRMD@@E', 'vendor_id_1371_4': 'GRM', 'spare': 0, 'vendor_model': 1, 'vendor_serial': 5, 'gps_type': 1}),
+    ('H>dR=eTW21DupoUG2ehhhh0@2220', 0,
+     {'mmsi': 986222006, 'mothership_mmsi': 4202626}),
 ])
 def test_ais24_part_b(body, pad, expected):
     actual = AISMessage().decode_nmea(body, pad)

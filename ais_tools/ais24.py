@@ -50,7 +50,7 @@ class DimensionOrMothership(Message):
         self.mothership_fields = mothership_fields
 
     def get_fields(self, message=None):
-        mmsi = message.get('id')
+        mmsi = message.get('mmsi')
         if mmsi // 10000000 == 98:
             return self.mothership_fields
         else:
