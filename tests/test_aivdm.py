@@ -21,7 +21,6 @@ def test_decode(nmea, expected):
 
 @pytest.mark.parametrize("nmea,error", [
     ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
-    ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', 'Type check failed in field spare2.*'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
 ])
 def test_decode_fail(nmea, error):
@@ -38,6 +37,8 @@ def test_bad_bitcount_type_24():
     assert actual.get('error') is None
     assert actual.get('name') == 'DAKUWAQA@@@@@@@@@@@@'
 
+# TODO: Test this type 8 message that now should parse
+# ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', 'Type check failed in field spare2.*'),
 
 def test_encode():
     encoder = AIVDM()
