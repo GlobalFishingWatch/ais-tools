@@ -23,6 +23,8 @@ def test_decode(nmea, expected):
     ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
     ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', 'Type check failed in field spare2.*'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: UintTranscoder Cannot read 30 bits, only 28 available. '
+                                  ' LIBAIS ERR: Ais18: AIS_ERR_BAD_BIT_COUNT'),
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()
