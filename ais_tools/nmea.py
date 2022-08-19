@@ -91,7 +91,11 @@ def safe_join_multipart_stream(lines, max_time_window=500, max_message_window=10
         yield line
 
 
-def join_multipart_stream(lines, max_time_window=500, max_message_window=1000, ignore_decode_errors=False, use_station_id=True):
+def join_multipart_stream(lines,
+                          max_time_window=500,
+                          max_message_window=1000,
+                          ignore_decode_errors=False,
+                          use_station_id=True):
     """
     Takes a stream of nmea text lines and tries to find the matching parts of multi part messages
     which may not be adjacent in the stream and may come out of order.
@@ -126,7 +130,7 @@ def join_multipart_stream(lines, max_time_window=500, max_message_window=1000, i
             # - tagblock_channel is the AIS RF channel (either A or B) that was used for transmission
 
             station_id = tagblock.get('tagblock_station') if use_station_id else None
-            key = (total_parts, station_id, tagblock.get('tagblock_id'), 
+            key = (total_parts, station_id, tagblock.get('tagblock_id'),
                    tagblock.get('tagblock_channel'))
 
             # pack up the message part

@@ -137,9 +137,9 @@ def encode(input, output):
               help="Only match message parts if the station_id from the tagblock also matches"
               )
 def join_multipart(input, output, max_time, max_count, use_station_id):
-    for nmea in safe_join_multipart_stream(input, 
-                                           max_time_window=max_time, 
-                                           max_message_window=max_count, 
+    for nmea in safe_join_multipart_stream(input,
+                                           max_time_window=max_time,
+                                           max_message_window=max_count,
                                            use_station_id=use_station_id):
         output.write(nmea)
         output.write('\n')
