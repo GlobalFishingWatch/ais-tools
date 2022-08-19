@@ -4,6 +4,7 @@ from ais_tools.transcode import bits_to_nmea
 from ais_tools.transcode import nmea_to_bits
 from ais_tools.transcode import byte_align
 from ais_tools import ais8
+from ais_tools.transcode import ASCII8toAIS6
 from ais_tools import ais18
 from ais_tools import ais24
 from ais_tools import ais25
@@ -35,3 +36,11 @@ class AISMessageTranscoder(MessageTranscoder):
 
     def decode_nmea(self, body, pad=0):
         return self.decode(nmea_to_bits(body, pad))
+
+    @staticmethod
+    def can_encode(message):
+        return message.get('id') in message_types
+
+    @staticmethod
+    def can_decode(body, pad=0):
+        return True if body and ASCII8toAIS6.get(body[0]) in message_types else False

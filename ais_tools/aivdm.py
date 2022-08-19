@@ -39,10 +39,12 @@ class AisToolsDecoder:
 
     def decode_payload(self, body, pad):
         aistools_err = None
-        try:
-            return self.transcoder.decode_nmea(body, pad)
-        except DecodeError as e:
-            aistools_err = str(e)
+
+        if self.transcoder.can_decode(body, pad):
+            try:
+                return self.transcoder.decode_nmea(body, pad)
+            except DecodeError as e:
+                aistools_err = str(e)
 
         try:
             return LibaisDecoder.decode_payload(body, pad)

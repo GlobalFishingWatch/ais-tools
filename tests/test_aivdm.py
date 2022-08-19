@@ -24,7 +24,8 @@ def test_decode(nmea, expected):
 @pytest.mark.parametrize("nmea,error", [
     ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
-    ('!', 'No valid AIVDM found in')
+    ('!', 'No valid AIVDM found in'),
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: UintTranscoder Cannot read 30 bits, only 28 available.')
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()

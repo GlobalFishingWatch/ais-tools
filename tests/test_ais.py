@@ -105,3 +105,25 @@ def test_ais8(body, pad, expected):
     msg = t.decode_nmea(body, pad)
     actual = {k: v for k, v in msg.items() if k in expected}
     assert actual == expected
+
+
+@pytest.mark.parametrize("body,expected", [
+    ('B6:DE`00AB2303S>IiE2Cwu3QP06', True),
+    ('xxx', False),
+    ('', False),
+])
+def test_can_decode(body, expected):
+    t = AISMessage()
+    assert t.can_decode(body) == expected
+
+
+@pytest.mark.parametrize("message,expected", [
+    ({'id': 1}, False),
+    ({'id': 18}, True),
+    ({'id': 123}, False),
+    ({'id': None}, False),
+    ({}, False),
+])
+def test_can_encode(message, expected):
+    t = AISMessage()
+    assert t.can_encode(message) == expected

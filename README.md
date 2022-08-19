@@ -9,7 +9,7 @@ Tools for encoding and decoding AIS messages
 Uses https://github.com/schwehr/libais as the base decoder
 
 ## Multi-sentence messages
-The strategy for handing multi-sentence messages, such as ASI type 5, is to group the sentence parts into a single unit as early as possible in the processing chain.  Ideally this happens at the AIS receiver or at the point when these messages are streaming in real-time and the tagblock with timestamp is added to the !AIVDM payload.
+The strategy for handing multi-sentence messages, such as AIS type 5, is to group the sentence parts into a single unit as early as possible in the processing chain.  Ideally this happens at the AIS receiver or at the point when these messages are streaming in real-time and the tagblock with timestamp is added to the !AIVDM payload.
 
 This can be done in a text stream by simply concatenating the sentence parts into a single line of text.  In a JSON encoded message, this can also be done by providing a list in the nmea attribute.
 
@@ -52,7 +52,7 @@ $ ais-tools decode ./sample/sample.nmea
 ### Add tagblock
 Used to add a tagblock to AIVDM messages. this is intended to be used with 
 a real time stream of messages as they are received, for instance from an 
-AIS RF signal decoder of from a udp stream.  The default action is to apply 
+AIS RF signal decoder of\r from a udp stream.  The default action is to apply 
 the current timestamp
 
 ```console
@@ -117,5 +117,3 @@ pip install -e .\[dev\]
 flake8 . --exclude ./venv/ --max-line-length=127
 pytest  --cov=./
 ```
-
-
