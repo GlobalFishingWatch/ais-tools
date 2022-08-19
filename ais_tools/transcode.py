@@ -130,6 +130,38 @@ class BitsTranscoder(FieldTranscoder):
         return bits.bin
 
 
+class HexTranscoder(FieldTranscoder):
+    def encode_value(self, value):
+        bits = Bits(hex=value)
+        print(bits, len(bits), self.nbits)
+        assert len(bits) == self.nbits
+        return bits
+
+    def decode_value(self, bits):
+        return bits.hex
+
+
+class VariableLengthHexTranscoder(HexTranscoder):
+    def __init__(self, name, default=None):
+        super().__init__(name, nbits=0, default=default)
+
+    def read_bits(self, bits):
+        # read all the remaining bits
+        nbits = len(bits) - bits.pos
+        try:
+            return bits.read(nbits)
+        except bitstring.ReadError as e:
+            raise DecodeError('{} {}'.format(self.__class__.__name__, str(e)))
+
+    def encode_value(self, value):
+        bits = Bits()
+        try:
+            bits = Bits(hex=value)
+        except KeyError:
+            raise DecodeError('{} invalid Hexadecimal string "{}"'.format(self.__class__.__name__, value))
+        return bits
+
+
 class IntTranscoder(FieldTranscoder):
     def encode_value(self, value):
         return Bits(int=value, length=self.nbits)

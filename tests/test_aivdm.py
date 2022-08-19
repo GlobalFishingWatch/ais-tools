@@ -11,6 +11,8 @@ from ais_tools.message import Message
      {"tagblock_station": "sdr-experiments"}),
     ('!AIVDM,2,1,7,A,<M000000000000000000GcMvmEEEOPB6??uR0001np`R0;gbpaR@gP7GbSeH,0*63!AIVDM,2,2,7,A,OeEEEGp4Qf<,2*74',
      {"mmsi": 872415232}),
+    ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', {'id': 8}),
+
 ])
 def test_decode(nmea, expected):
     decoder = AIVDM()
@@ -21,8 +23,9 @@ def test_decode(nmea, expected):
 
 @pytest.mark.parametrize("nmea,error", [
     ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
-    ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', 'Type check failed in field spare2.*'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
+    ('!', 'No valid AIVDM found in'),
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: UintTranscoder Cannot read 30 bits, only 28 available.')
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()
@@ -46,3 +49,12 @@ def test_encode():
     )
     expected = Message('!AIVDM,1,1,,A,I00000004000,0*5B')
     assert expected == encoder.encode(msg)
+
+
+@pytest.mark.parametrize("message,error", [
+    ({'id': 24, 'mmsi': '123456789'}, 'AIS24: unknown part number None'),
+])
+def test_encode_fail(message, error):
+    encoder = AIVDM()
+    with pytest.raises(aivdm.libais.DecodeError, match=error):
+        encoder.encode(message)

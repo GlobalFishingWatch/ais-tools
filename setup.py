@@ -18,6 +18,7 @@ DEPENDENCIES = [
     "gpxpy",
     "requests",
     "bitstring",
+    "markupsafe==2.0.1",  # TODO remove this pin after this is fixed https://github.com/pallets/markupsafe/issues/284
     "Flask-API",
 ]
 
