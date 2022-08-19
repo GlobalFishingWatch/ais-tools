@@ -37,6 +37,7 @@ def test_nmea_to_bits(body, pad):
     (234.5, transcode.Uint10Transcoder, 12),
     (45.6789, transcode.LatLonTranscoder, 27),
     (-123.45678, transcode.LatLonTranscoder, 28),
+    ('ffff', transcode.HexTranscoder, 16),
 ])
 def test_transcoder_roundtrip(value, cls, nbits):
     msg = {'a': value}
@@ -71,16 +72,19 @@ def test_ascii6(value, nbits, expected):
     assert actual['a'] == expected
 
 
-@pytest.mark.parametrize("value,expected", [
-    ('1', '1'),
-    ('12', '12'),
-    ('123', '123'),
+@pytest.mark.parametrize("value,cls", [
+    ('1', transcode.VariableLengthASCII6Transcoder),
+    ('12', transcode.VariableLengthASCII6Transcoder),
+    ('123', transcode.VariableLengthASCII6Transcoder),
+    ('0', transcode.VariableLengthHexTranscoder),
+    ('f', transcode.VariableLengthHexTranscoder),
+    ('c0fefe', transcode.VariableLengthHexTranscoder),
 ])
-def test_var_ascii6(value, expected):
-    t = transcode.VariableLengthASCII6Transcoder(name='a')
+def test_variable_length_roundtrip(value, cls):
+    t = cls(name='a')
     msg = {'a': value}
     actual = t.decode(t.encode(msg))
-    assert actual['a'] == expected
+    assert actual['a'] == value
 
 
 @pytest.mark.parametrize("bits,cls,nbits", [

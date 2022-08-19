@@ -7,7 +7,16 @@ from ais_tools.cli import add_tagblock
 from ais_tools.cli import decode
 from ais_tools.cli import encode
 from ais_tools.cli import join_multipart
+from ais_tools.cli import cli
 from ais_tools.tagblock import parseTagBlock
+
+
+def test_help():
+    runner = CliRunner()
+    result = runner.invoke(cli)
+    assert not result.exception
+    print(result.output)
+    assert result.output.startswith('Usage')
 
 
 def test_add_tagblock():
