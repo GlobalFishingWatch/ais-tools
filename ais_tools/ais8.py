@@ -1,5 +1,4 @@
 from ais_tools.transcode import UintTranscoder as Uint
-from ais_tools.transcode import BitsTranscoder as Bits
 from ais_tools.transcode import HexTranscoder as Hex
 from ais_tools.transcode import VariableLengthHexTranscoder as VarHex
 

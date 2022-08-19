@@ -97,6 +97,8 @@ def test_ais18(body, pad, expected):
     ('8Nj<9D0000ttt0<D04@<tt<8`H0H@@l44L`<40<@tT`<4T0`=h0', 2,
      {'mmsi': 992151888, 'application_id': '0000',
       'application_data': '0f3cf0031400440cf3c308a18018410d0411ca0c100310f24a0c1240283700'}),
+    ('83am8S@j<d8dtfMEuj9loFOM6@00', 0,
+     {'application_id': '3232', 'application_data': 'c22cf2e755f72274dd67dd190000'}),
 ])
 def test_ais8(body, pad, expected):
     t = AISMessage()
