@@ -113,4 +113,3 @@ def test_can_decode(body, expected):
 def test_can_encode(message, expected):
     t = AISMessage()
     assert t.can_encode(message) == expected
-

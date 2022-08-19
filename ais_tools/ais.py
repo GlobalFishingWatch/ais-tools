@@ -42,4 +42,3 @@ class AISMessageTranscoder(MessageTranscoder):
     @staticmethod
     def can_decode(body, pad=0):
         return True if body and ASCII8toAIS6.get(body[0]) in message_types else False
-
