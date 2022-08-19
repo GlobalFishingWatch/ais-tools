@@ -133,7 +133,13 @@ def encode(input, output):
               help="Retain an unmatched message part in the buffer until at least max_count messages have"
                    "been seen after the message part was added to the buffer"
               )
-def join_multipart(input, output, max_time, max_count):
-    for nmea in safe_join_multipart_stream(input, max_time_window=max_time, max_message_window=max_count):
+@click.option('--use-station-id/--no-use-station-id', default=True,
+              help="Only match message parts if the station_id from the tagblock also matches"
+              )
+def join_multipart(input, output, max_time, max_count, use_station_id):
+    for nmea in safe_join_multipart_stream(input,
+                                           max_time_window=max_time,
+                                           max_message_window=max_count,
+                                           use_station_id=use_station_id):
         output.write(nmea)
         output.write('\n')
