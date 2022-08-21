@@ -2,6 +2,8 @@
 Tools for transcoding from an bitstring to dict according to an arbitrary mapping
 """
 
+from bitarray import bitarray
+from bitarray.util import int2ba
 import bitstring
 from bitstring import ConstBitStream as Bits
 from abc import ABC
@@ -12,6 +14,7 @@ from ais import DecodeError
 
 AIS6toASCII8 = [chr(i+48) for i in range(40)] + [chr(i+96) for i in range(24)]
 ASCII8toAIS6 = {c: i for i, c in enumerate(AIS6toASCII8)}
+ASCII8toAIS6_bits = {c: int2ba(i, length=6) for i, c in enumerate(AIS6toASCII8)}
 ASCII6toASCII8 = [c for c in "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&`()*+,-./0123456789:;<=>?"]
 ASCII8toASCII6 = {c: i for i, c in enumerate(ASCII6toASCII8)}
 
@@ -34,12 +37,9 @@ def bits_to_nmea(bits):
 
 
 def nmea_to_bits(body, pad):
-    bits = Bits()
-    for c in body:
-        bits += Bits(uint=ASCII8toAIS6[c], length=6)
-    if pad:
-        bits = bits[:0-pad]
-    return bits
+    bits = bitarray()
+    bits.encode(ASCII8toAIS6_bits, body)
+    return Bits(bytes=bits.tobytes(), length=len(body) * 6 - pad)
 
 
 class Transcoder(ABC):
