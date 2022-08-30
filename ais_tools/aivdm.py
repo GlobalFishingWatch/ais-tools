@@ -5,7 +5,7 @@ Tools for decoding AIS messages in AIVDM format
 import ais as libais
 from ais import DecodeError
 
-from ais_tools.ais import AISMessageTranscoder
+from ais_tools.ais import AISMessageTranscoder, NewAISMessageTranscoder
 from ais_tools.nmea import split_multipart
 from ais_tools.nmea import expand_nmea
 from ais_tools.tagblock import checksumStr
@@ -36,6 +36,25 @@ class LibaisDecoder:
 class AisToolsDecoder:
     def __init__(self):
         self.transcoder = AISMessageTranscoder()
+
+    def decode_payload(self, body, pad):
+        aistools_err = None
+
+        if self.transcoder.can_decode(body, pad):
+            try:
+                return self.transcoder.decode_nmea(body, pad)
+            except DecodeError as e:
+                aistools_err = str(e)
+
+        try:
+            return LibaisDecoder.decode_payload(body, pad)
+        except DecodeError as e:
+            raise DecodeError('AISTOOLS ERR: {}  LIBAIS ERR: {}'.format(aistools_err, str(e)))
+
+
+class NewAisToolsDecoder:
+    def __init__(self):
+        self.transcoder = NewAISMessageTranscoder()
 
     def decode_payload(self, body, pad):
         aistools_err = None
@@ -92,7 +111,7 @@ class AIVDM:
         Decode a single line of nmea that contains:
             a single-part AIVDM message, with or without prepended tagblock
             or a concatenated set of AIVDM messages that make up the parts for a multi-part message
-        Returns a dict with the passed in nmea string in the "nmea" field and the
+        Returns a dict with the passed in nmea string in the "nmea" field
 
         raises DecodeError if the message cannot be decoded.
         """

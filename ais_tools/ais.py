@@ -11,11 +11,46 @@ from ais_tools import ais25
 
 
 message_types = {
-    8: ais8.ais8_fields,
-    18: ais18.ais18_fields,
+    8: ais8._ais8_fields,
+    18: ais18._ais18_fields,
     24: [ais24.AIS24Transcoder()],
-    25: ais25.ais25_fields,
+    25: ais25._ais25_fields,
 }
+
+encode_fn = {
+    8: ais8.ais8_encode,
+    18: ais18.ais18_encode,
+    24: ais24.ais24_encode,
+    25: ais25.ais25_encode,
+}
+
+decode_fn = {
+    8: ais8.ais8_decode,
+    18: ais18.ais18_decode,
+    24: ais24.ais24_decode,
+    25: ais25.ais25_decode,
+}
+
+
+class NewAISMessageTranscoder:
+    @staticmethod
+    def can_encode(message):
+        return message.get('id') in encode_fn
+
+    @staticmethod
+    def can_decode(body, pad=0):
+        return True if body and ASCII8toAIS6.get(body[0]) in decode_fn else False
+
+    @staticmethod
+    def encode_nmea(message):
+        message_type = message.get('id')
+        return encode_fn[message_type](message)
+
+    @staticmethod
+    def decode_nmea(body, pad=0):
+        message_type = ASCII8toAIS6.get(body[0])
+        return decode_fn[message_type](body, pad)
+
 
 
 class AISMessageTranscoder(MessageTranscoder):

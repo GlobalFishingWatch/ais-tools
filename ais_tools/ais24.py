@@ -1,16 +1,108 @@
 from ais_tools.transcode import MessageTranscoder as Message
 from ais_tools.transcode import DecodeError
-from ais_tools.transcode import UintTranscoder as Uint
-from ais_tools.transcode import ASCII6Transcoder as ASCII6
+from ais_tools.transcode import UintTranscoder as _Uint
+from ais_tools.transcode import ASCII6Transcoder as _ASCII6
+
+from ais_tools.transcode import NmeaBits
+from ais_tools.transcode import NmeaStruct as Struct
+from ais_tools.transcode import UintField as Uint
+from ais_tools.transcode import ASCII6Field as ASCII6
+
+
+
+def ais24_decode(body, pad):
+    bits = NmeaBits.from_nmea(body, pad)
+    message = bits.unpack(ais24_fields)
+
+    part_num = message['part_num']
+    if part_num == 0:
+        name = bits.unpack(ais24_part_A_fields)
+        message['name'] = name['name_1'] + name['name_2']
+    elif part_num == 1:
+        message.update(bits.unpack(ais24_part_B_fields))
+    else:
+        raise DecodeError(f'AIS24: unknown part number {part_num}')
+
+    message.update(bits.unpack_from(vendorid_1371_4, offset=48))
+    if message['mmsi'] // 10000000 == 98:
+        message.update(bits.unpack_from(mothership_fields, offset=132))
+
+    return message
+
+
+def ais24_encode(message):
+    part_num = message['part_num']
+    if part_num == 0:
+        nbits = 160
+    elif part_num == 1:
+        nbits = 168
+    else:
+        raise DecodeError(f'AIS24: unknown part number {part_num}')
+
+    bits = NmeaBits(nbits)
+    bits.pack(ais24_fields, message)
+    if part_num == 0:
+        name = {
+            'name_1': message['name'][:10],
+            'name_2': message['name'][10:],
+        }
+        bits.pack(ais24_part_A_fields, name)
+    else:
+        bits.pack(ais24_part_B_fields, message)
+
+    if 'vendor_id' in message:
+        bits.pack_into(vendorid_1371_4, offset=48, message=message)
+
+    if 'mothership_mmsi' in message:
+        bits.pack_into(mothership_fields, offset=132, message=message)
+
+    return bits.to_nmea()
+
+
+ais24_fields = Struct(
+    Uint(name='id', nbits=6, default=0),
+    Uint(name='repeat_indicator', nbits=2),
+    Uint(name='mmsi', nbits=30),
+    Uint(name='part_num', nbits=2)
+)
+
+ais24_part_A_fields = Struct(
+    ASCII6(name='name_1', nbits=60),
+    ASCII6(name='name_2', nbits=60)
+)
+
+ais24_part_B_fields = Struct(
+    Uint(name='type_and_cargo', nbits=8),
+    ASCII6(name='vendor_id', nbits=42, default='@@@@@@@'),
+    ASCII6(name='callsign', nbits=42, default='@@@@@@@'),
+    Uint(name='dim_a', nbits=9),
+    Uint(name='dim_b', nbits=9),
+    Uint(name='dim_c', nbits=6),
+    Uint(name='dim_d', nbits=6),
+    Uint(name='gps_type', nbits=4),
+    Uint(name='spare', nbits=2)
+)
+
+vendorid_1371_4 = Struct(
+    ASCII6(name='vendor_id_1371_4', nbits=18, default='@@@'),
+    Uint(name='vendor_model', nbits=4),
+    Uint(name='vendor_serial', nbits=20),
+
+)
+
+mothership_fields = Struct(
+    Uint(name='mothership_mmsi', nbits=30),
+)
+
 
 
 class AIS24Transcoder(Message):
 
     def part_AB_fields(self, part_num):
         if part_num == 0:
-            return ais24_part_A_fields
+            return _ais24_part_A_fields
         elif part_num == 1:
-            return ais24_part_B_fields
+            return _ais24_part_B_fields
         else:
             raise DecodeError('AIS24: unknown part number {}'.format(part_num))
 
@@ -58,43 +150,43 @@ class DimensionOrMothership(Message):
 
 
 # PART A
-ais24_part_A_fields = [
-    Uint(name='id', nbits=6, default=0),
-    Uint(name='repeat_indicator', nbits=2),
-    Uint(name='mmsi', nbits=30),
-    Uint(name='part_num', nbits=2),
-    ASCII6(name='name', nbits=120),
+_ais24_part_A_fields = [
+    _Uint(name='id', nbits=6, default=0),
+    _Uint(name='repeat_indicator', nbits=2),
+    _Uint(name='mmsi', nbits=30),
+    _Uint(name='part_num', nbits=2),
+    _ASCII6(name='name', nbits=120),
 ]
 
 
-ais24_part_B_fields = [
-    Uint(name='id', nbits=6, default=0),
-    Uint(name='repeat_indicator', nbits=2),
-    Uint(name='mmsi', nbits=30),
-    Uint(name='part_num', nbits=2),
-    Uint(name='type_and_cargo', nbits=8),
+_ais24_part_B_fields = [
+    _Uint(name='id', nbits=6, default=0),
+    _Uint(name='repeat_indicator', nbits=2),
+    _Uint(name='mmsi', nbits=30),
+    _Uint(name='part_num', nbits=2),
+    _Uint(name='type_and_cargo', nbits=8),
     VendorID(
         [
-            ASCII6(name='vendor_id', nbits=42, default='@@@@@@@'),
+            _ASCII6(name='vendor_id', nbits=42, default='@@@@@@@'),
         ],
         [
-            ASCII6(name='vendor_id_1371_4', nbits=18, default='@@@'),
-            Uint(name='vendor_model', nbits=4),
-            Uint(name='vendor_serial', nbits=20),
+            _ASCII6(name='vendor_id_1371_4', nbits=18, default='@@@'),
+            _Uint(name='vendor_model', nbits=4),
+            _Uint(name='vendor_serial', nbits=20),
         ],
     ),
-    ASCII6(name='callsign', nbits=42, default='@@@@@@@'),
+    _ASCII6(name='callsign', nbits=42, default='@@@@@@@'),
     DimensionOrMothership(
         [
-            Uint(name='dim_a', nbits=9),
-            Uint(name='dim_b', nbits=9),
-            Uint(name='dim_c', nbits=6),
-            Uint(name='dim_d', nbits=6),
+            _Uint(name='dim_a', nbits=9),
+            _Uint(name='dim_b', nbits=9),
+            _Uint(name='dim_c', nbits=6),
+            _Uint(name='dim_d', nbits=6),
         ],
         [
-            Uint(name='mothership_mmsi', nbits=30),
+            _Uint(name='mothership_mmsi', nbits=30),
         ]
     ),
-    Uint(name='gps_type', nbits=4),
-    Uint(name='spare', nbits=2),
+    _Uint(name='gps_type', nbits=4),
+    _Uint(name='spare', nbits=2),
 ]
