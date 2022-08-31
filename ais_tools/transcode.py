@@ -1,5 +1,5 @@
 """
-Tools for transcoding from an bitstring to dict according to an arbitrary mapping
+Tools for transcoding from an array of bits to dict according to an arbitrary mapping
 """
 
 from bitarray import bitarray
@@ -8,7 +8,7 @@ from bitarray.util import int2ba
 from bitarray.util import hex2ba
 from bitarray.util import ba2hex
 import cbitstruct as bitstruct
-from bitstring import ConstBitStream as Bits
+# from bitstring import ConstBitStream as Bits
 from abc import abstractmethod
 
 from ais import DecodeError
@@ -37,15 +37,16 @@ def bits_to_nmea(bits):
     if pad == 6:
         pad = 0
     else:
-        bits += Bits(uint=0, length=pad)
-    body = ''.join([AIS6toASCII8[b.uint] for b in bits.cut(6)])
-    return body, pad
+        bits = bits + (pad * bitarray('0'))
+    return ''.join(bits.iterdecode(ASCII8toAIS6_decode_tree)), pad
 
 
 def nmea_to_bits(body, pad):
     bits = bitarray()
     bits.encode(ASCII8toAIS6_bits, body)
-    return Bits(bytes=bits.tobytes(), length=len(body) * 6 - pad)
+    if pad > 0:
+        bits = bits[:-pad]
+    return bits
 
 
 class NmeaBits:
