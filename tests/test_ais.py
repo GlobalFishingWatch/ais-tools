@@ -1,5 +1,5 @@
 import pytest
-from ais_tools.ais import NewAISMessageTranscoder
+from ais_tools.ais import AISMessageTranscoder
 
 import ais as libais
 from ais import DecodeError
@@ -11,7 +11,7 @@ from ais import DecodeError
     ('', False),
 ])
 def test_can_decode(body, expected):
-    t = NewAISMessageTranscoder()
+    t = AISMessageTranscoder()
     assert t.can_decode(body) == expected
 
 
@@ -23,7 +23,7 @@ def test_can_decode(body, expected):
     ({}, False),
 ])
 def test_can_encode(message, expected):
-    t = NewAISMessageTranscoder()
+    t = AISMessageTranscoder()
     assert t.can_encode(message) == expected
 
 
@@ -35,10 +35,10 @@ def test_can_encode(message, expected):
      {'application_id': '3232', 'application_data': 'c22cf2e755f72274dd67dd190000'}),
 ])
 def test_ais8(body, pad, expected):
-    msg = NewAISMessageTranscoder.decode_nmea(body, pad)
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
     actual = {k: v for k, v in msg.items() if k in expected}
     assert actual == expected
-    assert NewAISMessageTranscoder.encode_nmea(msg) == (body, pad)
+    assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
 
 
 @pytest.mark.parametrize("body,pad,expected", [
@@ -55,10 +55,24 @@ def test_ais8(body, pad, expected):
     ('B42OJB@000OKsg5nMAH03wuUkP06', 0, {'unit_flag': 1, 'commstate_flag': 1}),
 ])
 def test_ais18(body, pad, expected):
-    msg = NewAISMessageTranscoder.decode_nmea(body, pad)
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
     actual = {k: v for k, v in msg.items() if k in expected}
     assert actual == expected
-    assert NewAISMessageTranscoder.encode_nmea(msg) == (body, pad)
+    assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
+
+
+@pytest.mark.parametrize("fields", [
+    {'part_num': 0, 'name': 'ABCDEFGHIJKLMNOP@@@@'},
+    {'part_num': 1, 'vendor_id_1371_4': 'GRM'},
+    {'part_num': 1, 'mmsi': 987654321, 'mothership_mmsi': 123456789},
+
+])
+def test_ais24(fields):
+    message = dict(id=24, mmsi=123456789)
+    message.update(fields)
+    body, pad = AISMessageTranscoder.encode_nmea(message)
+    actual = AISMessageTranscoder.decode_nmea(body, pad)
+    assert message == {k: v for k, v in actual.items() if k in message}
 
 
 @pytest.mark.parametrize("body,pad,expected", [
@@ -68,9 +82,9 @@ def test_ais18(body, pad, expected):
      {'mmsi': 986222006, 'mothership_mmsi': 4202626}),
 ])
 def test_ais24_part_b(body, pad, expected):
-    msg = NewAISMessageTranscoder.decode_nmea(body, pad)
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
     assert expected == {k: v for k, v in msg.items() if k in expected}
-    assert NewAISMessageTranscoder.encode_nmea(msg) == (body, pad)
+    assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
 
 
 def test_ais24_part_a_incorrect_pad():
@@ -82,7 +96,7 @@ def test_ais24_part_a_incorrect_pad():
     pad = 0
     with pytest.raises(DecodeError):
         libais.decode(body, pad)
-    actual = NewAISMessageTranscoder.decode_nmea(body, pad)
+    actual = AISMessageTranscoder.decode_nmea(body, pad)
     expected = {'name': 'DAKUWAQA@@@@@@@@@@@@'}
     assert expected == {k: v for k, v in actual.items() if k in expected}
 
@@ -92,8 +106,25 @@ def test_ais24_part_a_incorrect_pad():
     ({'id': 25, 'mmsi': 123456789, 'text': 'SOME TEXT', 'addressed': 1, 'dest_mmsi': 123456789}),
 ])
 def test_ais25(msg):
-    body, pad = NewAISMessageTranscoder.encode_nmea(msg)
+    body, pad = AISMessageTranscoder.encode_nmea(msg)
     print(body, pad)
-    actual = NewAISMessageTranscoder.decode_nmea(body, pad)
+    actual = AISMessageTranscoder.decode_nmea(body, pad)
     assert msg == {k: v for k, v in actual.items() if k in msg}
 
+
+
+@pytest.mark.parametrize("msg,expected", [
+    ({'id': 24, 'mmsi': 123456789, 'part_num': 2}, 'AIS24: unknown part number 2'),
+    ({'id': 18, 'mmsi': 123456789, 'slot_timeout': 8}, 'AIS18: unknown slot_timeout value 8'),
+])
+def test_encode_fail(msg, expected):
+    with pytest.raises(DecodeError, match=expected):
+        body, pad = AISMessageTranscoder.encode_nmea(msg)
+        print(body, pad)
+
+@pytest.mark.parametrize("body,pad,expected", [
+    ('H1mg=5H00000000000000000000', 0, 'AIS24: unknown part number 2'),
+])
+def test_decode_fail(body, pad, expected):
+    with pytest.raises(DecodeError, match=expected):
+        message = AISMessageTranscoder.decode_nmea(body, pad)

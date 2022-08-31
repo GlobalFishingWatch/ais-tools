@@ -25,7 +25,7 @@ def test_decode(nmea, expected):
     ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
     ('!', 'No valid AIVDM found in'),
-    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: UintTranscoder Cannot read 30 bits, only 28 available.')
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36')
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()
@@ -45,14 +45,14 @@ def test_bad_bitcount_type_24():
 def test_encode():
     encoder = AIVDM()
     msg = Message(
-        id=25
+        id=25, mmsi=123456789
     )
-    expected = Message('!AIVDM,1,1,,A,I00000004000,0*5B')
+    expected = Message('!AIVDM,1,1,,A,I1mg=5@0@000,5*59')
     assert expected == encoder.encode(msg)
 
 
 @pytest.mark.parametrize("message,error", [
-    ({'id': 24, 'mmsi': '123456789'}, 'AIS24: unknown part number None'),
+    ({'id': 24, 'mmsi': 123456789, 'part_num': 2}, 'AIS24: unknown part number 2'),
 ])
 def test_encode_fail(message, error):
     encoder = AIVDM()

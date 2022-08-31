@@ -1,7 +1,3 @@
-from ais_tools import transcode
-from ais_tools.transcode import UintTranscoder as _Uint
-from ais_tools.transcode import VariableLengthASCII6Transcoder as _VarASCII6
-
 from ais_tools.transcode import NmeaBits
 from ais_tools.transcode import NmeaStruct as Struct
 from ais_tools.transcode import UintField as Uint
@@ -28,7 +24,8 @@ def ais25_decode(body, pad):
 
 
 def ais25_encode(message):
-    length = ais25_fields.nbits + ais25_dac_fi_fields.nbits + len(message['text']) * 6
+    text = message.get('text', '')
+    length = ais25_fields.nbits + ais25_dac_fi_fields.nbits + len(text) * 6
     addressed = message.get('addressed', 0)
     if addressed:
         length += ais25_destination_fields.nbits
@@ -42,7 +39,7 @@ def ais25_encode(message):
     bits.pack(ais25_dac_fi_fields, message)
 
     text_bits = bitarray()
-    text_bits.encode(ASCII8toASCII6_bits, message['text'])
+    text_bits.encode(ASCII8toASCII6_bits, text)
     bits.bits[bits.offset:bits.length] = text_bits
 
     return bits.to_nmea()
@@ -66,30 +63,3 @@ ais25_dac_fi_fields = Struct(
     Uint(name='fi', nbits=6, default=0),
     Uint(name='text_seq', nbits=11, default=0),
 )
-
-
-class AIS25Destination(transcode.MessageTranscoder):
-    def get_fields(self, message=None):
-        addressed = message.get('addressed', 0)
-        if addressed:
-            return self._fields
-        else:
-            return []
-
-
-_ais25_fields = [
-    _Uint(name='id', nbits=6, default=0),
-    _Uint(name='repeat_indicator', nbits=2),
-    _Uint(name='mmsi', nbits=30),
-    _Uint(name='part_num', nbits=2),
-    _Uint(name='addressed', nbits=1),
-    _Uint(name='use_app_id', nbits=1),
-    AIS25Destination([
-        _Uint(name='dest_mmsi', nbits=30),
-        _Uint(name='spare', nbits=2),
-    ]),
-    _Uint(name='dac', nbits=10, default=1),
-    _Uint(name='fi', nbits=6),
-    _Uint(name='text_seq', nbits=11),
-    _VarASCII6(name='text', default='')
-]

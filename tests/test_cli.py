@@ -56,7 +56,7 @@ def test_encode():
     input = '{"id":25, "text": "TEST", "mmsi": 123456789}'
     result = runner.invoke(encode, input=input)
     assert not result.exception
-    assert result.output.strip() == '!AIVDM,1,1,,A,I1mg=5@04002PbJP,0*02'
+    assert result.output.strip() == '!AIVDM,1,1,,A,I1mg=5@0@00:2ab0,5*52'
 
 
 def test_encode_fail():
@@ -64,8 +64,8 @@ def test_encode_fail():
     input = 'INVALID JSON'
     result = runner.invoke(encode, input=input)
     assert not result.exception
-    assert result.stderr.strip() == 'AIS: Unknown message type None'
-    assert result.output.strip() == '!AIVDM,1,1,,A,I00000004000bBAr@0,4*3C'
+    assert result.stderr.strip() == 'AISTOOLS ERR: Failed to encode unknown message type None'
+    assert result.output.strip() == '!AIVDM,1,1,,A,I0000000@002a97a0,5*16'
 
 
 def test_join_multipart():

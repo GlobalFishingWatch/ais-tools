@@ -1,12 +1,7 @@
-from ais_tools.transcode import UintTranscoder as _Uint
-from ais_tools.transcode import HexTranscoder as _Hex
-from ais_tools.transcode import VariableLengthHexTranscoder as _VarHex
-
 from ais_tools.transcode import NmeaBits
 from ais_tools.transcode import NmeaStruct as Struct
 from ais_tools.transcode import UintField as Uint
 from ais_tools.transcode import HexField as Hex
-from bitarray import bitarray
 from bitarray.util import hex2ba
 from bitarray.util import ba2hex
 
@@ -37,13 +32,3 @@ ais8_fields = Struct(
     Uint(name='spare', nbits=2, default=0),
     Hex(name='application_id', nbits=16),
 )
-
-
-_ais8_fields = [
-    _Uint(name='id', nbits=6, default=0),
-    _Uint(name='repeat_indicator', nbits=2),
-    _Uint(name='mmsi', nbits=30),
-    _Uint(name='spare', nbits=2),
-    _Hex(name='application_id', nbits=16),
-    _VarHex(name='application_data')
-]

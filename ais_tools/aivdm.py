@@ -5,7 +5,7 @@ Tools for decoding AIS messages in AIVDM format
 import ais as libais
 from ais import DecodeError
 
-from ais_tools.ais import AISMessageTranscoder, NewAISMessageTranscoder
+from ais_tools.ais import AISMessageTranscoder
 from ais_tools.nmea import split_multipart
 from ais_tools.nmea import expand_nmea
 from ais_tools.tagblock import checksumStr
@@ -52,30 +52,14 @@ class AisToolsDecoder:
             raise DecodeError('AISTOOLS ERR: {}  LIBAIS ERR: {}'.format(aistools_err, str(e)))
 
 
-class NewAisToolsDecoder:
-    def __init__(self):
-        self.transcoder = NewAISMessageTranscoder()
-
-    def decode_payload(self, body, pad):
-        aistools_err = None
-
-        if self.transcoder.can_decode(body, pad):
-            try:
-                return self.transcoder.decode_nmea(body, pad)
-            except DecodeError as e:
-                aistools_err = str(e)
-
-        try:
-            return LibaisDecoder.decode_payload(body, pad)
-        except DecodeError as e:
-            raise DecodeError('AISTOOLS ERR: {}  LIBAIS ERR: {}'.format(aistools_err, str(e)))
-
-
 class AisToolsEncoder:
     def __init__(self):
         self.transcoder = AISMessageTranscoder()
 
     def encode_payload(self, message):
+        if not self.transcoder.can_encode(message):
+            raise DecodeError(f'AISTOOLS ERR: Failed to encode unknown message type {message.get("id")}')
+
         return self.transcoder.encode_nmea(message)
 
 
@@ -168,7 +152,7 @@ class AIVDM:
         try:
             return self.encode(message)
         except DecodeError as e:
-            msg = self.encode(Message(id=25, text='ERROR'))
+            msg = self.encode(Message(id=25, mmsi=0, text='ERROR'))
             msg['error'] = str(e)
             return msg
 

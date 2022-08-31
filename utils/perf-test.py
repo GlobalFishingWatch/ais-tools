@@ -2,7 +2,7 @@ import timeit
 import cProfile
 import pstats
 from pstats import SortKey
-from ais_tools.aivdm import AIVDM, AisToolsDecoder, NewAisToolsDecoder
+from ais_tools.aivdm import AIVDM, AisToolsDecoder
 # from ais_tools.aivdm import LibaisDecoder
 
 
@@ -14,14 +14,14 @@ tests = [type_1, type_18]
 
 for nmea in tests:
     print(nmea)
-    print(timeit.timeit(f'AIVDM(decoder=NewAisToolsDecoder()).decode("{nmea}")',
-                        setup='from ais_tools.aivdm import AIVDM,LibaisDecoder,NewAisToolsDecoder',
+    print(timeit.timeit(f'AIVDM(decoder=AisToolsDecoder()).decode("{nmea}")',
+                        setup='from ais_tools.aivdm import AIVDM,LibaisDecoder,AisToolsDecoder',
                         number=10000)
           )
     print()
 
 
-decoder = AIVDM(NewAisToolsDecoder())
+decoder = AIVDM(AisToolsDecoder())
 
 
 def do_something():
