@@ -185,7 +185,7 @@ def test_join_multipart_stream_timeout():
 def test_join_multipart_stream_fail():
     nmea = ['invalid']
     with pytest.raises(DecodeError, match='not enough fields in nmea message'):
-        combined = list(join_multipart_stream(nmea))
+        list(join_multipart_stream(nmea))
 
 
 def test_join_multipart_stream_fail_not_fail():

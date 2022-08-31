@@ -126,4 +126,4 @@ def test_encode_fail(msg, expected):
 ])
 def test_decode_fail(body, pad, expected):
     with pytest.raises(DecodeError, match=expected):
-        message = AISMessageTranscoder.decode_nmea(body, pad)
+        AISMessageTranscoder.decode_nmea(body, pad)
