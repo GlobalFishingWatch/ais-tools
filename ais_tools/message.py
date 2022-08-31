@@ -67,12 +67,13 @@ class Message(dict):
             self['source'] = source
         return self
 
-    def create_uuid(self):
-        return str(UUID(self.get('source', 'ais-tools'), self.get('nmea', '')))
+    def create_uuid(self, fields=('source', 'nmea', 'tagblock_timestamp')):
+        # return str(UUID(self.get('source', 'ais-tools'), self.get('nmea', '')))
+        return str(UUID('ais-tools', *[str(self.get(f, '')) for f in fields]))
 
-    def add_uuid(self, overwrite=False):
+    def add_uuid(self, overwrite=False, fields=('source', 'nmea', 'tagblock_timestamp')):
         if self.get('uuid') is None or overwrite:
-            self['uuid'] = self.create_uuid()
+            self['uuid'] = self.create_uuid(fields=fields)
         return self
 
     @classmethod
