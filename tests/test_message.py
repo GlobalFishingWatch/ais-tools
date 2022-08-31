@@ -13,18 +13,25 @@ def test_uuid():
     ('!AIVDM1234567*89', {'nmea': '!AIVDM1234567*89'}),
     ({'nmea': '!AIVDM1234567*89'}, {'nmea': '!AIVDM1234567*89'}),
     ('{"nmea": "!AIVDM1234567*89"}', {'nmea': '!AIVDM1234567*89'}),
+    ('', {'nmea': ''}),
 ])
 def test_message_construct(msg, expected):
     assert Message(msg) == expected
 
 
-@pytest.mark.parametrize("msg", [
+@pytest.mark.parametrize("arg", [
     42,
     ['!AIVDM'],
 ])
-def test_message_construct_fail(msg):
+def test_message_construct_fail(arg):
     with pytest.raises(ValueError):
-        Message(msg)
+        Message(arg)
+
+
+def test_message_construct_too_many_args():
+    with pytest.raises(ValueError, match='Message can only be constructed with a single positional '
+                                         'argument or one or more kwargs'):
+        Message(1, 2)
 
 
 @pytest.mark.parametrize("msg", [

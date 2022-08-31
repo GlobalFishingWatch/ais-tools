@@ -67,6 +67,7 @@ def test_join_multipart_fail():
 @pytest.mark.parametrize("nmea", [
     ('!AIVDM,2,1,7,A,@*6F'),
     ('!AIVDM,2,1,7,A,@*6F!AIVDM,2,1,7,A,@*6F'),
+    ('\\!AIVDM,2,1,7,A,@*6F\\!AIVDM,2,1,7,A,@*6F'),
     ('\\t:1*00\\!AIVDM,2,1,7,A,@*00\\t:2*00\\!AIVDM,2,2,7,A,@*00')
 ])
 def test_split_multipart(nmea):
@@ -109,6 +110,17 @@ def test_join_multipart_stream_pairs(nmea):
     combined = list(join_multipart_stream(reversed(nmea)))
     assert len(combined) == 1
     assert combined == [''.join(nmea)]
+
+
+@pytest.mark.parametrize("nmea", [
+    (['!AIVDM,2,1,7,B,@,0*51',
+      '!AIVDM,2,1,7,B,@,0*51',
+      '!AIVDM,2,2,7,B,@,0*52']),
+])
+def test_join_multipart_stream_triple(nmea):
+    combined = list(join_multipart_stream(nmea))
+    assert len(combined) == 2
+    assert combined == [nmea[0], ''.join(nmea[1:])]
 
 
 @pytest.mark.parametrize("nmea", [
@@ -168,3 +180,15 @@ def test_join_multipart_stream_timeout():
     actual = [a if len(a) > 1 else a[0] for a in actual]
     expected = ['1', '3', '4', '6', '2.1', ['7.1', '7.2'], '5.2', '8.2', '5.1', '2.2']
     assert actual == expected
+
+
+def test_join_multipart_stream_fail():
+    nmea = ['invalid']
+    with pytest.raises(DecodeError, match='not enough fields in nmea message'):
+        combined = list(join_multipart_stream(nmea))
+
+
+def test_join_multipart_stream_fail_not_fail():
+    nmea = ['invalid']
+    combined = list(join_multipart_stream(nmea, ignore_decode_errors=True))
+    assert combined == nmea

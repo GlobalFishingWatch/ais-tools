@@ -112,7 +112,6 @@ def test_ais25(msg):
     assert msg == {k: v for k, v in actual.items() if k in msg}
 
 
-
 @pytest.mark.parametrize("msg,expected", [
     ({'id': 24, 'mmsi': 123456789, 'part_num': 2}, 'AIS24: unknown part number 2'),
     ({'id': 18, 'mmsi': 123456789, 'slot_timeout': 8}, 'AIS18: unknown slot_timeout value 8'),
@@ -120,7 +119,7 @@ def test_ais25(msg):
 def test_encode_fail(msg, expected):
     with pytest.raises(DecodeError, match=expected):
         body, pad = AISMessageTranscoder.encode_nmea(msg)
-        print(body, pad)
+
 
 @pytest.mark.parametrize("body,pad,expected", [
     ('H1mg=5H00000000000000000000', 0, 'AIS24: unknown part number 2'),
