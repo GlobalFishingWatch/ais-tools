@@ -18,6 +18,10 @@ def ais25_decode(body, pad):
     message.update(bits.unpack(ais25_dac_fi_fields))
 
     text_bits = bits.bits[bits.offset:]
+    if len(text_bits) % 6 != 0:
+        # assume that the pad value was wrong and just ignore the extra bits at the end
+        new_len = (len(text_bits) // 6) * 6
+        text_bits = text_bits[:new_len]
     message['text'] = ''.join(text_bits.iterdecode(ASCII8toASCII6_decode_tree))
 
     return message

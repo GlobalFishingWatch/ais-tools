@@ -10,7 +10,13 @@ def ais8_decode(body, pad):
     bits = NmeaBits.from_nmea(body, pad)
     message = bits.unpack(ais8_fields)
 
-    message['application_data'] = ba2hex(bits.bits[bits.offset:])
+    data_bits = bits.bits[bits.offset:]
+    if len(data_bits) % 4 != 0:
+        # assume that the pad value was wrong and just ignore the extra bits at the end
+        new_len = (len(data_bits) // 4) * 4
+        data_bits = data_bits[:new_len]
+
+    message['application_data'] = ba2hex(data_bits)
 
     return message
 

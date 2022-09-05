@@ -41,6 +41,12 @@ def test_ais8(body, pad, expected):
     assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
 
 
+def test_ais8_wrong_pad():
+    body, pad = '83am8S@j<d8dtfMEuj9loFOM6@0', 0   # pad should be 5, not 0
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
+    assert ('83am8S@j<d8dtfMEuj9loFOM6@0', 2) == AISMessageTranscoder.encode_nmea(msg)
+
+
 @pytest.mark.parametrize("body,pad,expected", [
     ('B:U=ai@09o>61WLb:orRv2010400', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 1}),
     ('B52T:q@1C6TOpsUj5@??owTQh85G', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 2}),
@@ -110,6 +116,13 @@ def test_ais25(msg):
     print(body, pad)
     actual = AISMessageTranscoder.decode_nmea(body, pad)
     assert msg == {k: v for k, v in actual.items() if k in msg}
+
+
+def test_ais25_wrong_pad():
+    body, pad = 'I8:lin3LSu;r:IN9=F7PGE1lbIFw', 0   # pad should be 5, not 0
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
+    # trailing pad bits are all 1s in the original, and 0s in the re-encoded result
+    assert ('I8:lin3LSu;r:IN9=F7PGE1lbIFP', 5) == AISMessageTranscoder.encode_nmea(msg)
 
 
 @pytest.mark.parametrize("msg,expected", [
