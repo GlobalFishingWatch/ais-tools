@@ -71,7 +71,7 @@ class Message(dict):
         return self
 
     def create_uuid(self, fields=default_uuid_fields):
-        return str(UUID('ais-tools', *[str(self.get(f, '')) for f in fields]))
+        return str(UUID.create_uuid(*[str(self.get(f, '')) for f in fields]))
 
     def add_uuid(self, overwrite=False, fields=default_uuid_fields):
         if self.get('uuid') is None or overwrite:

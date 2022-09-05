@@ -52,11 +52,11 @@ def test_add_source(msg, source, overwrite, expected):
 
 
 @pytest.mark.parametrize("msg,overwrite,expected", [
-    ({}, False, '02638ec7-57a1-513b-9a77-bf1e9ab8168e'),
-    ({'nmea': '!AVIDM123'}, False, 'b5bb7232-4dc5-5fea-8c2f-1d72f9a1c12f'),
+    ({}, False, 'c4a4d6e8-ea5f-5af5-8091-9afe3a73f652'),
+    ({'nmea': '!AVIDM123'}, False, 'de08b5ee-d5dc-5561-8790-4abfcbd4b953'),
     ({'nmea': '!AVIDM123', 'uuid': 'old'}, False, 'old'),
-    ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, 'b5bb7232-4dc5-5fea-8c2f-1d72f9a1c12f'),
-    ({'nmea': '!AVIDM123', 'tagblock_timestamp': 1598653784}, True, '44e57f8d-6418-583a-8540-711e8da15361'),
+    ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, 'de08b5ee-d5dc-5561-8790-4abfcbd4b953'),
+    ({'nmea': '!AVIDM123', 'tagblock_timestamp': 1598653784}, True, '3c17f7c5-74fd-53af-ac9f-87861c43b217'),
 ])
 def test_add_uuid(msg, overwrite, expected):
     msg = Message(msg).add_uuid(overwrite=overwrite)
@@ -103,7 +103,7 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
     messages = [{'nmea': '!AVIDM123', 'source': 'test', 'uuid': old_uuid}]
 
     if add_uuid and (overwrite or old_uuid is None):
-        expected = '758f856f-d386-5259-9d3e-0f40870ee838'
+        expected = '56cf351b-5e53-52b3-9f36-45a93a7d89ec'
     else:
         expected = old_uuid
     messages = Message.stream(messages)
