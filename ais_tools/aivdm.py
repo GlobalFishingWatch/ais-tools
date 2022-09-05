@@ -73,7 +73,7 @@ class AIVDM:
         self.decoder = decoder or AisToolsDecoder()
         self.encoder = encoder or AisToolsEncoder()
 
-    def safe_decode(self, nmea):
+    def safe_decode(self, nmea, best_effort=False):
         """
         Attempt to decode an AIVDM message using AIVDM.decode().   If a error occurs and DecodeError is raised,
         suppress the exception and instead return a dict:
@@ -85,12 +85,12 @@ class AIVDM:
         """
         msg = Message(nmea)
         try:
-            msg = self.decode(nmea)
+            msg = self.decode(nmea, safe_decode_payload=best_effort)
         except libais.DecodeError as e:
             msg['error'] = str(e)
         return msg
 
-    def decode(self, nmea):
+    def decode(self, nmea, safe_decode_payload=False):
         """
         Decode a single line of nmea that contains:
             a single-part AIVDM message, with or without prepended tagblock
@@ -131,7 +131,14 @@ class AIVDM:
             )
 
         msg.update(tagblock)
-        msg.update(self.decode_payload(body, pad))
+
+        try:
+            msg.update(self.decode_payload(body, pad))
+        except DecodeError as e:
+            if safe_decode_payload:
+                msg['error'] = str(e)
+            else:
+                raise
 
         return msg
 

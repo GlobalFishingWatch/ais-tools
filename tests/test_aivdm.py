@@ -58,3 +58,11 @@ def test_encode_fail(message, error):
     encoder = AIVDM()
     with pytest.raises(aivdm.libais.DecodeError, match=error):
         encoder.encode(message)
+
+
+def test_safe_decode():
+    decoder=AIVDM()
+    nmea='\\s:66,c:1662392995*32\\!AIVDM,1,1,,B,6NlUC7@00000>d`w0000@00,2*6F'
+    msg = decoder.safe_decode(nmea=nmea, best_effort=True)
+    assert msg['error'] == 'AISTOOLS ERR: None  LIBAIS ERR: Ais6: DAC:FI not known.  6:235:10 AIS_UNINITIALIZED'
+    assert msg['tagblock_timestamp'] == 1662392995
