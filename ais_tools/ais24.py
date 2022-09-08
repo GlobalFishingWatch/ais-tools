@@ -76,7 +76,7 @@ ais24_part_B_fields = Struct(
     Uint(name='dim_b', nbits=9, default=0),
     Uint(name='dim_c', nbits=6, default=0),
     Uint(name='dim_d', nbits=6, default=0),
-    Uint(name='gps_type', nbits=4, default=0),
+    Uint(name='fix_type', nbits=4, default=0),
     Uint(name='spare', nbits=2, default=0)
 )
 

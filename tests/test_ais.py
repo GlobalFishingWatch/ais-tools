@@ -1,8 +1,40 @@
 import pytest
 from ais_tools.ais import AISMessageTranscoder
+import math
 
 import ais as libais
 from ais import DecodeError
+
+
+@pytest.mark.parametrize("body,pad,ignore", [
+    ('B>cSnNP006Vuqd5aC;?Q3wVQjFLr', 0, {'mode_flag'}),
+    ('B5O3hLP00H`fAd4naG6E3wR5oP06', 0, {'mode_flag', 'commstate_cs_fill'}),
+    ('B6:`hQ@0021M<;T=IQ:FWwR61P06', 0, {'mode_flag', 'commstate_cs_fill'}),
+    ('B39J`I0000?Dql7gCSwQ3wWQjE2b', 0, {'mode_flag'}),
+    ('B6:k??@0021FQ5SBI0q`GwpSQP06', 0, {'mode_flag'}),
+    ('H>cSnNTU7B=40058qpmjhh000004', 0, {'vendor_id', 'spare', 'dim_a', 'dim_b', 'dim_c', 'dim_d'}),
+    ('H>cSnNP@4eEL544000000000000', 2, {}),
+    ('H>cSnNTU7B=40058qpmjhh000004', 0, {'spare'}),
+    ('I0000027FtlE01000VNJ;0`:h`0', 5, {}),
+])
+def test_nmea_vs_libais(body, pad, ignore):
+    is_close_fields = {'x', 'y', 'cog', 'sog'}
+
+    t = AISMessageTranscoder()
+    assert t.can_decode(body)
+    decoded = t.decode_nmea(body, pad)
+    libais_decoded = libais.decode(body, pad)
+    assert (body, pad) == t.encode_nmea(decoded)
+
+    expected = {k: v for k, v in libais_decoded.items() if k not in ignore and k not in is_close_fields}
+    actual = {k: v for k, v in decoded.items() if k in expected}
+    assert expected == actual
+
+    expected = {k: v for k, v in libais_decoded.items() if k in is_close_fields}
+    actual = {k: v for k, v in decoded.items() if k in expected}
+    for k, v in expected.items():
+        assert math.isclose(v, actual[k], rel_tol=0.0000001), \
+            'field {} value mismatch libais:{} !~= ais-tools:{}'.format(k, v, actual[k])
 
 
 @pytest.mark.parametrize("body,expected", [
@@ -83,7 +115,7 @@ def test_ais24(fields):
 
 @pytest.mark.parametrize("body,pad,expected", [
     ('H>cSnNTU7B=40058qpmjhh000004', 0,
-     {'vendor_id': 'GRMD@@E', 'vendor_id_1371_4': 'GRM', 'spare': 0, 'vendor_model': 1, 'vendor_serial': 5, 'gps_type': 1}),
+     {'vendor_id': 'GRMD@@E', 'vendor_id_1371_4': 'GRM', 'spare': 0, 'vendor_model': 1, 'vendor_serial': 5, 'fix_type': 1}),
     ('H>dR=eTW21DupoUG2ehhhh0@2220', 0,
      {'mmsi': 986222006, 'mothership_mmsi': 4202626}),
 ])
@@ -140,3 +172,20 @@ def test_encode_fail(msg, expected):
 def test_decode_fail(body, pad, expected):
     with pytest.raises(DecodeError, match=expected):
         AISMessageTranscoder.decode_nmea(body, pad)
+
+
+@pytest.mark.parametrize("body,pad,expected", [
+    ('B>qMUb000hhfFpsjH2UDI3v4SP06', 0, False),
+    ('B>qHvBP061u2m:2p94AU;wP6cP06', 0, True),
+])
+def test_type_18_assigned_mode(body, pad, expected):
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
+    assert msg['assigned_mode'] == expected
+
+
+@pytest.mark.parametrize("body,expected", [
+    ('0', 0), ('w', 63), ('Z', None)
+])
+def test_bad_message_id(body, expected):
+    with pytest.raises(DecodeError, match=f'No decode method available for message type {expected}'):
+        AISMessageTranscoder.decode_nmea(body, 0)
