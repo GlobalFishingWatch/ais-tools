@@ -2,7 +2,7 @@
 utilities for manipulating AIS messages as NMEA strings, json strings or dicts
 """
 
-import json
+import ujson as json
 from urllib.parse import quote as url_quote
 import posixpath as pp
 import uuid

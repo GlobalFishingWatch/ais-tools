@@ -1,5 +1,5 @@
 import click
-import json
+import ujson as json
 
 import ais_tools
 from ais_tools import message
