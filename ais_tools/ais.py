@@ -38,4 +38,9 @@ class AISMessageTranscoder:
     @staticmethod
     def decode_nmea(body, pad=0):
         message_type = ASCII8toAIS6.get(body[0])
-        return decode_fn[message_type](body, pad)
+        try:
+            result = decode_fn[message_type](body, pad)
+        except KeyError:
+            raise DecodeError(f'No decode method available for message type {message_type}')
+
+        return result
