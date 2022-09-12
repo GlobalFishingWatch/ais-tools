@@ -114,7 +114,7 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
         assert m.get('uuid') == expected
 
 
-def add_parser_version():
+def test_add_parser_version():
     message = Message()
     message.add_parser_version()
     assert ais_tools.__version__ in message['parser']
