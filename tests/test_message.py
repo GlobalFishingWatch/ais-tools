@@ -1,4 +1,5 @@
 import pytest
+import ais_tools
 from ais_tools.message import Message
 from ais_tools.message import UUID
 import itertools as it
@@ -111,3 +112,9 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
         if add_uuid:
             m.add_uuid(overwrite=overwrite)
         assert m.get('uuid') == expected
+
+
+def test_add_parser_version():
+    message = Message()
+    message.add_parser_version()
+    assert ais_tools.__version__ in message['parser']

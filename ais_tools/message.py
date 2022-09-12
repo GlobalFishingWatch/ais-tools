@@ -6,9 +6,10 @@ import json
 from urllib.parse import quote as url_quote
 import posixpath as pp
 import uuid
+import ais_tools
 
 
-default_uuid_fields = ('source', 'nmea', 'tagblock_timestamp')
+default_uuid_fields = ('source', 'tagblock_station', 'nmea', 'tagblock_timestamp')
 
 
 class UUID:
@@ -76,6 +77,11 @@ class Message(dict):
     def add_uuid(self, overwrite=False, fields=default_uuid_fields):
         if self.get('uuid') is None or overwrite:
             self['uuid'] = self.create_uuid(fields=fields)
+        return self
+
+    def add_parser_version(self, overwrite=False):
+        if self.get('parser') is None or overwrite:
+            self['parser'] = 'ais-tools-v' + ais_tools.__version__
         return self
 
     @classmethod
