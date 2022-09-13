@@ -8,7 +8,6 @@ from bitarray.util import int2ba
 from bitarray.util import hex2ba
 from bitarray.util import ba2hex
 import cbitstruct as bitstruct
-# from bitstring import ConstBitStream as Bits
 from abc import abstractmethod
 
 from ais import DecodeError
@@ -23,13 +22,6 @@ ASCII6toASCII8 = [c for c in "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&`()*+,-./
 ASCII8toASCII6 = {c: i for i, c in enumerate(ASCII6toASCII8)}
 ASCII8toASCII6_bits = {c: int2ba(i, length=6) for i, c in enumerate(ASCII6toASCII8)}
 ASCII8toASCII6_decode_tree = decodetree(ASCII8toASCII6_bits)
-
-
-# def byte_align(bits):
-#     pad = 8 - (len(bits) % 8)
-#     if pad < 8:
-#         bits += Bits(uint=0, length=pad)
-#     return bits
 
 
 def bits_to_nmea(bits):

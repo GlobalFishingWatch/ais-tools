@@ -77,7 +77,7 @@ ais18_fields = Struct(
     Uint(name='dsc_flag', nbits=1, default=0),
     Uint(name='band_flag', nbits=1, default=0),
     Uint(name='m22_flag', nbits=1, default=0),
-    Bool(name='assigned_mode', nbits=1, default=0),  # NB: Libais calls this 'mode_flag" for type 18, and calls it
+    Uint(name='assigned_mode', nbits=1, default=0),  # NB: Libais calls this 'mode_flag" for type 18, and calls it
                                                      # 'assigned_mode' for 19 and 21.
     Bool(name='raim', nbits=1, default=0),
     Uint(name='commstate_flag', nbits=1, default=0)
