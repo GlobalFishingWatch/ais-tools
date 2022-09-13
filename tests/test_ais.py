@@ -175,12 +175,12 @@ def test_decode_fail(body, pad, expected):
 
 
 @pytest.mark.parametrize("body,pad,expected", [
-    ('B>qMUb000hhfFpsjH2UDI3v4SP06', 0, False),
-    ('B>qHvBP061u2m:2p94AU;wP6cP06', 0, True),
+    ('B>qMUb000hhfFpsjH2UDI3v4SP06', 0, 0),
+    ('B>qHvBP061u2m:2p94AU;wP6cP06', 0, 1),
 ])
 def test_type_18_assigned_mode(body, pad, expected):
     msg = AISMessageTranscoder.decode_nmea(body, pad)
-    assert msg['assigned_mode'] == expected
+    assert msg['assigned_mode'] is expected
 
 
 @pytest.mark.parametrize("body,expected", [
