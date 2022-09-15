@@ -15,7 +15,9 @@ from ais_tools.message import Message
     ('\\s:66,c:1661782483*3E\\!AIVDM,1,1,,A,35DFuH002>9NHLHCE@MB@AqD07VS,0*57', {'raim': False}),
     ('\\s:66,c:1661782099*31\\!AIVDM,1,1,,A,33`mOp0P0n0FNg6Mv7seTwvP0S0S,0*5C', {'keep_flag': True}),
     ('\\s:66,c:1662392695*3D\\!AIVDM,1,1,,A,E>j9dQjas000000000000000000@Ijfb?VJlh00808v>B0,4*0D',
-       {'assigned_mode': False})
+        {'assigned_mode': False}),
+    ('\\s:66,c:1663246931*35\\!AIVDM,1,1,,,9001?BP=h:qJ9vb;:f7EN1h240Rb,0*3F',
+        {'alt_sensor': 0, 'assigned_mode': False})
 ])
 def test_decode(nmea, expected):
     decoder = AIVDM()

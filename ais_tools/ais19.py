@@ -1,11 +1,9 @@
-from ais_tools.transcode import DecodeError
 from ais_tools.transcode import NmeaBits
 from ais_tools.transcode import NmeaStruct as Struct
 from ais_tools.transcode import UintField as Uint
 from ais_tools.transcode import Uint10Field as Uint10
 from ais_tools.transcode import LatLonField as LatLon
 from ais_tools.transcode import BoolField as Bool
-from ais_tools.transcode import BitField as Bits
 from ais_tools.transcode import ASCII6Field as ASCII6
 
 
