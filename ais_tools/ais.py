@@ -1,6 +1,7 @@
 from ais_tools.transcode import DecodeError
-from ais_tools import ais8
 from ais_tools.transcode import ASCII8toAIS6
+from ais_tools import ais8
+from ais_tools import ais9
 from ais_tools import ais18
 from ais_tools import ais19
 from ais_tools import ais24
@@ -9,6 +10,7 @@ from ais_tools import ais25
 
 encode_fn = {
     8: ais8.ais8_encode,
+    9: ais9.ais9_encode,
     18: ais18.ais18_encode,
     19: ais19.ais19_encode,
     24: ais24.ais24_encode,
@@ -17,6 +19,7 @@ encode_fn = {
 
 decode_fn = {
     8: ais8.ais8_decode,
+    9: ais9.ais9_decode,
     18: ais18.ais18_decode,
     19: ais19.ais19_decode,
     24: ais24.ais24_decode,

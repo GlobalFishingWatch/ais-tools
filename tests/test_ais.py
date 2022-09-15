@@ -16,7 +16,8 @@ from ais import DecodeError
     ('H>cSnNP@4eEL544000000000000', 2, {}),
     ('H>cSnNTU7B=40058qpmjhh000004', 0, {'spare'}),
     ('I0000027FtlE01000VNJ;0`:h`0', 5, {}),
-    ('C7m@5n004qtr0wtdVL9GSwrPFK04BL`2L?042@2>B310?1052120', 0, {'assigned_mode'})
+    ('C7m@5n004qtr0wtdVL9GSwrPFK04BL`2L?042@2>B310?1052120', 0, {'assigned_mode'}),
+    ('9001?BP=h:qJ9vb;:f7EN1h240Rb', 0, {})
 ])
 def test_nmea_vs_libais(body, pad, ignore):
     is_close_fields = {'x', 'y', 'cog', 'sog'}
@@ -81,6 +82,17 @@ def test_ais8_wrong_pad():
 
 
 @pytest.mark.parametrize("body,pad,expected", [
+    ('9001?BP=h:qJ9vb;:f7EN1h240Rb', 0, {'mmsi': 20298, 'alt': 55, 'sog': 10}),
+    ('90009C3dRIM1QSsjSPAa1;h200T4', 0, {'mmsi': 2380, 'alt': 946, 'alt_sensor': 0}),
+])
+def test_ais9(body, pad, expected):
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
+    actual = {k: v for k, v in msg.items() if k in expected}
+    assert actual == expected
+    assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
+
+
+@pytest.mark.parametrize("body,pad,expected", [
     ('B:U=ai@09o>61WLb:orRv2010400', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 1}),
     ('B52T:q@1C6TOpsUj5@??owTQh85G', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 2}),
     ('B696W<d`0R98PMUHAqvbGwkjh<0=', 0, {'unit_flag': 0, 'commstate_flag': 0, 'slot_timeout': 3}),
@@ -102,13 +114,14 @@ def test_ais18(body, pad, expected):
 
 @pytest.mark.parametrize("body,pad,expected", [
     ('C8k?R4h06mc;FwrwlfQWpTv0PBL>`2BTNL?WSWKQ1gW:00411R2P', 0, {'name': 'PINGTAIRONG313-0 73%'}),
-    ('C8kI2<004V0u6wsPwKH00Qv0PBL>`2BTNL?gkKW1eg:000411R2P',0, {'assigned_mode': False})
+    ('C8kI2<004V0u6wsPwKH00Qv0PBL>`2BTNL?gkKW1eg:000411R2P', 0, {'assigned_mode': False})
 ])
 def test_ais19(body, pad, expected):
     msg = AISMessageTranscoder.decode_nmea(body, pad)
     actual = {k: v for k, v in msg.items() if k in expected}
     assert actual == expected
     assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
+
 
 @pytest.mark.parametrize("fields", [
     {'part_num': 0, 'name': 'ABCDEFGHIJKLMNOP@@@@'},
