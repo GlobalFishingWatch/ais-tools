@@ -16,6 +16,7 @@ from ais import DecodeError
     ('H>cSnNP@4eEL544000000000000', 2, {}),
     ('H>cSnNTU7B=40058qpmjhh000004', 0, {'spare'}),
     ('I0000027FtlE01000VNJ;0`:h`0', 5, {}),
+    ('C7m@5n004qtr0wtdVL9GSwrPFK04BL`2L?042@2>B310?1052120', 0, {'assigned_mode'})
 ])
 def test_nmea_vs_libais(body, pad, ignore):
     is_close_fields = {'x', 'y', 'cog', 'sog'}
@@ -99,6 +100,16 @@ def test_ais18(body, pad, expected):
     assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
 
 
+@pytest.mark.parametrize("body,pad,expected", [
+    ('C8k?R4h06mc;FwrwlfQWpTv0PBL>`2BTNL?WSWKQ1gW:00411R2P', 0, {'name': 'PINGTAIRONG313-0 73%'}),
+    ('C8kI2<004V0u6wsPwKH00Qv0PBL>`2BTNL?gkKW1eg:000411R2P',0, {'assigned_mode': False})
+])
+def test_ais19(body, pad, expected):
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
+    actual = {k: v for k, v in msg.items() if k in expected}
+    assert actual == expected
+    assert AISMessageTranscoder.encode_nmea(msg) == (body, pad)
+
 @pytest.mark.parametrize("fields", [
     {'part_num': 0, 'name': 'ABCDEFGHIJKLMNOP@@@@'},
     {'part_num': 1, 'vendor_id_1371_4': 'GRM'},
@@ -175,8 +186,8 @@ def test_decode_fail(body, pad, expected):
 
 
 @pytest.mark.parametrize("body,pad,expected", [
-    ('B>qMUb000hhfFpsjH2UDI3v4SP06', 0, 0),
-    ('B>qHvBP061u2m:2p94AU;wP6cP06', 0, 1),
+    ('B>qMUb000hhfFpsjH2UDI3v4SP06', 0, False),
+    ('B>qHvBP061u2m:2p94AU;wP6cP06', 0, True),
 ])
 def test_type_18_assigned_mode(body, pad, expected):
     msg = AISMessageTranscoder.decode_nmea(body, pad)
