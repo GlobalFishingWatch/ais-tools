@@ -14,13 +14,13 @@ package = __import__('ais_tools')
 
 DEPENDENCIES = [
     "libais",
-    "Click==7.0",
+    "Click",
     "gpxpy",
     "requests",
     "bitarray",
     "cbitstruct",
     "markupsafe==2.0.1",  # TODO remove this pin after this is fixed https://github.com/pallets/markupsafe/issues/284
-    "Flask-API",
+    # "Flask-API",
 ]
 
 DEV_DEPENDENCIES = [
