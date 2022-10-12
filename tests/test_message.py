@@ -14,7 +14,7 @@ def test_uuid():
     ('!AIVDM1234567*89', {'nmea': '!AIVDM1234567*89'}),
     ({'nmea': '!AIVDM1234567*89'}, {'nmea': '!AIVDM1234567*89'}),
     ('{"nmea": "!AIVDM1234567*89"}', {'nmea': '!AIVDM1234567*89'}),
-    ('', {'nmea': ''}),
+    ('\n', {'nmea': ''}),
 ])
 def test_message_construct(msg, expected):
     assert Message(msg) == expected
