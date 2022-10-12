@@ -90,7 +90,7 @@ class AIVDM:
             msg['error'] = str(e)
         return msg
 
-    def decode(self, nmea, safe_decode_payload=False):
+    def decode(self, nmea, safe_decode_payload=False, validate_checksum=False):
         """
         Decode a single line of nmea that contains:
             a single-part AIVDM message, with or without prepended tagblock
@@ -102,7 +102,7 @@ class AIVDM:
 
         msg = Message(nmea)
         nmea = msg.nmea
-        parts = [expand_nmea(part) for part in split_multipart(nmea)]
+        parts = [expand_nmea(part, validate_checksum=validate_checksum) for part in split_multipart(nmea)]
         if len(parts) == 0:
             raise DecodeError('No valid AIVDM found in {}'.format(nmea))
         elif len(parts) == 1:
