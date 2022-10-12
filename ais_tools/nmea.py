@@ -7,7 +7,7 @@ from ais_tools.tagblock import isChecksumValid
 from ais_tools.tagblock import parseTagBlock
 
 
-def expand_nmea(line):
+def expand_nmea(line, validate_checksum=False):
     try:
         tagblock, nmea = parseTagBlock(line)
     except ValueError as e:
@@ -18,7 +18,7 @@ def expand_nmea(line):
     if len(fields) < 6:
         raise DecodeError('not enough fields in nmea message')
 
-    if not isChecksumValid(nmea):
+    if validate_checksum and not isChecksumValid(nmea):
         raise DecodeError('Invalid checksum')
 
     try:

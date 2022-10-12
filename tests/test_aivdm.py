@@ -27,7 +27,6 @@ def test_decode(nmea, expected):
 
 
 @pytest.mark.parametrize("nmea,error", [
-    ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
     ('!', 'No valid AIVDM found in'),
     ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36')
@@ -36,6 +35,15 @@ def test_decode_fail(nmea, error):
     decoder = AIVDM()
     with pytest.raises(aivdm.libais.DecodeError, match=error):
         decoder.decode(nmea)
+
+
+@pytest.mark.parametrize("nmea,error", [
+    ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
+])
+def test_decode_invalid_checksum(nmea, error):
+    decoder = AIVDM()
+    with pytest.raises(aivdm.libais.DecodeError, match=error):
+        decoder.decode(nmea, validate_checksum=True)
 
 
 # test for issue #1 Workaround for type 24 with bad bitcount
