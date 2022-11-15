@@ -79,3 +79,11 @@ def test_safe_decode():
     msg = decoder.safe_decode(nmea=nmea, best_effort=True)
     assert msg['error'] == 'AISTOOLS ERR: None  LIBAIS ERR: Ais6: DAC:FI not known.  6:235:10 AIS_UNINITIALIZED'
     assert msg['tagblock_timestamp'] == 1662392995
+
+
+def test_missing_part():
+    decoder = AIVDM()
+    nmea = '\\s:185.59.110.110,c:1668472438*25\\!AIVDM,2,2,6,B,6@DQ00000000008,2*4A'
+    msg = decoder.safe_decode(nmea=nmea, best_effort=True)
+    assert msg['error'] == 'Expected 2 message parts to decode but found 1'
+    assert msg['tagblock_timestamp'] == 1668472438

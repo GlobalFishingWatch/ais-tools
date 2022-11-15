@@ -124,15 +124,15 @@ class AIVDM:
             # pad value comes from the final part
             pad = pads[-1]
 
-        # Check to see if a multipart message is missing some parts, or maybe has extra
-        if len(parts) != tagblock['tagblock_groupsize']:
-            raise DecodeError(
-                'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
-            )
-
         msg.update(tagblock)
 
         try:
+            # Check to see if a multipart message is missing some parts, or maybe has extra
+            if len(parts) != tagblock['tagblock_groupsize']:
+                raise DecodeError(
+                    'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
+                )
+
             msg.update(self.decode_payload(body, pad))
         except DecodeError as e:
             if safe_decode_payload:
