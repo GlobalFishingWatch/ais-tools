@@ -12,14 +12,11 @@ with warnings.catch_warnings():
     from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
-nmeaChecksumRegExStr = r"""\,[0-9]\*[0-9A-F][0-9A-F]"""
-nmeaChecksumRE = re.compile(nmeaChecksumRegExStr)
 
 
-def isChecksumValid(nmeaStr, allowTailData=True):
+def isChecksumValid(nmeaStr):
     """Return True if the string checks out with the checksum.
 
-    @param allowTailData: Permit handing of Coast Guard format with data after the checksum
     @param data: NMEA message.  Leading ?/! are optional
     @type data: str
     @return: True if the checksum matches
@@ -34,15 +31,17 @@ def isChecksumValid(nmeaStr, allowTailData=True):
     False
     """
 
-    if allowTailData:
-        match = nmeaChecksumRE.search(nmeaStr)
-        if not match:
-            return False
-        nmeaStr = nmeaStr[:match.end()]
+    if len(nmeaStr) < 4:
+        return False
 
     if nmeaStr[-3] != '*':
         return False  # Bad string without proper checksum.
     checksum = nmeaStr[-2:]
+    nmeaStr = nmeaStr[:-3]
+    if nmeaStr[0] in ('!', '?', '\\'):
+        nmeaStr = nmeaStr[1:]
+
+    print(nmeaStr, checksum.upper(), checksumstr(nmeaStr))
     if checksum.upper() == checksumstr(nmeaStr):
         return True
     return False
