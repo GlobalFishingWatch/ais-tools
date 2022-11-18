@@ -1,7 +1,7 @@
 import pytest
 
 from ais_tools.checksum import checksum
-from ais_tools.checksum import checksum_str
+from ais_tools.checksum import checksumstr
 from ais.stream.checksum import checksumStr
 
 
@@ -21,7 +21,7 @@ def test_checksum(str, expected):
     ('', '00'),
 ])
 def test_checksum_str(str, expected):
-    actual = checksum_str(str)
+    actual = checksumstr(str)
 
     assert actual == expected
     if len(str) > 1:

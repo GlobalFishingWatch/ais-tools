@@ -24,7 +24,7 @@ checksum_compute_checksum(PyObject *module, PyObject *args)
 }
 
 static PyObject *
-checksum_compute_checksum_str(PyObject *module, PyObject *args)
+checksum_compute_checksumstr(PyObject *module, PyObject *args)
 {
     const char *str;
     int c;
@@ -65,7 +65,7 @@ static PyMethodDef checksum_methods[] = {
 //     "Print a lovely skit to standard output."},
     {"checksum", (PyCFunction)(void(*)(void))checksum_compute_checksum, METH_VARARGS,
      "Compute checksum of a string. returns an integer value"},
-    {"checksum_str", (PyCFunction)(void(*)(void))checksum_compute_checksum_str, METH_VARARGS,
+    {"checksumstr", (PyCFunction)(void(*)(void))checksum_compute_checksumstr, METH_VARARGS,
      "Compute checksum of a string. returns a 2-character hex string"},
     {NULL, NULL, 0, NULL}   /* sentinel */
 };
