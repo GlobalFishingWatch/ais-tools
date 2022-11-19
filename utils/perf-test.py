@@ -29,6 +29,21 @@ def libais_vs_aistools():
         print()
 
 
+def checksum_compare():
+    str = 'A' * 30
+    num_iterations = 1000000
+    print('checksum_str',
+          timeit.timeit(f'checksumstr("{str}")',
+                        setup='from ais_tools.checksum import checksumstr',
+                        number=num_iterations)
+          )
+    print('checksumStr',
+          timeit.timeit(f'checksumStr("{str}")',
+                        setup='from ais.stream.checksum import checksumStr',
+                        number=num_iterations)
+          )
+
+
 decoder = AIVDM(AisToolsDecoder())
 
 
@@ -53,8 +68,9 @@ def run_perf_test(func):
 
 
 def main():
-    # run_perf_test('decode(10000)')
-    run_perf_test('full_decode(100000)')
+    run_perf_test('decode(10000)')
+    # run_perf_test('full_decode(100000)')
+    # checksum_compare()
 
 
 if __name__ == "__main__":

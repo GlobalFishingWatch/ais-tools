@@ -1,12 +1,11 @@
 from datetime import datetime
 from datetime import timezone
 
+from ais_tools.checksum import checksumstr
 
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from ais.stream.checksum import isChecksumValid     # noqa: F401
-    from ais.stream.checksum import checksumStr
     from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
@@ -45,7 +44,7 @@ def create_tagblock(station, timestamp=None, add_tagblock_t=True):
     if add_tagblock_t:
         params['T'] = datetime.fromtimestamp(t, tz=timezone.utc).strftime(TAGBLOCK_T_FORMAT)
     param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
-    return '{}*{}'.format(param_str, checksumStr(param_str))
+    return '{}*{}'.format(param_str, checksumstr(param_str))
 
 
 def split_tagblock(nmea):

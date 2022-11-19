@@ -51,8 +51,8 @@ def test_join_tagblock(t, nmea, expected):
 
 @pytest.mark.parametrize("t,nmea,overwrite,expected", [
     ("", "", None, ""),
-    ('c:1000,s:new*5B', '\\c:1000,s:old*5B\\!AIVDM', True, "\\c:1000,s:new*5B\\!AIVDM"),
-    ('c:1000,s:new*5B', '\\c:1000,s:old*5B\\!AIVDM', False, "\\c:1000,s:old*5B\\!AIVDM"),
+    ('c:1000,s:new*5A', '\\c:1000,s:old*5A\\!AIVDM', True, "\\c:1000,s:new*5A\\!AIVDM"),
+    ('c:1000,s:new*5A', '\\c:1000,s:old*5A\\!AIVDM', False, "\\c:1000,s:old*5A\\!AIVDM"),
 ])
 def test_add_tagblock(t, nmea, overwrite, expected):
     assert expected == tagblock.add_tagblock(t, nmea, overwrite)
