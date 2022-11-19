@@ -9,17 +9,29 @@ from setuptools import setup
 
 import codecs
 
+import sys
+from setuptools import Extension
+
 package = __import__('ais_tools')
+
+extra_compile_args = []
+extra_link_args = []
+undef_macros = []
+
+
+if sys.platform == "win32":
+    extra_compile_args += []
+else:
+    extra_compile_args += ["-std=c11", "-Wall", "-Werror", "-O3"]
 
 
 DEPENDENCIES = [
     "libais",
-    "Click==7.0",
+    "Click",
     "gpxpy",
     "requests",
-    "bitstring",
-    "markupsafe==2.0.1",  # TODO remove this pin after this is fixed https://github.com/pallets/markupsafe/issues/284
-    "Flask-API",
+    "bitarray",
+    "cbitstruct",
 ]
 
 DEV_DEPENDENCIES = [
@@ -53,4 +65,14 @@ setup(
         [console_scripts]
         ais-tools=ais_tools.cli:cli
     ''',
+    ext_modules=[
+        Extension(
+            "ais_tools.checksum",
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
+            sources=["ais_tools/checksum.c"],
+            include_dirs=["ais_tools/"],
+            undef_macros=undef_macros,
+        )
+    ],
 )

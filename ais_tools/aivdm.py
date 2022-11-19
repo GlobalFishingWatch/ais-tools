@@ -8,7 +8,7 @@ from ais import DecodeError
 from ais_tools.ais import AISMessageTranscoder
 from ais_tools.nmea import split_multipart
 from ais_tools.nmea import expand_nmea
-from ais_tools.tagblock import checksumStr
+from ais_tools.checksum import checksumstr
 from ais_tools.message import Message
 
 
@@ -57,6 +57,9 @@ class AisToolsEncoder:
         self.transcoder = AISMessageTranscoder()
 
     def encode_payload(self, message):
+        if not self.transcoder.can_encode(message):
+            raise DecodeError(f'AISTOOLS ERR: Failed to encode unknown message type {message.get("id")}')
+
         return self.transcoder.encode_nmea(message)
 
 
@@ -70,7 +73,7 @@ class AIVDM:
         self.decoder = decoder or AisToolsDecoder()
         self.encoder = encoder or AisToolsEncoder()
 
-    def safe_decode(self, nmea):
+    def safe_decode(self, nmea, best_effort=False):
         """
         Attempt to decode an AIVDM message using AIVDM.decode().   If a error occurs and DecodeError is raised,
         suppress the exception and instead return a dict:
@@ -82,24 +85,24 @@ class AIVDM:
         """
         msg = Message(nmea)
         try:
-            msg = self.decode(nmea)
+            msg = self.decode(nmea, safe_decode_payload=best_effort)
         except libais.DecodeError as e:
             msg['error'] = str(e)
         return msg
 
-    def decode(self, nmea):
+    def decode(self, nmea, safe_decode_payload=False, validate_checksum=False):
         """
         Decode a single line of nmea that contains:
             a single-part AIVDM message, with or without prepended tagblock
             or a concatenated set of AIVDM messages that make up the parts for a multi-part message
-        Returns a dict with the passed in nmea string in the "nmea" field and the
+        Returns a dict with the passed in nmea string in the "nmea" field
 
         raises DecodeError if the message cannot be decoded.
         """
 
         msg = Message(nmea)
         nmea = msg.nmea
-        parts = [expand_nmea(part) for part in split_multipart(nmea)]
+        parts = [expand_nmea(part, validate_checksum=validate_checksum) for part in split_multipart(nmea)]
         if len(parts) == 0:
             raise DecodeError('No valid AIVDM found in {}'.format(nmea))
         elif len(parts) == 1:
@@ -121,14 +124,21 @@ class AIVDM:
             # pad value comes from the final part
             pad = pads[-1]
 
-        # Check to see if a multipart message is missing some parts, or maybe has extra
-        if len(parts) != tagblock['tagblock_groupsize']:
-            raise DecodeError(
-                'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
-            )
-
         msg.update(tagblock)
-        msg.update(self.decode_payload(body, pad))
+
+        try:
+            # Check to see if a multipart message is missing some parts, or maybe has extra
+            if len(parts) != tagblock['tagblock_groupsize']:
+                raise DecodeError(
+                    'Expected {} message parts to decode but found {}'.format(tagblock['tagblock_groupsize'], len(parts))
+                )
+
+            msg.update(self.decode_payload(body, pad))
+        except DecodeError as e:
+            if safe_decode_payload:
+                msg['error'] = str(e)
+            else:
+                raise
 
         return msg
 
@@ -149,14 +159,14 @@ class AIVDM:
         try:
             return self.encode(message)
         except DecodeError as e:
-            msg = self.encode(Message(id=25, text='ERROR'))
+            msg = self.encode(Message(id=25, mmsi=0, text='ERROR'))
             msg['error'] = str(e)
             return msg
 
     def encode(self, message):
         body, pad = self.encode_payload(message)
         sentence = "AIVDM,1,1,,A,{},{}".format(body, pad)
-        return Message("!{}*{}".format(sentence, checksumStr(sentence)))
+        return Message("!{}*{}".format(sentence, checksumstr(sentence)))
 
     def encode_payload(self, message):
         return self.encoder.encode_payload(message)

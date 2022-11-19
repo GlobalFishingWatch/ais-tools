@@ -6,6 +6,11 @@ import json
 from urllib.parse import quote as url_quote
 import posixpath as pp
 import uuid
+from hashlib import md5
+import ais_tools
+
+
+default_uuid_fields = ('source', 'tagblock_station', 'nmea', 'tagblock_timestamp')
 
 
 class UUID:
@@ -39,8 +44,6 @@ class Message(dict):
             message = args[0]
             if not message:
                 pass
-            elif isinstance(message, dict):
-                self.update(message)
             elif isinstance(message, str):
                 message = message.strip()
                 if len(message) == 0:
@@ -53,8 +56,10 @@ class Message(dict):
                         # Nope - not JSON.  Giving up...
                         self.update(dict(nmea=message, error="JSONDecodeError: {}".format(str(e))))
                 else:
-                    # assume it's an NMEA string and pack it up in a dict
-                    self.update(dict(nmea=message))
+                    # assume it's an NMEA string
+                    self['nmea'] = message
+            elif isinstance(message, dict):
+                self.update(message)
             else:
                 raise ValueError("Unable to convert {} to NMEA message".format(message))
 
@@ -67,12 +72,21 @@ class Message(dict):
             self['source'] = source
         return self
 
-    def create_uuid(self):
-        return str(UUID(self.get('source', 'ais-tools'), self.get('nmea', '')))
+    def create_uuid(self, fields=default_uuid_fields):
+        name = '|'.join((str(self.get(f, '')) for f in fields))
+        hex = md5(bytes(name, "utf-8")).digest().hex()
+        return '%s-%s-%s-%s-%s' % (
+            hex[:8], hex[8:12], hex[12:16], hex[16:20], hex[20:32]
+        )
 
-    def add_uuid(self, overwrite=False):
+    def add_uuid(self, overwrite=False, fields=default_uuid_fields):
         if self.get('uuid') is None or overwrite:
-            self['uuid'] = self.create_uuid()
+            self['uuid'] = self.create_uuid(fields=fields)
+        return self
+
+    def add_parser_version(self, overwrite=False):
+        if self.get('parser') is None or overwrite:
+            self['parser'] = 'ais-tools-' + ais_tools.__version__
         return self
 
     @classmethod

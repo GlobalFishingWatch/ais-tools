@@ -13,6 +13,9 @@ from ais_tools import tagblock
     ("\\g:1-2-9907,s:rORBCOMM00,c:1327423135*6d"
      "\\!AIVDM,2,1,7,B,56:ToV0000008Q@S400nuJ0`Tr1UD4r1<PDpN3T:000004Hl0AVR5B0B@000,0*10",
      1327423135),
+    ("\\c:invalid*6d"
+     "\\!AIVDM,2,1,7,B,56:ToV0000008Q@S400nuJ0`Tr1UD4r1<PDpN3T:000004Hl0AVR5B0B@000,0*10",
+     0),
 ])
 def test_safe_tagblock_timestamp(line, expected):
     assert tagblock.safe_tagblock_timestamp(line) == expected
@@ -48,8 +51,8 @@ def test_join_tagblock(t, nmea, expected):
 
 @pytest.mark.parametrize("t,nmea,overwrite,expected", [
     ("", "", None, ""),
-    ('c:1000,s:new*5B', '\\c:1000,s:old*5B\\!AIVDM', True, "\\c:1000,s:new*5B\\!AIVDM"),
-    ('c:1000,s:new*5B', '\\c:1000,s:old*5B\\!AIVDM', False, "\\c:1000,s:old*5B\\!AIVDM"),
+    ('c:1000,s:new*5A', '\\c:1000,s:old*5A\\!AIVDM', True, "\\c:1000,s:new*5A\\!AIVDM"),
+    ('c:1000,s:new*5A', '\\c:1000,s:old*5A\\!AIVDM', False, "\\c:1000,s:old*5A\\!AIVDM"),
 ])
 def test_add_tagblock(t, nmea, overwrite, expected):
     assert expected == tagblock.add_tagblock(t, nmea, overwrite)

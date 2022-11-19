@@ -3,11 +3,15 @@ from datetime import datetime
 import re
 
 from ais import DecodeError
-from ais_tools.tagblock import isChecksumValid
+from ais_tools.checksum import is_checksum_valid
 from ais_tools.tagblock import parseTagBlock
 
+REGEX_BANG = re.compile(r'(![^!]+)')
+REGEX_BACKSLASH = re.compile(r'(\\[^\\]+\\![^!\\]+)')
+REGEX_BACKSLASH_BANG = re.compile(r'(\\![^!\\]+)')
 
-def expand_nmea(line):
+
+def expand_nmea(line, validate_checksum=False):
     try:
         tagblock, nmea = parseTagBlock(line)
     except ValueError as e:
@@ -18,7 +22,7 @@ def expand_nmea(line):
     if len(fields) < 6:
         raise DecodeError('not enough fields in nmea message')
 
-    if not isChecksumValid(nmea):
+    if validate_checksum and not is_checksum_valid(nmea):
         raise DecodeError('Invalid checksum')
 
     try:
@@ -54,15 +58,15 @@ def split_multipart(line):
     and all parts in the line should have the same format
     """
     if line.startswith('!'):
-        regex = r'(![^!]+)'
+        regex = REGEX_BANG
     elif line.startswith('\\!'):
-        regex = r'(\\![^!\\]+)'
+        regex = REGEX_BACKSLASH_BANG
     elif line.startswith('\\'):
-        regex = r'(\\[^\\]+\\![^!\\]+)'
+        regex = REGEX_BACKSLASH
     else:
         raise DecodeError('no valid AIVDM message detected')
 
-    return re.findall(regex, line)
+    return regex.findall(line)
 
 
 def join_multipart(lines):

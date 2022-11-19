@@ -1,4 +1,5 @@
 import pytest
+import ais_tools
 from ais_tools.message import Message
 from ais_tools.message import UUID
 import itertools as it
@@ -13,18 +14,25 @@ def test_uuid():
     ('!AIVDM1234567*89', {'nmea': '!AIVDM1234567*89'}),
     ({'nmea': '!AIVDM1234567*89'}, {'nmea': '!AIVDM1234567*89'}),
     ('{"nmea": "!AIVDM1234567*89"}', {'nmea': '!AIVDM1234567*89'}),
+    ('\n', {'nmea': ''}),
 ])
 def test_message_construct(msg, expected):
     assert Message(msg) == expected
 
 
-@pytest.mark.parametrize("msg", [
+@pytest.mark.parametrize("arg", [
     42,
     ['!AIVDM'],
 ])
-def test_message_construct_fail(msg):
+def test_message_construct_fail(arg):
     with pytest.raises(ValueError):
-        Message(msg)
+        Message(arg)
+
+
+def test_message_construct_too_many_args():
+    with pytest.raises(ValueError, match='Message can only be constructed with a single positional '
+                                         'argument or one or more kwargs'):
+        Message(1, 2)
 
 
 @pytest.mark.parametrize("msg", [
@@ -45,13 +53,15 @@ def test_add_source(msg, source, overwrite, expected):
 
 
 @pytest.mark.parametrize("msg,overwrite,expected", [
-    ({}, False, {'nmea': '', 'uuid': '02638ec7-57a1-513b-9a77-bf1e9ab8168e'}),
-    ({'nmea': '!AVIDM123'}, False, {'nmea': '!AVIDM123', 'uuid': 'a12758f1-dc54-5441-a3ff-10018331c665'}),
-    ({'nmea': '!AVIDM123', 'uuid': 'old'}, False, {'nmea': '!AVIDM123', 'uuid': 'old'}),
-    ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, {'nmea': '!AVIDM123', 'uuid': 'a12758f1-dc54-5441-a3ff-10018331c665'}),
+    ({}, False, '2edf2958-1665-61c5-c08c-d228e53bbcdc'),
+    ({'nmea': '!AVIDM123'}, False, '1d469a2d-5b2f-4ef9-f5ac-fb4e336e91da'),
+    ({'nmea': '!AVIDM123', 'uuid': 'old'}, False, 'old'),
+    ({'nmea': '!AVIDM123', 'uuid': 'old'}, True, '1d469a2d-5b2f-4ef9-f5ac-fb4e336e91da'),
+    ({'nmea': '!AVIDM123', 'tagblock_timestamp': 1598653784}, True, '9f2cb724-3e0b-97ff-00b5-67fcf1ca94b4'),
 ])
 def test_add_uuid(msg, overwrite, expected):
-    assert Message(msg).add_uuid(overwrite) == expected
+    msg = Message(msg).add_uuid(overwrite=overwrite)
+    assert msg['uuid'] == expected
 
 
 @pytest.mark.parametrize("msg", [
@@ -94,7 +104,7 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
     messages = [{'nmea': '!AVIDM123', 'source': 'test', 'uuid': old_uuid}]
 
     if add_uuid and (overwrite or old_uuid is None):
-        expected = '84ce1423-6ae0-5db6-b55a-11c28bb3a7b4'
+        expected = '123c397d-7053-8788-5984-74c73f833f37'
     else:
         expected = old_uuid
     messages = Message.stream(messages)
@@ -102,3 +112,9 @@ def test_message_stream_add_uuid(old_uuid, add_uuid, overwrite):
         if add_uuid:
             m.add_uuid(overwrite=overwrite)
         assert m.get('uuid') == expected
+
+
+def test_add_parser_version():
+    message = Message()
+    message.add_parser_version()
+    assert ais_tools.__version__ in message['parser']

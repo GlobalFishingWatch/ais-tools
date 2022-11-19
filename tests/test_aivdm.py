@@ -12,7 +12,12 @@ from ais_tools.message import Message
     ('!AIVDM,2,1,7,A,<M000000000000000000GcMvmEEEOPB6??uR0001np`R0;gbpaR@gP7GbSeH,0*63!AIVDM,2,2,7,A,OeEEEGp4Qf<,2*74',
      {"mmsi": 872415232}),
     ('!AIVDM,1,1,,A,83am8S@j<d8dtfMEuj9loFOM6@00,0*69', {'id': 8}),
-
+    ('\\s:66,c:1661782483*3E\\!AIVDM,1,1,,A,35DFuH002>9NHLHCE@MB@AqD07VS,0*57', {'raim': False}),
+    ('\\s:66,c:1661782099*31\\!AIVDM,1,1,,A,33`mOp0P0n0FNg6Mv7seTwvP0S0S,0*5C', {'keep_flag': True}),
+    ('\\s:66,c:1662392695*3D\\!AIVDM,1,1,,A,E>j9dQjas000000000000000000@Ijfb?VJlh00808v>B0,4*0D',
+        {'assigned_mode': False}),
+    ('\\s:66,c:1663246931*35\\!AIVDM,1,1,,,9001?BP=h:qJ9vb;:f7EN1h240Rb,0*3F',
+        {'alt_sensor': 0, 'assigned_mode': False})
 ])
 def test_decode(nmea, expected):
     decoder = AIVDM()
@@ -22,15 +27,23 @@ def test_decode(nmea, expected):
 
 
 @pytest.mark.parametrize("nmea,error", [
-    ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
     ('!', 'No valid AIVDM found in'),
-    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: UintTranscoder Cannot read 30 bits, only 28 available.')
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36')
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()
     with pytest.raises(aivdm.libais.DecodeError, match=error):
         decoder.decode(nmea)
+
+
+@pytest.mark.parametrize("nmea,error", [
+    ('!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,1*7B', 'Invalid checksum'),
+])
+def test_decode_invalid_checksum(nmea, error):
+    decoder = AIVDM()
+    with pytest.raises(aivdm.libais.DecodeError, match=error):
+        decoder.decode(nmea, validate_checksum=True)
 
 
 # test for issue #1 Workaround for type 24 with bad bitcount
@@ -45,16 +58,32 @@ def test_bad_bitcount_type_24():
 def test_encode():
     encoder = AIVDM()
     msg = Message(
-        id=25
+        id=25, mmsi=123456789
     )
-    expected = Message('!AIVDM,1,1,,A,I00000004000,0*5B')
+    expected = Message('!AIVDM,1,1,,A,I1mg=5@0@000,5*59')
     assert expected == encoder.encode(msg)
 
 
 @pytest.mark.parametrize("message,error", [
-    ({'id': 24, 'mmsi': '123456789'}, 'AIS24: unknown part number None'),
+    ({'id': 24, 'mmsi': 123456789, 'part_num': 2}, 'AIS24: unknown part number 2'),
 ])
 def test_encode_fail(message, error):
     encoder = AIVDM()
     with pytest.raises(aivdm.libais.DecodeError, match=error):
         encoder.encode(message)
+
+
+def test_safe_decode():
+    decoder = AIVDM()
+    nmea = '\\s:66,c:1662392995*32\\!AIVDM,1,1,,B,6NlUC7@00000>d`w0000@00,2*6F'
+    msg = decoder.safe_decode(nmea=nmea, best_effort=True)
+    assert msg['error'] == 'AISTOOLS ERR: None  LIBAIS ERR: Ais6: DAC:FI not known.  6:235:10 AIS_UNINITIALIZED'
+    assert msg['tagblock_timestamp'] == 1662392995
+
+
+def test_missing_part():
+    decoder = AIVDM()
+    nmea = '\\s:185.59.110.110,c:1668472438*25\\!AIVDM,2,2,6,B,6@DQ00000000008,2*4A'
+    msg = decoder.safe_decode(nmea=nmea, best_effort=True)
+    assert msg['error'] == 'Expected 2 message parts to decode but found 1'
+    assert msg['tagblock_timestamp'] == 1668472438
