@@ -8,7 +8,7 @@ from ais import DecodeError
 from ais_tools.ais import AISMessageTranscoder
 from ais_tools.nmea import split_multipart
 from ais_tools.nmea import expand_nmea
-from ais_tools.tagblock import checksumstr
+from ais_tools.checksum import checksumstr
 from ais_tools.message import Message
 
 

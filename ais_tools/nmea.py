@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 
 from ais import DecodeError
-from ais_tools.tagblock import isChecksumValid
+from ais_tools.checksum import is_checksum_valid
 from ais_tools.tagblock import parseTagBlock
 
 
@@ -18,7 +18,7 @@ def expand_nmea(line, validate_checksum=False):
     if len(fields) < 6:
         raise DecodeError('not enough fields in nmea message')
 
-    if validate_checksum and not isChecksumValid(nmea):
+    if validate_checksum and not is_checksum_valid(nmea):
         raise DecodeError('Invalid checksum')
 
     try:

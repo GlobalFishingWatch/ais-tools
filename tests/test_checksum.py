@@ -1,6 +1,7 @@
 import pytest
 
 from ais_tools.checksum import checksum
+from ais_tools.checksum import is_checksum_valid
 from ais_tools.checksum import checksumstr
 from ais.stream.checksum import checksumStr
 
@@ -13,6 +14,7 @@ from ais.stream.checksum import checksumStr
 ])
 def test_checksum(str, expected):
     assert checksum(str) == expected
+
 
 @pytest.mark.parametrize("str,expected", [
     ('test', '16'),
@@ -27,3 +29,20 @@ def test_checksum_str(str, expected):
     if len(str) > 1:
         assert actual == checksumStr(str)
 
+
+@pytest.mark.parametrize("str,expected", [
+    ("", False),
+    ("*", False),
+    ("4", False),
+    ("40", False),
+    ("*40", False),
+    ("nochecksum", False),
+    ("partialchecksum*", False),
+    ("partialchecksum*2", False),
+    ("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09", True),
+    ("!AIVDM,11,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09", False),
+    ("c:1000,s:old*5A", True),
+    ("\\c:1000,s:old*5A", True)
+])
+def test_is_checksum_valid(str, expected):
+    assert is_checksum_valid(str) == expected

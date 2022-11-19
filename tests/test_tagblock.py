@@ -56,17 +56,3 @@ def test_join_tagblock(t, nmea, expected):
 ])
 def test_add_tagblock(t, nmea, overwrite, expected):
     assert expected == tagblock.add_tagblock(t, nmea, overwrite)
-
-
-@pytest.mark.parametrize("str,expected", [
-    ("", False),
-    ("nochecksum", False),
-    ("partialchecksum*", False),
-    ("partialchecksum*2", False),
-    ("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09", True),
-    ("!AIVDM,11,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09", False),
-    ("c:1000,s:old*5A", True),
-    ("\\c:1000,s:old*5A", True)
-])
-def test_isChecksumValid(str, expected):
-    assert tagblock.isChecksumValid(str) == expected
