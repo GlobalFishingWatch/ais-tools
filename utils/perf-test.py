@@ -68,9 +68,9 @@ def run_perf_test(func):
 
 
 def main():
-    # run_perf_test('decode(10000)')
+    run_perf_test('decode(10000)')
     # run_perf_test('full_decode(100000)')
-    checksum_compare()
+    # checksum_compare()
 
 
 if __name__ == "__main__":

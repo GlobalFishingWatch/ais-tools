@@ -10,39 +10,6 @@ with warnings.catch_warnings():
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
-#
-# def isChecksumValid(nmeaStr):
-#     """Return True if the string checks out with the checksum.
-#
-#     @param data: NMEA message.  Leading ?/! are optional
-#     @type data: str
-#     @return: True if the checksum matches
-#     @rtype: bool
-#
-#     >>> isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09")
-#     True
-#
-#     Corrupted:
-#
-#     >>> isChecksumValid("!AIVDM,11,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09")
-#     False
-#     """
-#
-#     if len(nmeaStr) < 4:
-#         return False
-#
-#     if nmeaStr[-3] != '*':
-#         return False  # Bad string without proper checksum.
-#     checksum = nmeaStr[-2:]
-#     nmeaStr = nmeaStr[:-3]
-#     if nmeaStr[0] in ('!', '?', '\\'):
-#         nmeaStr = nmeaStr[1:]
-#
-#     print(nmeaStr, checksum.upper(), checksumstr(nmeaStr))
-#     if checksum.upper() == checksumstr(nmeaStr):
-#         return True
-#     return False
-
 
 def safe_tagblock_timestamp(line):
     """
