@@ -1,7 +1,9 @@
 from datetime import datetime
 from datetime import timezone
 
+from ais import DecodeError
 from ais_tools.checksum import checksumstr
+from ais_tools.checksum import is_checksum_valid
 
 import warnings
 with warnings.catch_warnings():
@@ -81,3 +83,66 @@ def add_tagblock(tagblock, nmea, overwrite=True):
         tagblock = existing_tagblock
 
     return join_tagblock(tagblock, nmea)
+
+tagblock_fields = {
+    'c': 'tagblock_timestamp',
+    'n': 'tagblock_line_count',
+    'r': 'tagblock_relative_time',
+    'd': 'tagblock_destination',
+    's': 'tagblock_station',
+    't': 'tagblock_text',
+}
+
+tagblock_fields_reversed = {v:k for k, v in tagblock_fields.items()}
+
+tagblock_group_fields = ["tagblock_sentence", "tagblock_groupsize", "tagblock_id"]
+
+
+def encode_tagblock(**kwargs):
+    group_fields = {}
+    fields = {}
+
+    for k,v in kwargs.items():
+        if k in tagblock_group_fields:
+            group_fields[k] = str(v)
+        elif k in tagblock_fields_reversed:
+            fields[tagblock_fields_reversed[k]] = v
+        else:
+            fields[k.replace('tagblock_', '')] = v
+
+    if len(group_fields) == 3:
+        fields['g'] = '-'.join([group_fields[k] for k in tagblock_group_fields])
+
+    base_str = ','.join(["{}:{}".format(k, v) for k, v in fields.items()])
+    return '{}*{}'.format(base_str, checksumstr(base_str))
+
+
+def decode_tagblock(tagblock_str, validate_checksum=False):
+
+    tagblock = tagblock_str.rsplit("*", 1)[0]
+
+    fields = {}
+
+    if not tagblock:
+        return fields
+
+    if validate_checksum and not is_checksum_valid(tagblock_str):
+        raise DecodeError('Invalid checksum')
+
+    for field in tagblock.split(","):
+        key, value = field.split(":")
+
+        if key == 'g':
+            fields.update(dict(zip(tagblock_group_fields,
+                               [int(part) for part in value.split("-")])))
+        else:
+            if key in ['n', 'r']:
+                value = int(value)
+            elif key == 'c':
+                value = int(value)
+                if value > 40000000000:
+                    value = value / 1000.0
+
+            fields[tagblock_fields.get(key, key)] = value
+
+    return fields

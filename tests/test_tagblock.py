@@ -1,6 +1,7 @@
 import pytest
 
 from ais_tools import tagblock
+from ais_tools.tagblock import DecodeError
 
 
 @pytest.mark.parametrize("line,expected", [
@@ -56,3 +57,47 @@ def test_join_tagblock(t, nmea, expected):
 ])
 def test_add_tagblock(t, nmea, overwrite, expected):
     assert expected == tagblock.add_tagblock(t, nmea, overwrite)
+
+@pytest.mark.parametrize("fields,expected", [
+    ({}, '*00'),
+    ({'z': 123}, 'z:123*70'),
+    ({'tagblock_timestamp': 123456789}, 'c:123456789*68'),
+    ({'tagblock_timestamp': 123456789, 'tagblock_station': 'test'}, 'c:123456789,s:test*1B'),
+    ({'tagblock_timestamp': 123456789,
+      'tagblock_station': 'test',
+      'tagblock_sentence': 1}, 'c:123456789,s:test*1B'),
+    ({'tagblock_timestamp': 123456789,
+      'tagblock_station': 'test',
+      'tagblock_sentence': 1,
+      'tagblock_groupsize': 2,
+      'tagblock_id': 3}, 'c:123456789,s:test,g:1-2-3*5A'),
+])
+def test_encode_tagblock(fields, expected):
+    assert expected == tagblock.encode_tagblock(**fields)
+
+
+@pytest.mark.parametrize("tagblock_str,expected", [
+    ('*00', {}),
+    ('z:123*70', {'z': '123'}),
+    ('c:123456789*68',{'tagblock_timestamp': 123456789}),
+    ('c:123456789,s:test,g:1-2-3*5A',
+     {'tagblock_timestamp': 123456789,
+      'tagblock_station': 'test',
+      'tagblock_sentence': 1,
+      'tagblock_groupsize': 2,
+      'tagblock_id': 3}),
+])
+def test_decode_tagblock(tagblock_str, expected):
+    assert expected == tagblock.decode_tagblock(tagblock_str)
+    assert expected == tagblock.decode_tagblock(tagblock_str, validate_checksum=True)
+
+
+@pytest.mark.parametrize("tagblock_str", [
+    ('z:123*00'),
+    ('c:123456789,s:invalid,g:1-2-3*5A'),
+    ('c:123456789,s:invalid,g:1-2-3'),
+    ('c:123456789,s:invalid,g:1-2-3*ZZ'),
+])
+def test_decode_tagblock_invalid_checksum(tagblock_str):
+    with pytest.raises(DecodeError, match='Invalid checksum'):
+        tagblock.decode_tagblock(tagblock_str, validate_checksum=True)
