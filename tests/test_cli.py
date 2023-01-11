@@ -8,7 +8,9 @@ from ais_tools.cli import decode
 from ais_tools.cli import encode
 from ais_tools.cli import join_multipart
 from ais_tools.cli import cli
-from ais_tools.tagblock import parseTagBlock
+from ais_tools.tagblock import split_tagblock
+from ais_tools.tagblock import decode_tagblock
+# from ais_tools.tagblock import parseTagBlock
 
 
 def test_help():
@@ -27,7 +29,9 @@ def test_add_tagblock():
     result = runner.invoke(add_tagblock, input=input, args=args)
     assert not result.exception
 
-    tagblock, nmea = parseTagBlock(result.output.strip())
+    tagblock_str, nmea = split_tagblock(result.output.strip())
+    tagblock = decode_tagblock(tagblock_str)
+    # tagblock, nmea = parseTagBlock(result.output.strip())
     assert nmea == input
     assert tagblock['tagblock_station'] == 'test'
 
