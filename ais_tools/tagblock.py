@@ -5,10 +5,10 @@ from ais import DecodeError
 from ais_tools.checksum import checksumstr
 from ais_tools.checksum import is_checksum_valid
 
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    from ais.stream import parseTagBlock                # noqa: F401
+# import warnings
+# with warnings.catch_warnings():
+#     warnings.simplefilter("ignore")
+#     from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
@@ -58,7 +58,9 @@ def split_tagblock(nmea):
     """
     tagblock = ''
     if nmea.startswith("\\") and not nmea.startswith("\\!"):
-        tagblock, nmea = nmea[1:].split("\\", 1)
+        parts = nmea[1:].split("\\", 1)
+        if len(parts) == 2:
+            tagblock, nmea = parts
     return tagblock, nmea
 
 

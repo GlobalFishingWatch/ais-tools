@@ -4,7 +4,8 @@ import re
 
 from ais import DecodeError
 from ais_tools.checksum import is_checksum_valid
-from ais_tools.tagblock import parseTagBlock
+from ais_tools.tagblock import split_tagblock
+from ais_tools.tagblock import decode_tagblock
 
 REGEX_BANG = re.compile(r'(![^!]+)')
 REGEX_BACKSLASH = re.compile(r'(\\[^\\]+\\![^!\\]+)')
@@ -12,10 +13,8 @@ REGEX_BACKSLASH_BANG = re.compile(r'(\\![^!\\]+)')
 
 
 def expand_nmea(line, validate_checksum=False):
-    try:
-        tagblock, nmea = parseTagBlock(line)
-    except ValueError as e:
-        raise DecodeError('Failed to parse tagblock (%s) %s' % (str(e), line))
+    tagblock_str, nmea = split_tagblock(line)
+    tagblock = decode_tagblock(tagblock_str, validate_checksum=validate_checksum)
 
     nmea = nmea.strip()
     fields = nmea.split(',')

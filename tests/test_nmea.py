@@ -44,7 +44,7 @@ def test_expand_nmea(line, expected):
 ])
 def test_expand_nmea_fail(nmea):
     with pytest.raises(DecodeError):
-        tagblock, body, pad = expand_nmea(nmea)
+        tagblock, body, pad = expand_nmea(nmea, validate_checksum=True)
 
 
 @pytest.mark.parametrize("nmea", [

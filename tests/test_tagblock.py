@@ -97,6 +97,7 @@ def test_decode_tagblock(tagblock_str, expected):
     ('c:123456789,s:invalid,g:1-2-3*5A'),
     ('c:123456789,s:invalid,g:1-2-3'),
     ('c:123456789,s:invalid,g:1-2-3*ZZ'),
+    ('s:missing-tagblock-checksum,q:u,c:1509502436,T:2017-11-01 02.13.56')
 ])
 def test_decode_tagblock_invalid_checksum(tagblock_str):
     with pytest.raises(DecodeError, match='Invalid checksum'):
