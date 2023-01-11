@@ -132,19 +132,22 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
         raise DecodeError('Invalid checksum')
 
     for field in tagblock.split(","):
-        key, value = field.split(":")
+        try:
+            key, value = field.split(":")
 
-        if key == 'g':
-            fields.update(dict(zip(tagblock_group_fields,
-                               [int(part) for part in value.split("-")])))
-        else:
-            if key in ['n', 'r']:
-                value = int(value)
-            elif key == 'c':
-                value = int(value)
-                if value > 40000000000:
-                    value = value / 1000.0
+            if key == 'g':
+                fields.update(dict(zip(tagblock_group_fields,
+                                   [int(part) for part in value.split("-")])))
+            else:
+                if key in ['n', 'r']:
+                    value = int(value)
+                elif key == 'c':
+                    value = int(value)
+                    if value > 40000000000:
+                        value = value / 1000.0
 
-            fields[tagblock_fields.get(key, key)] = value
+                fields[tagblock_fields.get(key, key)] = value
+        except ValueError:
+            raise DecodeError('Unable to decode tagblock string')
 
     return fields
