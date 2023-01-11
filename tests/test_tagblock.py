@@ -58,6 +58,7 @@ def test_join_tagblock(t, nmea, expected):
 def test_add_tagblock(t, nmea, overwrite, expected):
     assert expected == tagblock.add_tagblock(t, nmea, overwrite)
 
+
 @pytest.mark.parametrize("fields,expected", [
     ({}, '*00'),
     ({'z': 123}, 'z:123*70'),
@@ -81,7 +82,7 @@ def test_encode_tagblock(fields, expected):
     ('*00', {}),
     ('z:123*70', {'z': '123'}),
     ('r:123*78', {'tagblock_relative_time': 123}),
-    ('c:123456789*68',{'tagblock_timestamp': 123456789}),
+    ('c:123456789*68', {'tagblock_timestamp': 123456789}),
     ('c:123456789,s:test,g:1-2-3*5A',
      {'tagblock_timestamp': 123456789,
       'tagblock_station': 'test',
@@ -104,6 +105,7 @@ def test_decode_tagblock(tagblock_str, expected):
 def test_decode_tagblock_invalid_checksum(tagblock_str):
     with pytest.raises(DecodeError, match='Invalid checksum'):
         tagblock.decode_tagblock(tagblock_str, validate_checksum=True)
+
 
 @pytest.mark.parametrize("tagblock_str", [
     ('invalid'),

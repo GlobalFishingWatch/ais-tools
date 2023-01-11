@@ -25,21 +25,16 @@ def expand_nmea(line, validate_checksum=False):
         raise DecodeError('Invalid checksum')
 
     try:
-        tagblock['tagblock_groupsize'] = int(fields[1])
-        tagblock['tagblock_sentence'] = int(fields[2])
-        if fields[3] != '':
-            tagblock['tagblock_id'] = int(fields[3])
+        if 'tagblock_groupsize' not in tagblock:
+            tagblock['tagblock_groupsize'] = int(fields[1])
+            tagblock['tagblock_sentence'] = int(fields[2])
+            if fields[3] != '':
+                tagblock['tagblock_id'] = int(fields[3])
         tagblock['tagblock_channel'] = fields[4]
         body = fields[5]
         pad = int(nmea.split('*')[0][-1])
     except ValueError:
         raise DecodeError('Unable to convert field to int in nmea message')
-
-    if 'tagblock_group' in tagblock:
-        tagblock_group = tagblock.get('tagblock_group', {})
-        del tagblock['tagblock_group']
-        group_fields = {'tagblock_' + k: v for k, v in tagblock_group.items()}
-        tagblock.update(group_fields)
 
     return tagblock, body, pad
 

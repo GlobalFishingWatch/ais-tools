@@ -86,6 +86,7 @@ def add_tagblock(tagblock, nmea, overwrite=True):
 
     return join_tagblock(tagblock, nmea)
 
+
 tagblock_fields = {
     'c': 'tagblock_timestamp',
     'n': 'tagblock_line_count',
@@ -95,7 +96,7 @@ tagblock_fields = {
     't': 'tagblock_text',
 }
 
-tagblock_fields_reversed = {v:k for k, v in tagblock_fields.items()}
+tagblock_fields_reversed = {v: k for k, v in tagblock_fields.items()}
 
 tagblock_group_fields = ["tagblock_sentence", "tagblock_groupsize", "tagblock_id"]
 
@@ -104,7 +105,7 @@ def encode_tagblock(**kwargs):
     group_fields = {}
     fields = {}
 
-    for k,v in kwargs.items():
+    for k, v in kwargs.items():
         if k in tagblock_group_fields:
             group_fields[k] = str(v)
         elif k in tagblock_fields_reversed:
