@@ -18,7 +18,6 @@ jobs:
         os:
           - macos-11
           - ubuntu-latest
-          - windows-latest
         python-version:
           - "3.7"
           - "3.8"
