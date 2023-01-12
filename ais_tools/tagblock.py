@@ -152,3 +152,11 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
             raise DecodeError('Unable to decode tagblock string')
 
     return fields
+
+
+def update_tagblock(nmea, **kwargs):
+    tagblock_str, nmea = split_tagblock(nmea)
+    tagblock = decode_tagblock(tagblock_str)
+    tagblock.update(kwargs)
+    tagblock_str = encode_tagblock(**tagblock)
+    return join_tagblock(tagblock_str, nmea)
