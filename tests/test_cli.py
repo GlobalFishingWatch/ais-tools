@@ -4,6 +4,7 @@ import json
 import re
 
 from ais_tools.cli import add_tagblock
+from ais_tools.cli import update_tagblock
 from ais_tools.cli import decode
 from ais_tools.cli import encode
 from ais_tools.cli import join_multipart
@@ -32,6 +33,20 @@ def test_add_tagblock():
     tagblock_str, nmea = split_tagblock(result.output.strip())
     tagblock = decode_tagblock(tagblock_str)
     # tagblock, nmea = parseTagBlock(result.output.strip())
+    assert nmea == input
+    assert tagblock['tagblock_station'] == 'test'
+
+
+def test_update_tagblock():
+
+    runner = CliRunner()
+    input = '!AIVDM,1,1,,A,B>cSnNP00FVur7UaC7WQ3wS1jCJJ,0*73'
+    args = '--station=test'
+    result = runner.invoke(update_tagblock, input=input, args=args)
+    assert not result.exception
+
+    tagblock_str, nmea = split_tagblock(result.output.strip())
+    tagblock = decode_tagblock(tagblock_str)
     assert nmea == input
     assert tagblock['tagblock_station'] == 'test'
 

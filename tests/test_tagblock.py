@@ -118,13 +118,13 @@ def test_decode_tagblock_invalid(tagblock_str):
 
 
 @pytest.mark.parametrize("tagblock_str,new_fields,expected", [
-    ('!AIVDM', {'q':123}, '\\q:123*7B\\!AIVDM'),
-    ('\\!AIVDM', {'q':123}, '\\q:123*7B\\!AIVDM'),
-    ('\\s:00*00\\!AIVDM', {'tagblock_station':99}, '\\s:99*49\\!AIVDM'),
-    ('\\s:00*00\\!AIVDM\\s:00*00\\!AIVDM', {'tagblock_station':99}, '\\s:99*49\\!AIVDM\\s:00*00\\!AIVDM'),
+    ('!AIVDM', {'q': 123}, '\\q:123*7B\\!AIVDM'),
+    ('\\!AIVDM', {'q': 123}, '\\q:123*7B\\!AIVDM'),
+    ('\\s:00*00\\!AIVDM', {'tagblock_station': 99}, '\\s:99*49\\!AIVDM'),
+    ('\\s:00*00\\!AIVDM\\s:00*00\\!AIVDM', {'tagblock_station': 99}, '\\s:99*49\\!AIVDM\\s:00*00\\!AIVDM'),
     ('\\c:123456789*68\\!AIVDM', {}, '\\c:123456789*68\\!AIVDM'),
-    ('\\c:123456789*68\\!AIVDM', {'tagblock_station':99}, '\\c:123456789,s:99*0D\\!AIVDM'),
-    ('\\c:123456789*68\\!AIVDM', {'q':123}, '\\c:123456789,q:123*3F\\!AIVDM'),
+    ('\\c:123456789*68\\!AIVDM', {'tagblock_station': 99}, '\\c:123456789,s:99*0D\\!AIVDM'),
+    ('\\c:123456789*68\\!AIVDM', {'q': 123}, '\\c:123456789,q:123*3F\\!AIVDM'),
 ])
 def test_update_tagblock(tagblock_str, new_fields, expected):
     assert expected == tagblock.update_tagblock(tagblock_str, **new_fields)
