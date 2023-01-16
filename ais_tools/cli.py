@@ -68,7 +68,7 @@ def cloud_stream(input, url, source, overwrite):
 def add_tagblock(input, output, station):
     for nmea in input:
         t = tagblock.create_tagblock(station)
-        output.write(tagblock.add_tagblock(t, nmea))
+        output.write(tagblock.add_tagblock(t, nmea.strip()))
         output.write('\n')
 
 
@@ -101,7 +101,7 @@ def update_tagblock(input, output, station, text):
     fields = {'tagblock_station': station, 'tagblock_text': text}
     fields = {k: v for k, v in fields.items() if v is not None}
     for nmea in input:
-        output.write(tagblock.update_tagblock(nmea, **fields))
+        output.write(tagblock.update_tagblock(nmea.strip(), **fields))
         output.write('\n')
 
 
