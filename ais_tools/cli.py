@@ -71,6 +71,7 @@ def add_tagblock(input, output, station):
         output.write(tagblock.add_tagblock(t, nmea))
         output.write('\n')
 
+
 @cli.command(
     short_help="Update existing tagblock with specified field values.  Create a new tagblock if none is present",
     help="Utility for updating a stream of raw AIVDM sentences with tagblocks, modifying the tagblock to"
