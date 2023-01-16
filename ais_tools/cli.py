@@ -71,6 +71,38 @@ def add_tagblock(input, output, station):
         output.write(tagblock.add_tagblock(t, nmea))
         output.write('\n')
 
+@cli.command(
+    short_help="Update existing tagblock with specified field values.  Create a new tagblock if none is present",
+    help="Utility for updating a stream of raw AIVDM sentences with tagblocks, modifying the tagblock to"
+         "add or overwrite selected fields "
+         "\n\n"
+         "INPUT should be a text stream with one NMEA message per line, and defaults to stdin.  Use '-' to explicitly "
+         "use stdin"
+         "\n\n"
+         "OUTPUT is a text stream of the input NMEA with modified tagblock"
+         "\n\n"
+         "For example:"
+         "\n\n"
+         "$ echo '\\c:1577762601537,s:99\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49' | \\"
+         "  ais_tools update-tagblock -s my-station"
+         "\n\n"
+         "outputs something like"
+         "\n\n"
+         "\\c:1577762601537,s:my-station*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49"
+)
+@click.argument('input', type=click.File('r'), default='-')
+@click.argument('output', type=click.File('w'), default='-')
+@click.option('-s', '--station',
+              help="identifier for the receiving station")
+@click.option('-t', '--text',
+              help="tagblock text field")
+def update_tagblock(input, output, station, text):
+    fields = {'tagblock_station': station, 'tagblock_text': text}
+    fields = {k: v for k, v in fields.items() if v is not None}
+    for nmea in input:
+        output.write(tagblock.update_tagblock(nmea, **fields))
+        output.write('\n')
+
 
 @cli.command(
     short_help="Decode AIS from NMEA to JSON",
