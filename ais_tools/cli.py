@@ -101,7 +101,7 @@ def update_tagblock(input, output, station, text):
     fields = {'tagblock_station': station, 'tagblock_text': text}
     fields = {k: v for k, v in fields.items() if v is not None}
     for nmea in input:
-        output.write(tagblock.update_tagblock(nmea.strip(), **fields))
+        output.write(tagblock.safe_update_tagblock(nmea.strip(), **fields))
         output.write('\n')
 
 
