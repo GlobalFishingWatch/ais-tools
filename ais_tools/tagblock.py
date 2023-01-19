@@ -160,3 +160,11 @@ def update_tagblock(nmea, **kwargs):
     tagblock.update(kwargs)
     tagblock_str = encode_tagblock(**tagblock)
     return join_tagblock(tagblock_str, nmea)
+
+
+def safe_update_tagblock(nmea, **kwargs):
+    try:
+        nmea = update_tagblock(nmea, **kwargs)
+    except DecodeError:
+        pass
+    return nmea
