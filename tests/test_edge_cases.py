@@ -3,7 +3,7 @@ from ais_tools.cli import update_tagblock
 from ais_tools.tagblock import decode_tagblock
 
 
-#issue 40 Update-tagblock fails on malformed group field in tagblock
+# issue 40 Update-tagblock fails on malformed group field in tagblock
 # https://github.com/GlobalFishingWatch/ais-tools/issues/40
 
 def test_issue_40():
@@ -13,6 +13,7 @@ def test_issue_40():
     result = runner.invoke(update_tagblock, input=input, args=args)
     assert not result.exception
     assert result.output.strip() == input
+
 
 def test_tagblock_group_with_extra_delimiters():
     tagblock = decode_tagblock('g:1-2--001,c:1326055296*3C')
