@@ -111,9 +111,11 @@ def test_decode_tagblock_invalid_checksum(tagblock_str):
     ('invalid'),
     ('c:invalid'),
     ('c:123456789,z'),
+    ('g:BAD,c:1326055296'),
+    ('g:1-2,c:1326055296')
 ])
 def test_decode_tagblock_invalid(tagblock_str):
-    with pytest.raises(DecodeError, match='Unable to decode tagblock string'):
+    with pytest.raises(DecodeError, match='Unable to decode tagblock'):
         tagblock.decode_tagblock(tagblock_str, validate_checksum=False)
 
 

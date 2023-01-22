@@ -137,8 +137,10 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
             key, value = field.split(":")
 
             if key == 'g':
-                fields.update(dict(zip(tagblock_group_fields,
-                                   [int(part) for part in value.split("-")])))
+                parts = [int(part) for part in value.split("-") if part]
+                if len(parts) != 3:
+                    raise DecodeError('Unable to decode tagblock group')
+                fields.update(dict(zip(tagblock_group_fields, parts)))
             else:
                 if key in ['n', 'r']:
                     value = int(value)
