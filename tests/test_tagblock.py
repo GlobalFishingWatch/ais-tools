@@ -3,6 +3,8 @@ import pytest
 from ais_tools import tagblock
 from ais_tools.tagblock import DecodeError
 
+from ais_tools import _tagblock
+
 
 @pytest.mark.parametrize("line,expected", [
     ("\\s:rORBCOMM000,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*7B",
@@ -130,3 +132,8 @@ def test_decode_tagblock_invalid(tagblock_str):
 ])
 def test_update_tagblock(tagblock_str, new_fields, expected):
     assert expected == tagblock.update_tagblock(tagblock_str, **new_fields)
+
+
+
+def test_split_fields():
+    assert _tagblock.decode('a:1,b:2') == 'tags'
