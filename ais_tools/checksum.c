@@ -4,6 +4,7 @@
 #include <Python.h>
 #include <stdbool.h>
 #include <string.h>
+#include "checksum.h"
 
 int _checksum(const char *s)
 {
@@ -23,18 +24,36 @@ char* _checksum_str(const char * s, char* checksum)
 bool _is_checksum_valid(char* s)
 {
   const char * skip_chars = "!?\\";
-  const char * separator = "*";
+  const char separator = '*';
+//  const char * separator = "*";
 
   char* body = s;
   char* checksum = NULL;
   char computed_checksum[3];
-  char* lasts = NULL;
+//  char* lasts = NULL;
 
   if (*body && strchr(skip_chars, body[0]))
     body++;
 
-  body = strtok_r(body, separator, &lasts);
-  checksum = strtok_r(NULL, separator, &lasts);
+  char* ptr = body;
+  while (*ptr != '\0' && *ptr != separator)
+      ptr++;
+
+  if (*ptr == '*')
+      *ptr++ = '\0';
+  checksum = ptr;
+
+//  if (*body == *separator)
+//  {
+//      // special case with zero-length body
+//      *body = '\0';
+//      checksum = body + 1;
+//  }
+//  else
+//  {
+//      body = strtok_r(body, separator, &lasts);
+//      checksum = strtok_r(NULL, separator, &lasts);
+//  }
   if (checksum == NULL || strlen(checksum) != 2)
     return false;
 
@@ -70,11 +89,18 @@ static PyObject *
 checksum_is_checksum_valid(PyObject *module, PyObject *args)
 {
     char *str;
+    char buffer[MAX_SENTENCE_LENGTH];
 
     if (!PyArg_ParseTuple(args, "s", &str))
         return NULL;
 
-    return _is_checksum_valid(str) ? Py_True: Py_False;
+    if (strlcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
+    {
+        PyErr_SetString(PyExc_ValueError, "String too long");
+        return NULL;
+    }
+
+    return _is_checksum_valid(buffer) ? Py_True: Py_False;
 }
 
 

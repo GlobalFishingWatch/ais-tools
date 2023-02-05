@@ -36,6 +36,7 @@ def test_checksum_str(str, expected):
 
 @pytest.mark.parametrize("str,expected", [
     ("", False),
+    ("*00", True),
     ("*", False),
     ("4", False),
     ("40", False),

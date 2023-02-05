@@ -82,7 +82,7 @@ def test_encode_tagblock(fields, expected):
 
 @pytest.mark.parametrize("tagblock_str,expected", [
     ('*00', {}),
-    ('z:123*70', {'z': '123'}),
+    ('z:123*70', {'tagblock_z': '123'}),
     ('r:123*78', {'tagblock_relative_time': 123}),
     ('c:123456789*68', {'tagblock_timestamp': 123456789}),
     ('c:123456789,s:test,g:1-2-3*5A',
@@ -113,8 +113,10 @@ def test_decode_tagblock_invalid_checksum(tagblock_str):
     ('invalid'),
     ('c:invalid'),
     ('c:123456789,z'),
+    ('n:not_a_number'),
     ('g:BAD,c:1326055296'),
-    ('g:1-2,c:1326055296')
+    ('g:1-2,c:1326055296'),
+    ('g:1-2-BAD'),
 ])
 def test_decode_tagblock_invalid(tagblock_str):
     with pytest.raises(DecodeError, match='Unable to decode tagblock'):
@@ -135,5 +137,47 @@ def test_update_tagblock(tagblock_str, new_fields, expected):
 
 
 
-def test_split_fields():
-    assert _tagblock.decode('a:1,b:2') == 'tags'
+@pytest.mark.parametrize("tagblock_str,expected", [
+    ('', {}),
+    ('*00', {}),
+    ('a:1', {'tagblock_a': '1'}),
+    ('d:dest*00', {'tagblock_destination': 'dest'}),
+    ('n:42', {'tagblock_line_count': 42}),
+    ("c:123456789", {'tagblock_timestamp': 123456789}),
+    ('g:1-2-3', {'tagblock_sentence': 1, 'tagblock_groupsize': 2, 'tagblock_id': 3})
+])
+def test_tagblock_decode(tagblock_str, expected):
+    assert _tagblock.decode(tagblock_str) == expected
+
+
+@pytest.mark.parametrize("fields,expected", [
+    (None,'*00'),
+    ({},'*00'),
+    ({'a': 1}, 'a:1*6A'),
+    ({'tagblock_a': 1}, 'a:1*6A'),
+    ({'tagblock_a': None}, 'a:None*71'),
+    ({'tagblock_timestamp': 12345678}, "c:12345678*51"),
+    ({'tagblock_sentence': 1, 'tagblock_groupsize': 2, 'tagblock_id': 3}, 'g:1-2-3*6D'),
+    ({'tagblock_line_count': 1}, 'n:1*65')
+])
+def test_tagblock_encode(fields, expected):
+    assert _tagblock.encode(fields) == expected
+
+
+@pytest.mark.parametrize("fields", [
+    ({}),
+    ({'tagblock_a': '1'}),
+    ({'tagblock_timestamp': 12345678}),
+    ({'tagblock_timestamp': 12345678,
+      'tagblock_destination': 'D',
+      'tagblock_line_count': 2,
+      'tagblock_station': 'S',
+      'tagblock_text': 'T',
+      'tagblock_relative_time': 12345678,
+      'tagblock_sentence': 1,
+      'tagblock_groupsize': 2,
+      'tagblock_id': 3
+      }),
+])
+def test_encode_decode(fields):
+    assert _tagblock.decode(_tagblock.encode(fields)) == fields
