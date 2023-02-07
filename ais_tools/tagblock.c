@@ -38,6 +38,10 @@ struct TAGBLOCK_FIELD
 #define CUSTOM_FIELD_PREFIX    "tagblock_"
 #define TAGBLOCK_GROUP         "g"
 
+#define ERR_TAGBLOCK_DECODE    "Unable to decode tagblock string"
+#define ERR_TAGBLOCK_TOO_LONG  "Tagblock string too long"
+#define ERR_TOO_MANY_FIELDS    "Too many fields"
+
 typedef struct {char short_key[2]; const char* long_key;} KEY_MAP;
 static KEY_MAP key_map[] = {
     {"c", TAGBLOCK_TIMESTAMP},
@@ -118,8 +122,6 @@ int split_fields(char* tagblock_str, struct TAGBLOCK_FIELD* fields, int max_fiel
     if (field_save_ptr != NULL)
         *field_save_ptr = '\0';
 
-//    tagblock_str = strtok_r(tagblock_str, CHECKSUM_SEPARATOR, &field_save_ptr);
-
     // make sure we have something to decode
     if (!tagblock_str || !*tagblock_str)
         return 0;
@@ -148,11 +150,13 @@ int split_fields(char* tagblock_str, struct TAGBLOCK_FIELD* fields, int max_fiel
     return idx;
 }
 
+// TODO: need a return value that indicates the string is too long
 size_t join_fields(const struct TAGBLOCK_FIELD* fields, size_t num_fields, char* tagblock_str, size_t buf_size)
 {
-    const char * end = tagblock_str + buf_size - 1;
+    const char * end = tagblock_str + buf_size - 4;
     size_t last_field_idx = num_fields - 1;
     char * ptr = tagblock_str;
+    char checksum_str[3];
 
     for (size_t idx = 0; idx < num_fields; idx++)
     {
@@ -165,7 +169,14 @@ size_t join_fields(const struct TAGBLOCK_FIELD* fields, size_t num_fields, char*
         }
     }
     *ptr++ = '\0';  // very important!  unsafe_strcat does not add a null at the end of the string
-    return ptr - tagblock_str;
+
+    // TODO: use unsafe_strcat instead of strcat
+    _checksum_str(tagblock_str, checksum_str);
+
+    strcat(tagblock_str, CHECKSUM_SEPARATOR);
+    strcat(tagblock_str, checksum_str);
+
+    return strlen(tagblock_str);
 }
 
 int decode_timestamp_field(struct TAGBLOCK_FIELD* field, PyObject* dict)
@@ -265,21 +276,22 @@ size_t encode_group_fields(char* buffer, size_t buf_size, struct TAGBLOCK_FIELD*
 }
 
 static PyObject *
-tagblock_decode(PyObject *module, PyObject *args)
+tagblock_decode(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 {
-    char *param;
+    const char *param;
     char tagblock_str[MAX_TAGBLOCK_STR_LEN];
     struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
     int num_fields = 0;
     int status = SUCCESS;
 
-
-    if (!PyArg_ParseTuple(args, "s", &param))
+    if (nargs != 1)
         return NULL;
+
+    param = PyUnicode_AsUTF8(PyObject_Str(args[0]));
 
     if (strlcpy(tagblock_str, param, ARRAY_LENGTH(tagblock_str)) >= ARRAY_LENGTH(tagblock_str))
     {
-        PyErr_SetString(PyExc_ValueError, "Tagblock string too long");
+        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
         return NULL;
     }
 
@@ -320,40 +332,31 @@ tagblock_decode(PyObject *module, PyObject *args)
         return dict;
     else
     {
-        PyErr_SetString(PyExc_ValueError, "Tagblock decode failure");
+        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_DECODE);
         return NULL;
     }
 }
 
-static PyObject *
-tagblock_encode(PyObject *module, PyObject *args)
+int encode_fields(PyObject* dict, struct TAGBLOCK_FIELD* fields, size_t max_fields, char* buffer, size_t buf_size)
 {
-
-    PyObject *dict, *key, *value;
+    PyObject *key, *value;
     Py_ssize_t pos = 0;
-
-    struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
+    size_t field_idx = 0;
     struct TAGBLOCK_FIELD group_fields[ARRAY_LENGTH(group_field_keys)];
 
-    init_fields (fields, ARRAY_LENGTH(group_fields));
     init_fields (group_fields, ARRAY_LENGTH(group_fields));
 
-    size_t field_idx = 0;
-    char tagblock_str[MAX_TAGBLOCK_STR_LEN];
-    char checksum_str[3];
-    char group_field_value [MAX_VALUE_LEN];
+    while (PyDict_Next(dict, &pos, &key, &value))
+    {
+        if (field_idx == max_fields)
+            return FAIL;    // no more room in fields
 
-    if (!PyArg_ParseTuple(args, "O", &dict))
-        return NULL;
-
-    while (PyDict_Next(dict, &pos, &key, &value) && field_idx < ARRAY_LENGTH(fields) ) {
         const char* key_str = PyUnicode_AsUTF8(PyObject_Str(key));
         const char* value_str = PyUnicode_AsUTF8(PyObject_Str(value));
 
         size_t group_ordinal = lookup_group_field_key(key_str);
         if (group_ordinal > 0)
         {
-//            group_fields[group_ordinal - 1].key[0] = '\0';
             group_fields[group_ordinal - 1].value = value_str;
         }
         else
@@ -371,31 +374,210 @@ tagblock_encode(PyObject *module, PyObject *args)
     }
 
     // encode group field and add it to the field list
-    if (field_idx < ARRAY_LENGTH(fields))
+    // check the return code to see if there is a complete set of group fields
+    if (encode_group_fields(buffer, buf_size, group_fields))
     {
-        // check the return code to see if there is a complete set of group fields
-        if (encode_group_fields(group_field_value, ARRAY_LENGTH(group_field_value), group_fields))
-        {
-            strlcpy(fields[field_idx].key, TAGBLOCK_GROUP, ARRAY_LENGTH(fields[field_idx].key));
-            fields[field_idx].value = group_field_value;
-            field_idx++;
-        }
+        if (field_idx >= max_fields)
+            return FAIL;        // no more room to add another field
+
+        strlcpy(fields[field_idx].key, TAGBLOCK_GROUP, ARRAY_LENGTH(fields[field_idx].key));
+        fields[field_idx].value = buffer;
+        field_idx++;
     }
 
-    join_fields(fields, field_idx, tagblock_str, ARRAY_LENGTH(tagblock_str) - 3);
+    return field_idx;
+}
 
-    _checksum_str(tagblock_str, checksum_str);
-    strcat(tagblock_str, CHECKSUM_SEPARATOR);
-    strcat(tagblock_str, checksum_str);
+
+int merge_fields( struct TAGBLOCK_FIELD* fields, size_t num_fields, size_t max_fields,
+                  struct TAGBLOCK_FIELD* update_fields, size_t num_update_fields)
+{
+    for (size_t update_idx = 0; update_idx < num_update_fields; update_idx++)
+    {
+        char* key = update_fields[update_idx].key;
+
+        size_t fields_idx = 0;
+        while (fields_idx < num_fields)
+        {
+            if (0 == strcmp(key, fields[fields_idx].key))
+                break;
+            fields_idx++;
+        }
+        if (fields_idx == num_fields)
+        {
+            if (num_fields < max_fields)
+                num_fields++;
+            else
+                return FAIL;
+        }
+
+        fields[fields_idx] = update_fields[update_idx];
+
+
+//
+//        for (size_t fields_idx = 0; fields_idx < num_fields; fields_idx++)
+//        {
+//            if (0 == strcmp(key, fields[fields_idx].key))
+//            {
+//                // found a matching field. Replace the value
+//                fields[fields_idx].value = update_fields[update_idx].value;
+//                break;
+//            }
+//        }
+//        // no matching field found. Append to the end if there is room
+//        if (num_fields < max_fields)
+//            fields[num_fields++] = update_fields[update_idx];
+//        else
+//            return FAIL;
+    }
+
+    return num_fields;
+}
+
+
+
+static PyObject *
+tagblock_encode(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
+{
+
+    PyObject *dict;
+//    , *key, *value;
+//    Py_ssize_t pos = 0;
+
+    struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
+//    struct TAGBLOCK_FIELD group_fields[ARRAY_LENGTH(group_field_keys)];
+
+    init_fields (fields, ARRAY_LENGTH(fields));
+//    init_fields (group_fields, ARRAY_LENGTH(group_fields));
+
+//    size_t field_idx = 0;
+    char tagblock_str[MAX_TAGBLOCK_STR_LEN];
+//    char checksum_str[3];
+    char value_buffer [MAX_VALUE_LEN];
+
+    if (nargs != 1)
+        return NULL;
+
+    dict = args[0];
+
+    int num_fields = encode_fields(dict, fields, ARRAY_LENGTH(fields), value_buffer, ARRAY_LENGTH(value_buffer));
+    if (num_fields < 0)
+    {
+        PyErr_SetString(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
+        return NULL;
+    }
+
+//    while (PyDict_Next(dict, &pos, &key, &value) && field_idx < ARRAY_LENGTH(fields) ) {
+//        const char* key_str = PyUnicode_AsUTF8(PyObject_Str(key));
+//        const char* value_str = PyUnicode_AsUTF8(PyObject_Str(value));
+//
+//        size_t group_ordinal = lookup_group_field_key(key_str);
+//        if (group_ordinal > 0)
+//        {
+//            group_fields[group_ordinal - 1].value = value_str;
+//        }
+//        else
+//        {
+//            const char* short_key = lookup_short_key (key_str);
+//
+//            if (short_key)
+//                strlcpy(fields[field_idx].key, short_key, ARRAY_LENGTH(fields[field_idx].key));
+//            else
+//                extract_custom_short_key(fields[field_idx].key, ARRAY_LENGTH(fields[field_idx].key), key_str);
+//
+//            fields[field_idx].value = value_str;
+//            field_idx++;
+//        }
+//    }
+//
+//    // encode group field and add it to the field list
+//    if (field_idx < ARRAY_LENGTH(fields))
+//    {
+//        // check the return code to see if there is a complete set of group fields
+//        if (encode_group_fields(group_field_value, ARRAY_LENGTH(group_field_value), group_fields))
+//        {
+//            strlcpy(fields[field_idx].key, TAGBLOCK_GROUP, ARRAY_LENGTH(fields[field_idx].key));
+//            fields[field_idx].value = group_field_value;
+//            field_idx++;
+//        }
+//    }
+
+    join_fields(fields, num_fields, tagblock_str, ARRAY_LENGTH(tagblock_str));
+
+//    _checksum_str(tagblock_str, checksum_str);
+//    strcat(tagblock_str, CHECKSUM_SEPARATOR);
+//    strcat(tagblock_str, checksum_str);
 
     return PyUnicode_FromString(tagblock_str);
 }
 
+
+static PyObject *
+tagblock_update(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
+{
+    const char* str;
+    PyObject* dict;
+    char tagblock_str[MAX_TAGBLOCK_STR_LEN];
+    struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
+    int num_fields = 0;
+    struct TAGBLOCK_FIELD update_fields[MAX_TAGBLOCK_FIELDS];
+    int num_update_fields = 0;
+    char value_buffer[MAX_VALUE_LEN];
+
+
+//    int status = SUCCESS;
+
+    if (nargs != 2)
+    {
+        PyErr_SetString(PyExc_TypeError, "update expects 2 arguments");
+        return NULL;
+    }
+
+    str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
+    dict = args[1];
+
+    if (strlcpy(tagblock_str, str, ARRAY_LENGTH(tagblock_str)) >= ARRAY_LENGTH(tagblock_str))
+    {
+        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
+        return NULL;
+    }
+
+    num_fields = split_fields(tagblock_str, fields, ARRAY_LENGTH(fields));
+    if (num_fields < 0)
+    {
+        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_DECODE);
+        return NULL;
+    }
+
+    // TODO: return failure if (num_update_fields < 0)
+    num_update_fields = encode_fields(dict, update_fields, ARRAY_LENGTH(update_fields),
+                                      value_buffer, ARRAY_LENGTH(value_buffer));
+    if (num_update_fields < 0)
+    {
+        PyErr_SetString(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
+        return NULL;
+    }
+
+    num_fields = merge_fields(fields, num_fields, ARRAY_LENGTH(fields), update_fields, num_update_fields);
+    if (num_fields < 0)
+    {
+        PyErr_SetString(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
+        return NULL;
+    }
+
+    join_fields(fields, num_fields, tagblock_str, ARRAY_LENGTH(tagblock_str));
+
+    return PyUnicode_FromString(tagblock_str);
+}
+
+
 static PyMethodDef tagblock_methods[] = {
-    {"decode", (PyCFunction)(void(*)(void))tagblock_decode, METH_VARARGS,
+    {"decode", (PyCFunction)(void(*)(void))tagblock_decode, METH_FASTCALL,
      "decode a tagblock string.  Returns a dict"},
-    {"encode", (PyCFunction)(void(*)(void))tagblock_encode, METH_VARARGS,
+    {"encode", (PyCFunction)(void(*)(void))tagblock_encode, METH_FASTCALL,
      "encode a tagblock string from a dict.  Returns a string"},
+    {"update", (PyCFunction)(void(*)(void))tagblock_update, METH_FASTCALL,
+     "update a tagblock string from a dict.  Returns a string"},
     {NULL, NULL, 0, NULL}   /* sentinel */
 };
 

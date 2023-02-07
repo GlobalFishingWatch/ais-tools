@@ -181,3 +181,10 @@ def test_tagblock_encode(fields, expected):
 ])
 def test_encode_decode(fields):
     assert _tagblock.decode(_tagblock.encode(fields)) == fields
+
+
+def test_update():
+    tagblock_str="z:1*71"
+    fields = {'tagblock_text': 'ABC'}
+    expected = "z:1,t:ABC*53"
+    assert _tagblock.update(tagblock_str, fields) == expected
