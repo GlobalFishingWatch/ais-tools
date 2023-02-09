@@ -178,15 +178,15 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
 
 
 def update_tagblock(nmea, **kwargs):
-    tagblock_str, nmea = split_tagblock(nmea)
-
-    tagblock_str = _tagblock.update(tagblock_str, kwargs)
-    # tagblock = decode_tagblock(tagblock_str)
-    # tagblock.update(kwargs)
-    # tagblock_str = encode_tagblock(**tagblock)
-
-    return join_tagblock(tagblock_str, nmea)
-
+    # tagblock_str, nmea = split_tagblock(nmea)
+    #
+    # tagblock_str = _tagblock.update(tagblock_str, kwargs)
+    # # tagblock = decode_tagblock(tagblock_str)
+    # # tagblock.update(kwargs)
+    # # tagblock_str = encode_tagblock(**tagblock)
+    #
+    # return join_tagblock(tagblock_str, nmea)
+    return _tagblock.update(nmea, kwargs)
 
 def safe_update_tagblock(nmea, **kwargs):
     try:

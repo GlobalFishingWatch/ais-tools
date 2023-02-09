@@ -152,43 +152,6 @@ int split_tagblock(char* message, const char** tagblock, const char** nmea)
     }
 
     return tagblock_len;
-
-
-//
-//    if (message[0] == *AIVDM_START)
-//    {
-//        *nmea = message;
-//        *tagblock = EMPTY_STRING;
-//    }
-//    else if (message[0] == *TAGBLOCK_SEPARATOR && message[1] != *AIVDM_START)
-//    {
-//        if (message[1] == *AIVDM_START)
-//        {
-//            *nmea = message;
-//            *tagblock = EMPTY_STRING;
-//        }
-//        else
-//        {
-//            for (ptr = &message[1]; *ptr != '\0' && *ptr != *TAGBLOCK_SEPARATOR; ptr++);
-//            if (*ptr)
-//            {
-//                *ptr = '\0';
-//                *tagblock = &message[1];
-//                *nmea = ptr + 1;
-//                return ptr - message - 1;
-//            }
-//        }
-//    }
-//    else
-//    {
-//        *tagblock_str = message;
-//        *nmea = EMPTY_STRING;
-//    }
-//
-//    if (message[0] != *AIVDM_START)
-//    *nmea = message;
-//    *tagblock = EMPTY_STRING;
-//    return 0;
 }
 
 int join_tagblock(char* buffer, size_t buf_size, const char* tagblock_str, const char* nmea_str)
