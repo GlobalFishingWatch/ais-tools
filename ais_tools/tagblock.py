@@ -57,22 +57,27 @@ def split_tagblock(nmea):
     Note that if the nmea is a concatenated multipart message then only the tagblock of
     the first message will be split off
     """
-    tagblock = ''
-    if nmea.startswith("\\") and not nmea.startswith("\\!"):
-        parts = nmea[1:].split("\\", 1)
-        if len(parts) == 2:
-            tagblock, nmea = parts
-    return tagblock, nmea
+    return _tagblock.split(nmea)
+
+    # tagblock = ''
+    # if nmea.startswith("\\") and not nmea.startswith("\\!"):
+    #     parts = nmea[1:].split("\\", 1)
+    #     if len(parts) == 2:
+    #         tagblock, nmea = parts
+    # return tagblock, nmea
 
 
 def join_tagblock(tagblock, nmea):
     """
     Join a tagblock to an AIVDM message that does not already have a tagblock
     """
-    if tagblock and nmea:
-        return "\\{}\\{}".format(tagblock.lstrip('\\'), nmea.lstrip('\\'))
-    else:
-        return "{}{}".format(tagblock, nmea)
+
+    return _tagblock.join(tagblock, nmea)
+
+    # if tagblock and nmea:
+    #     return "\\{}\\{}".format(tagblock.lstrip('\\'), nmea.lstrip('\\'))
+    # else:
+    #     return "{}{}".format(tagblock, nmea)
 
 
 def add_tagblock(tagblock, nmea, overwrite=True):

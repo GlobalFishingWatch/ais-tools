@@ -14,6 +14,10 @@ REGEX_BACKSLASH_BANG = re.compile(r'(\\![^!\\]+)')
 
 def expand_nmea(line, validate_checksum=False):
     tagblock_str, nmea = split_tagblock(line)
+    if not nmea:
+        nmea = tagblock_str
+        tagblock_str = ''
+
     tagblock = decode_tagblock(tagblock_str, validate_checksum=validate_checksum)
 
     nmea = nmea.strip()

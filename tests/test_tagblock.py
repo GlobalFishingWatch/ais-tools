@@ -34,9 +34,10 @@ def test_create_tagblock(station, timestamp, add_tagblock_t, expected):
 
 @pytest.mark.parametrize("nmea,expected", [
     ("!AIVDM", ('', '!AIVDM')),
-    ("\\!AIVDM", ('', '\\!AIVDM')),
+    ("\\!AIVDM", ('', '!AIVDM')),
     ("\\c:1000,s:sta*5B\\!AIVDM", ('c:1000,s:sta*5B', '!AIVDM')),
-    ("NOT A MESSAGE", ('', 'NOT A MESSAGE')),
+    ("\\c:1000,s:sta*5B", ('c:1000,s:sta*5B', '')),
+    ("NOT A MESSAGE", ('NOT A MESSAGE', '')),
 ])
 def test_split_tagblock(nmea, expected):
     assert expected == tagblock.split_tagblock(nmea)
@@ -184,7 +185,7 @@ def test_encode_decode(fields):
 
 
 def test_update():
-    tagblock_str="z:1*71"
+    tagblock_str="\\z:1*71\\"
     fields = {'tagblock_text': 'ABC'}
     expected = "z:1,t:ABC*53"
     assert _tagblock.update(tagblock_str, fields) == expected

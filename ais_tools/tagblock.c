@@ -19,6 +19,9 @@ const char * CHECKSUM_SEPARATOR = "*";
 const char * FIELD_SEPARATOR = ",";
 const char * KEY_VALUE_SEPARATOR = ":";
 const char * GROUP_SEPARATOR = "-";
+const char* TAGBLOCK_SEPARATOR = "\\";
+const char* AIVDM_START = "!";
+const char * EMPTY_STRING = "";
 
 struct TAGBLOCK_FIELD
 {
@@ -41,6 +44,7 @@ struct TAGBLOCK_FIELD
 #define ERR_TAGBLOCK_DECODE    "Unable to decode tagblock string"
 #define ERR_TAGBLOCK_TOO_LONG  "Tagblock string too long"
 #define ERR_TOO_MANY_FIELDS    "Too many fields"
+#define ERR_NMEA_TOO_LONG      "NMEA string too long"
 
 typedef struct {char short_key[2]; const char* long_key;} KEY_MAP;
 static KEY_MAP key_map[] = {
@@ -107,24 +111,143 @@ static char *unsafe_strcat(char *dest, const char *end, const char *str)
     return dest;
 }
 
+int split_tagblock(char* message, const char** tagblock, const char** nmea)
+{
+    // Four cases for the given message string
+
+    // starts with '!' - no tagblock, message is all nmea
+    // starts with '\!' - no tagblock, strip off '\', message is all nmea
+    // starts with '\[^!]' - is a tagblock , strip off leading '\', nmea is whatever comes after the  next '\'.
+    // start with '[^\!]' - is a tagblock, nmea is whatever comes after the  next '\'.
+    // starts with '[^!]' and there are no `\` delimiters - tagblock is empty, entire string in nmea
+
+    char* ptr;
+    int tagblock_len = 0;
+
+    ptr = message;
+    if (*ptr == *TAGBLOCK_SEPARATOR)
+        ptr ++;
+    if (*ptr == *AIVDM_START)
+    {
+        *nmea = ptr;
+        *tagblock = EMPTY_STRING;
+    }
+    else
+    {
+        *tagblock = ptr;
+        for (ptr = &message[1]; *ptr != '\0' && *ptr != *TAGBLOCK_SEPARATOR; ptr++);
+        tagblock_len = ptr - *tagblock;
+        if (*ptr)
+        {
+            *ptr = '\0';
+            *nmea = ptr + 1;
+        }
+//        else if (*message == *TAGBLOCK_SEPARATOR)
+//        {
+//            *nmea = *tagblock;
+//            *tagblock = EMPTY_STRING;
+//        }
+        else
+            *nmea = EMPTY_STRING;
+    }
+
+    return tagblock_len;
+
+
+//
+//    if (message[0] == *AIVDM_START)
+//    {
+//        *nmea = message;
+//        *tagblock = EMPTY_STRING;
+//    }
+//    else if (message[0] == *TAGBLOCK_SEPARATOR && message[1] != *AIVDM_START)
+//    {
+//        if (message[1] == *AIVDM_START)
+//        {
+//            *nmea = message;
+//            *tagblock = EMPTY_STRING;
+//        }
+//        else
+//        {
+//            for (ptr = &message[1]; *ptr != '\0' && *ptr != *TAGBLOCK_SEPARATOR; ptr++);
+//            if (*ptr)
+//            {
+//                *ptr = '\0';
+//                *tagblock = &message[1];
+//                *nmea = ptr + 1;
+//                return ptr - message - 1;
+//            }
+//        }
+//    }
+//    else
+//    {
+//        *tagblock_str = message;
+//        *nmea = EMPTY_STRING;
+//    }
+//
+//    if (message[0] != *AIVDM_START)
+//    *nmea = message;
+//    *tagblock = EMPTY_STRING;
+//    return 0;
+}
+
+int join_tagblock(char* buffer, size_t buf_size, const char* tagblock_str, const char* nmea_str)
+{
+    char* end = buffer + buf_size - 1;
+    char* ptr = buffer;
+
+    if (*tagblock_str && *nmea_str)
+    {
+        if (*tagblock_str != *TAGBLOCK_SEPARATOR)
+            ptr = unsafe_strcat(ptr, end, TAGBLOCK_SEPARATOR);
+        ptr = unsafe_strcat(ptr, end, tagblock_str);
+
+        if (*nmea_str != *TAGBLOCK_SEPARATOR)
+            ptr = unsafe_strcat(ptr, end, TAGBLOCK_SEPARATOR);
+        ptr = unsafe_strcat(ptr, end, nmea_str);
+    }
+    else
+    {
+        ptr = unsafe_strcat(ptr, end, tagblock_str);
+        ptr = unsafe_strcat(ptr, end, nmea_str);
+    }
+
+    if (ptr <= end)
+    {
+        *ptr = '\0';
+        return ptr - buffer;
+    }
+    else
+    {
+        *end = '\0';
+        return FAIL;
+    }
+
+    return SUCCESS;
+}
+
 // split a tagblock string with structure
+//   k:value,k:value
 //   k:value,k:value*cc
+//   \\k:value,k:value*cc\\other_stuff
+
 int split_fields(char* tagblock_str, struct TAGBLOCK_FIELD* fields, int max_fields)
 {
     int idx = 0;
+    char * ptr;
     char * field_save_ptr = NULL;
     char * field;
 
     char * key_value_save_ptr = NULL;
 
-    // strip off the checksum if present
-    field_save_ptr = strstr(tagblock_str, CHECKSUM_SEPARATOR);
-    if (field_save_ptr != NULL)
-        *field_save_ptr = '\0';
+    // skip leading tagblock delimiter
+    if (*tagblock_str == *TAGBLOCK_SEPARATOR)
+        tagblock_str++;
 
-    // make sure we have something to decode
-    if (!tagblock_str || !*tagblock_str)
-        return 0;
+    // seek forward to find either the checksum, the next tagblock separator, or the end of the string.
+    // Terminate the string at the first delimiter found
+    for (ptr = tagblock_str; *ptr != *TAGBLOCK_SEPARATOR && *ptr != *CHECKSUM_SEPARATOR && *ptr != '\0'; ptr++);
+    *ptr = '\0';
 
     // get the first comma delimited field
     field = strtok_r(tagblock_str, FIELD_SEPARATOR, &field_save_ptr);
@@ -153,7 +276,7 @@ int split_fields(char* tagblock_str, struct TAGBLOCK_FIELD* fields, int max_fiel
 // TODO: need a return value that indicates the string is too long
 size_t join_fields(const struct TAGBLOCK_FIELD* fields, size_t num_fields, char* tagblock_str, size_t buf_size)
 {
-    const char * end = tagblock_str + buf_size - 4;
+    const char * end = tagblock_str + buf_size - 5;    // leave room for  3 chars for the checkcum plus trailing null
     size_t last_field_idx = num_fields - 1;
     char * ptr = tagblock_str;
     char checksum_str[3];
@@ -412,23 +535,6 @@ int merge_fields( struct TAGBLOCK_FIELD* fields, size_t num_fields, size_t max_f
         }
 
         fields[fields_idx] = update_fields[update_idx];
-
-
-//
-//        for (size_t fields_idx = 0; fields_idx < num_fields; fields_idx++)
-//        {
-//            if (0 == strcmp(key, fields[fields_idx].key))
-//            {
-//                // found a matching field. Replace the value
-//                fields[fields_idx].value = update_fields[update_idx].value;
-//                break;
-//            }
-//        }
-//        // no matching field found. Append to the end if there is room
-//        if (num_fields < max_fields)
-//            fields[num_fields++] = update_fields[update_idx];
-//        else
-//            return FAIL;
     }
 
     return num_fields;
@@ -441,18 +547,12 @@ tagblock_encode(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 {
 
     PyObject *dict;
-//    , *key, *value;
-//    Py_ssize_t pos = 0;
 
     struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
-//    struct TAGBLOCK_FIELD group_fields[ARRAY_LENGTH(group_field_keys)];
 
     init_fields (fields, ARRAY_LENGTH(fields));
-//    init_fields (group_fields, ARRAY_LENGTH(group_fields));
 
-//    size_t field_idx = 0;
     char tagblock_str[MAX_TAGBLOCK_STR_LEN];
-//    char checksum_str[3];
     char value_buffer [MAX_VALUE_LEN];
 
     if (nargs != 1)
@@ -467,46 +567,7 @@ tagblock_encode(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
         return NULL;
     }
 
-//    while (PyDict_Next(dict, &pos, &key, &value) && field_idx < ARRAY_LENGTH(fields) ) {
-//        const char* key_str = PyUnicode_AsUTF8(PyObject_Str(key));
-//        const char* value_str = PyUnicode_AsUTF8(PyObject_Str(value));
-//
-//        size_t group_ordinal = lookup_group_field_key(key_str);
-//        if (group_ordinal > 0)
-//        {
-//            group_fields[group_ordinal - 1].value = value_str;
-//        }
-//        else
-//        {
-//            const char* short_key = lookup_short_key (key_str);
-//
-//            if (short_key)
-//                strlcpy(fields[field_idx].key, short_key, ARRAY_LENGTH(fields[field_idx].key));
-//            else
-//                extract_custom_short_key(fields[field_idx].key, ARRAY_LENGTH(fields[field_idx].key), key_str);
-//
-//            fields[field_idx].value = value_str;
-//            field_idx++;
-//        }
-//    }
-//
-//    // encode group field and add it to the field list
-//    if (field_idx < ARRAY_LENGTH(fields))
-//    {
-//        // check the return code to see if there is a complete set of group fields
-//        if (encode_group_fields(group_field_value, ARRAY_LENGTH(group_field_value), group_fields))
-//        {
-//            strlcpy(fields[field_idx].key, TAGBLOCK_GROUP, ARRAY_LENGTH(fields[field_idx].key));
-//            fields[field_idx].value = group_field_value;
-//            field_idx++;
-//        }
-//    }
-
     join_fields(fields, num_fields, tagblock_str, ARRAY_LENGTH(tagblock_str));
-
-//    _checksum_str(tagblock_str, checksum_str);
-//    strcat(tagblock_str, CHECKSUM_SEPARATOR);
-//    strcat(tagblock_str, checksum_str);
 
     return PyUnicode_FromString(tagblock_str);
 }
@@ -517,59 +578,100 @@ tagblock_update(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
 {
     const char* str;
     PyObject* dict;
-    char tagblock_str[MAX_TAGBLOCK_STR_LEN];
-    struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
-    int num_fields = 0;
-    struct TAGBLOCK_FIELD update_fields[MAX_TAGBLOCK_FIELDS];
-    int num_update_fields = 0;
-    char value_buffer[MAX_VALUE_LEN];
+    char message[MAX_SENTENCE_LENGTH];
+    char updated_message[MAX_SENTENCE_LENGTH];
+    const char* tagblock_str;
+    const char* nmea_str;
 
-
-//    int status = SUCCESS;
 
     if (nargs != 2)
-    {
-        PyErr_SetString(PyExc_TypeError, "update expects 2 arguments");
-        return NULL;
-    }
+        return PyErr_Format(PyExc_TypeError, "update expects 2 arguments");
 
     str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
     dict = args[1];
 
-    if (strlcpy(tagblock_str, str, ARRAY_LENGTH(tagblock_str)) >= ARRAY_LENGTH(tagblock_str))
-    {
-        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
-        return NULL;
-    }
+    if (strlcpy(message, str, ARRAY_LENGTH(message)) >= ARRAY_LENGTH(message))
+        return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
 
-    num_fields = split_fields(tagblock_str, fields, ARRAY_LENGTH(fields));
+    split_tagblock(message, &tagblock_str, &nmea_str);
+
+
+    char tagblock_buffer[MAX_TAGBLOCK_STR_LEN];
+    if (strlcpy(tagblock_buffer, tagblock_str, ARRAY_LENGTH(tagblock_buffer)) >= ARRAY_LENGTH(tagblock_buffer))
+        return PyErr_Format(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
+
+
+    struct TAGBLOCK_FIELD fields[MAX_TAGBLOCK_FIELDS];
+    int num_fields = 0;
+    num_fields = split_fields(tagblock_buffer, fields, ARRAY_LENGTH(fields));
     if (num_fields < 0)
-    {
-        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_DECODE);
-        return NULL;
-    }
+        return PyErr_Format(PyExc_ValueError, ERR_TAGBLOCK_DECODE);
 
-    // TODO: return failure if (num_update_fields < 0)
+
+    struct TAGBLOCK_FIELD update_fields[MAX_TAGBLOCK_FIELDS];
+    int num_update_fields = 0;
+    char value_buffer[MAX_VALUE_LEN];
     num_update_fields = encode_fields(dict, update_fields, ARRAY_LENGTH(update_fields),
                                       value_buffer, ARRAY_LENGTH(value_buffer));
     if (num_update_fields < 0)
-    {
-        PyErr_SetString(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
-        return NULL;
-    }
+        return PyErr_Format(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
+
 
     num_fields = merge_fields(fields, num_fields, ARRAY_LENGTH(fields), update_fields, num_update_fields);
     if (num_fields < 0)
-    {
-        PyErr_SetString(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
-        return NULL;
-    }
+        return PyErr_Format(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
 
-    join_fields(fields, num_fields, tagblock_str, ARRAY_LENGTH(tagblock_str));
 
-    return PyUnicode_FromString(tagblock_str);
+    char updated_tagblock_str[MAX_TAGBLOCK_STR_LEN];
+    join_fields(fields, num_fields, updated_tagblock_str, ARRAY_LENGTH(updated_tagblock_str));
+
+    int msg_len = join_tagblock(updated_message, ARRAY_LENGTH(updated_message), updated_tagblock_str, nmea_str);
+    if (msg_len < 0)
+        return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
+
+
+    return PyUnicode_FromString(updated_message);
+
 }
 
+static PyObject *
+tagblock_split(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
+{
+    const char* str;
+    char buffer[MAX_SENTENCE_LENGTH];
+    const char* tagblock_str;
+    const char* nmea_str;
+
+    if (nargs != 1)
+        return PyErr_Format(PyExc_TypeError, "split expects only 1 argument");
+
+    str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
+    if (strlcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
+        return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
+
+    split_tagblock(buffer, &tagblock_str, &nmea_str);
+
+    return PyTuple_Pack(2, PyUnicode_FromString(tagblock_str), PyUnicode_FromString(nmea_str));
+}
+
+static PyObject *
+tagblock_join(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
+{
+    char buffer[MAX_SENTENCE_LENGTH];
+    const char* tagblock_str;
+    const char* nmea_str;
+
+    if (nargs != 2)
+        return PyErr_Format(PyExc_TypeError, "join expects 2 arguments");
+
+    tagblock_str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
+    nmea_str = PyUnicode_AsUTF8(PyObject_Str(args[1]));
+
+    if (FAIL == join_tagblock(buffer, ARRAY_LENGTH(buffer), tagblock_str, nmea_str))
+        return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
+
+    return PyUnicode_FromString(buffer);
+}
 
 static PyMethodDef tagblock_methods[] = {
     {"decode", (PyCFunction)(void(*)(void))tagblock_decode, METH_FASTCALL,
@@ -578,6 +680,10 @@ static PyMethodDef tagblock_methods[] = {
      "encode a tagblock string from a dict.  Returns a string"},
     {"update", (PyCFunction)(void(*)(void))tagblock_update, METH_FASTCALL,
      "update a tagblock string from a dict.  Returns a string"},
+    {"split", (PyCFunction)(void(*)(void))tagblock_split, METH_FASTCALL,
+     "Split off the tagblock portion of a longer nmea string.  Returns a tuple containing two strings"},
+    {"join", (PyCFunction)(void(*)(void))tagblock_join, METH_FASTCALL,
+     "Join a tagblock to an AIVDM message.  Returns a string."},
     {NULL, NULL, 0, NULL}   /* sentinel */
 };
 
