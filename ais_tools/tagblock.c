@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
-#include "checksum.h"
+#include "ais-tools.h"
 
 
 #define SUCCESS 0
@@ -87,9 +87,9 @@ void extract_custom_short_key(char* buffer, size_t buf_size, const char* long_ke
     size_t prefix_len = ARRAY_LENGTH(CUSTOM_FIELD_PREFIX) - 1;
 
     if (0 == strncmp(CUSTOM_FIELD_PREFIX, long_key, prefix_len))
-        strlcpy(buffer, &long_key[prefix_len], buf_size);
+        zzz_strlcpy(buffer, &long_key[prefix_len], buf_size);
     else
-        strlcpy(buffer, long_key, buf_size);
+        zzz_strlcpy(buffer, long_key, buf_size);
 }
 
 void init_fields( struct TAGBLOCK_FIELD* fields, size_t num_fields)
@@ -223,7 +223,7 @@ int split_fields(char* tagblock_str, struct TAGBLOCK_FIELD* fields, int max_fiel
         // if we don't have both key and value, then fail
         if (key && value)
         {
-            strlcpy(fields[idx].key, key, ARRAY_LENGTH(fields[idx].key));
+            zzz_strlcpy(fields[idx].key, key, ARRAY_LENGTH(fields[idx].key));
             fields[idx].value = value;
             idx++;
         }
@@ -309,7 +309,7 @@ int decode_group_field(struct TAGBLOCK_FIELD* field, PyObject* dict)
     long values[ARRAY_LENGTH(group_field_keys)];
     char buffer[MAX_VALUE_LEN];
 
-    if (strlcpy(buffer, field->value, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
+    if (zzz_strlcpy(buffer, field->value, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
         return FAIL;
 
     char * f = strtok_r(buffer, GROUP_SEPARATOR, &save_ptr);
@@ -375,7 +375,7 @@ tagblock_decode(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 
     param = PyUnicode_AsUTF8(PyObject_Str(args[0]));
 
-    if (strlcpy(tagblock_str, param, ARRAY_LENGTH(tagblock_str)) >= ARRAY_LENGTH(tagblock_str))
+    if (zzz_strlcpy(tagblock_str, param, ARRAY_LENGTH(tagblock_str)) >= ARRAY_LENGTH(tagblock_str))
     {
         PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
         return NULL;
@@ -450,7 +450,7 @@ int encode_fields(PyObject* dict, struct TAGBLOCK_FIELD* fields, size_t max_fiel
             const char* short_key = lookup_short_key (key_str);
 
             if (short_key)
-                strlcpy(fields[field_idx].key, short_key, ARRAY_LENGTH(fields[field_idx].key));
+                zzz_strlcpy(fields[field_idx].key, short_key, ARRAY_LENGTH(fields[field_idx].key));
             else
                 extract_custom_short_key(fields[field_idx].key, ARRAY_LENGTH(fields[field_idx].key), key_str);
 
@@ -466,7 +466,7 @@ int encode_fields(PyObject* dict, struct TAGBLOCK_FIELD* fields, size_t max_fiel
         if (field_idx >= max_fields)
             return FAIL;        // no more room to add another field
 
-        strlcpy(fields[field_idx].key, TAGBLOCK_GROUP, ARRAY_LENGTH(fields[field_idx].key));
+        zzz_strlcpy(fields[field_idx].key, TAGBLOCK_GROUP, ARRAY_LENGTH(fields[field_idx].key));
         fields[field_idx].value = buffer;
         field_idx++;
     }
@@ -553,14 +553,14 @@ tagblock_update(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
     str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
     dict = args[1];
 
-    if (strlcpy(message, str, ARRAY_LENGTH(message)) >= ARRAY_LENGTH(message))
+    if (zzz_strlcpy(message, str, ARRAY_LENGTH(message)) >= ARRAY_LENGTH(message))
         return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
 
     split_tagblock(message, &tagblock_str, &nmea_str);
 
 
     char tagblock_buffer[MAX_TAGBLOCK_STR_LEN];
-    if (strlcpy(tagblock_buffer, tagblock_str, ARRAY_LENGTH(tagblock_buffer)) >= ARRAY_LENGTH(tagblock_buffer))
+    if (zzz_strlcpy(tagblock_buffer, tagblock_str, ARRAY_LENGTH(tagblock_buffer)) >= ARRAY_LENGTH(tagblock_buffer))
         return PyErr_Format(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
 
 
@@ -609,7 +609,7 @@ tagblock_split(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
         return PyErr_Format(PyExc_TypeError, "split expects only 1 argument");
 
     str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
-    if (strlcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
+    if (zzz_strlcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
         return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
 
     split_tagblock(buffer, &tagblock_str, &nmea_str);

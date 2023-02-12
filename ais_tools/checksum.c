@@ -4,7 +4,7 @@
 #include <Python.h>
 #include <stdbool.h>
 #include <string.h>
-#include "checksum.h"
+#include "ais-tools.h"
 
 int _checksum(const char *s)
 {
@@ -25,12 +25,10 @@ bool _is_checksum_valid(char* s)
 {
   const char * skip_chars = "!?\\";
   const char separator = '*';
-//  const char * separator = "*";
 
   char* body = s;
   char* checksum = NULL;
   char computed_checksum[3];
-//  char* lasts = NULL;
 
   if (*body && strchr(skip_chars, body[0]))
     body++;
@@ -43,17 +41,7 @@ bool _is_checksum_valid(char* s)
       *ptr++ = '\0';
   checksum = ptr;
 
-//  if (*body == *separator)
-//  {
-//      // special case with zero-length body
-//      *body = '\0';
-//      checksum = body + 1;
-//  }
-//  else
-//  {
-//      body = strtok_r(body, separator, &lasts);
-//      checksum = strtok_r(NULL, separator, &lasts);
-//  }
+
   if (checksum == NULL || strlen(checksum) != 2)
     return false;
 
@@ -94,7 +82,7 @@ checksum_is_checksum_valid(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "s", &str))
         return NULL;
 
-    if (strlcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
+    if (zzz_strlcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
     {
         PyErr_SetString(PyExc_ValueError, "String too long");
         return NULL;
