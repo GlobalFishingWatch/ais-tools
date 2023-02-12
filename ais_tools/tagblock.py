@@ -6,10 +6,6 @@ from ais_tools.checksum import checksumstr
 from ais_tools.checksum import is_checksum_valid
 from ais_tools import _tagblock
 
-# import warnings
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore")
-#     from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
@@ -59,12 +55,6 @@ def split_tagblock(nmea):
     """
     return _tagblock.split(nmea)
 
-    # tagblock = ''
-    # if nmea.startswith("\\") and not nmea.startswith("\\!"):
-    #     parts = nmea[1:].split("\\", 1)
-    #     if len(parts) == 2:
-    #         tagblock, nmea = parts
-    # return tagblock, nmea
 
 
 def join_tagblock(tagblock, nmea):
@@ -74,10 +64,6 @@ def join_tagblock(tagblock, nmea):
 
     return _tagblock.join(tagblock, nmea)
 
-    # if tagblock and nmea:
-    #     return "\\{}\\{}".format(tagblock.lstrip('\\'), nmea.lstrip('\\'))
-    # else:
-    #     return "{}{}".format(tagblock, nmea)
 
 
 def add_tagblock(tagblock, nmea, overwrite=True):
@@ -112,80 +98,18 @@ def encode_tagblock(**kwargs):
         return _tagblock.encode(kwargs)
     except:
         raise DecodeError('unable to encode tagblock')
-    # print(kwargs)
-    # print(t1)
-
-    # group_fields = {}
-    # fields = {}
-    #
-    # for k, v in kwargs.items():
-    #     if k in tagblock_group_fields:
-    #         group_fields[k] = str(v)
-    #     elif k in tagblock_fields_reversed:
-    #         fields[tagblock_fields_reversed[k]] = v
-    #     else:
-    #         fields[k.replace('tagblock_', '')] = v
-    #
-    # if len(group_fields) == 3:
-    #     fields['g'] = '-'.join([group_fields[k] for k in tagblock_group_fields])
-    #
-    # base_str = ','.join(["{}:{}".format(k, v) for k, v in fields.items()])
-    # t2 =  '{}*{}'.format(base_str, checksumstr(base_str))
 
 
 def decode_tagblock(tagblock_str, validate_checksum=False):
     if validate_checksum and not is_checksum_valid(tagblock_str):
         raise DecodeError('Invalid checksum')
-
     try:
         return _tagblock.decode(tagblock_str)
     except:
         raise DecodeError('Unable to decode tagblock')
 
 
-    # tagblock = tagblock_str.rsplit("*", 1)[0]
-    #
-    # fields = {}
-    #
-    # if not tagblock:
-    #     return fields
-    #
-    # if validate_checksum and not is_checksum_valid(tagblock_str):
-    #     raise DecodeError('Invalid checksum')
-    #
-    # for field in tagblock.split(","):
-    #     try:
-    #         key, value = field.split(":")
-    #
-    #         if key == 'g':
-    #             parts = [int(part) for part in value.split("-") if part]
-    #             if len(parts) != 3:
-    #                 raise DecodeError('Unable to decode tagblock group')
-    #             fields.update(dict(zip(tagblock_group_fields, parts)))
-    #         else:
-    #             if key in ['n', 'r']:
-    #                 value = int(value)
-    #             elif key == 'c':
-    #                 value = int(value)
-    #                 if value > 40000000000:
-    #                     value = value / 1000.0
-    #
-    #             fields[tagblock_fields.get(key, key)] = value
-    #     except ValueError:
-    #         raise DecodeError('Unable to decode tagblock string')
-    #
-    # return fields
-
-
 def update_tagblock(nmea, **kwargs):
-    # tagblock_str, nmea = split_tagblock(nmea)
-    #
-    # tagblock_str = _tagblock.update(tagblock_str, kwargs)
-    # # tagblock = decode_tagblock(tagblock_str)
-    # # tagblock.update(kwargs)
-    # # tagblock_str = encode_tagblock(**tagblock)
-    #
-    # return join_tagblock(tagblock_str, nmea)
     return _tagblock.update(nmea, kwargs)
 
 def safe_update_tagblock(nmea, **kwargs):
