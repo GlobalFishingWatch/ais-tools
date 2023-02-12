@@ -78,7 +78,7 @@ setup(
             "ais_tools._tagblock",
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_link_args,
-            sources=["ais_tools/tagblock.c", "ais_tools/strlcpy.c"],
+            sources=["ais_tools/tagblock.c", "ais_tools/checksum.c", "ais_tools/strlcpy.c"],
             include_dirs=["ais_tools/"],
             undef_macros=undef_macros,
         )
