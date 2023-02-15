@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 
 from ais import DecodeError
-from ais_tools.checksum import is_checksum_valid
+from ais_tools.core import is_checksum_valid
 from ais_tools.tagblock import split_tagblock
 from ais_tools.tagblock import decode_tagblock
 

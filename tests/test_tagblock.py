@@ -4,7 +4,7 @@ from ais_tools import tagblock
 from ais_tools.tagblock import DecodeError
 
 from ais_tools import _tagblock
-
+from ais_tools import core
 
 @pytest.mark.parametrize("line,expected", [
     ("\\s:rORBCOMM000,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*7B",
@@ -148,7 +148,7 @@ def test_update_tagblock(tagblock_str, new_fields, expected):
     ('g:1-2-3', {'tagblock_sentence': 1, 'tagblock_groupsize': 2, 'tagblock_id': 3})
 ])
 def test_tagblock_decode(tagblock_str, expected):
-    assert _tagblock.decode(tagblock_str) == expected
+    assert core.decode_tagblock(tagblock_str) == expected
 
 
 @pytest.mark.parametrize("fields,expected", [
@@ -162,7 +162,7 @@ def test_tagblock_decode(tagblock_str, expected):
     ({'tagblock_line_count': 1}, 'n:1*65')
 ])
 def test_tagblock_encode(fields, expected):
-    assert _tagblock.encode(fields) == expected
+    assert core.encode_tagblock(fields) == expected
 
 
 @pytest.mark.parametrize("fields", [
@@ -181,7 +181,7 @@ def test_tagblock_encode(fields, expected):
       }),
 ])
 def test_encode_decode(fields):
-    assert _tagblock.decode(_tagblock.encode(fields)) == fields
+    assert core.decode_tagblock(core.encode_tagblock(fields)) == fields
 
 
 def test_update():

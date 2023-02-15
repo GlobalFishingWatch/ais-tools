@@ -1,8 +1,8 @@
 import pytest
 
-from ais_tools.checksum import checksum
-from ais_tools.checksum import is_checksum_valid
-from ais_tools.checksum import checksumstr
+from ais_tools.core import checksum
+from ais_tools.core import is_checksum_valid
+from ais_tools.core import checksum_str
 
 import warnings
 with warnings.catch_warnings():
@@ -27,7 +27,7 @@ def test_checksum(str, expected):
     ('', '00'),
 ])
 def test_checksum_str(str, expected):
-    actual = checksumstr(str)
+    actual = checksum_str(str)
 
     assert actual == expected
     if len(str) > 1:

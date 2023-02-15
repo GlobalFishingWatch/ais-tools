@@ -2,9 +2,10 @@ from datetime import datetime
 from datetime import timezone
 
 from ais import DecodeError
-from ais_tools.checksum import checksumstr
-from ais_tools.checksum import is_checksum_valid
+# from ais_tools.core import checksum_str
+from ais_tools.core import is_checksum_valid
 from ais_tools import _tagblock
+from ais_tools import core
 
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
@@ -42,8 +43,10 @@ def create_tagblock(station, timestamp=None, add_tagblock_t=True):
     )
     if add_tagblock_t:
         params['T'] = datetime.fromtimestamp(t, tz=timezone.utc).strftime(TAGBLOCK_T_FORMAT)
-    param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
-    return '{}*{}'.format(param_str, checksumstr(param_str))
+    return core.encode_tagblock(params)
+
+    # param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
+    # return '{}*{}'.format(param_str, checksum_str(param_str))
 
 
 def split_tagblock(nmea):
@@ -53,7 +56,7 @@ def split_tagblock(nmea):
     Note that if the nmea is a concatenated multipart message then only the tagblock of
     the first message will be split off
     """
-    return _tagblock.split(nmea)
+    return core.split_tagblock(nmea)
 
 
 
@@ -62,7 +65,7 @@ def join_tagblock(tagblock, nmea):
     Join a tagblock to an AIVDM message that does not already have a tagblock
     """
 
-    return _tagblock.join(tagblock, nmea)
+    return core.join_tagblock(tagblock, nmea)
 
 
 
@@ -79,34 +82,20 @@ def add_tagblock(tagblock, nmea, overwrite=True):
     return join_tagblock(tagblock, nmea)
 
 
-tagblock_fields = {
-    'c': 'tagblock_timestamp',
-    'n': 'tagblock_line_count',
-    'r': 'tagblock_relative_time',
-    'd': 'tagblock_destination',
-    's': 'tagblock_station',
-    't': 'tagblock_text',
-}
-
-tagblock_fields_reversed = {v: k for k, v in tagblock_fields.items()}
-
-tagblock_group_fields = ["tagblock_sentence", "tagblock_groupsize", "tagblock_id"]
-
-
 def encode_tagblock(**kwargs):
     try:
-        return _tagblock.encode(kwargs)
-    except:
-        raise DecodeError('unable to encode tagblock')
+        return core.encode_tagblock(kwargs)
+    except ValueError as e:
+        raise DecodeError(e)
 
 
 def decode_tagblock(tagblock_str, validate_checksum=False):
     if validate_checksum and not is_checksum_valid(tagblock_str):
         raise DecodeError('Invalid checksum')
     try:
-        return _tagblock.decode(tagblock_str)
-    except:
-        raise DecodeError('Unable to decode tagblock')
+        return core.decode_tagblock(tagblock_str)
+    except ValueError as e:
+        raise DecodeError(e)
 
 
 def update_tagblock(nmea, **kwargs):
