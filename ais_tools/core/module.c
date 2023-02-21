@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <stdbool.h>
 #include "core.h"
+#include "methods.h"
 
 static PyMethodDef core_methods[] = {
     {"checksum", (PyCFunction)(void(*)(void))method_compute_checksum, METH_VARARGS,
@@ -13,8 +14,8 @@ static PyMethodDef core_methods[] = {
      "decode a tagblock string.  Returns a dict"},
     {"encode_tagblock", (PyCFunction)(void(*)(void))method_encode_tagblock, METH_FASTCALL,
      "encode a tagblock string from a dict.  Returns a string"},
-//    {"update_tagblock", (PyCFunction)(void(*)(void))tagblock_update, METH_FASTCALL,
-//     "update a tagblock string from a dict.  Returns a string"},
+    {"update_tagblock", (PyCFunction)(void(*)(void))method_update_tagblock, METH_FASTCALL,
+     "update a tagblock string from a dict.  Returns a string"},
     {"split_tagblock", (PyCFunction)(void(*)(void))method_split_tagblock, METH_FASTCALL,
      "Split off the tagblock portion of a longer nmea string.  Returns a tuple containing two strings"},
     {"join_tagblock", (PyCFunction)(void(*)(void))method_join_tagblock, METH_FASTCALL,

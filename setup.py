@@ -10,6 +10,7 @@ from setuptools import setup
 import codecs
 
 import sys
+import os
 from setuptools import Extension
 
 package = __import__('ais_tools')
@@ -24,6 +25,16 @@ if sys.platform == "win32":
 else:
     extra_compile_args += ["-std=c11", "-Wall", "-Werror", "-O3"]
 
+source_path = 'ais_tools/core/'
+sources = [f'{source_path}{file}' for file in os.listdir(source_path) if file.endswith('.c')]
+core_module = Extension(
+    "ais_tools.core",
+    extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
+    sources=sources,
+    include_dirs=[source_path],
+    undef_macros=undef_macros,
+)
 
 DEPENDENCIES = [
     "libais",
@@ -65,37 +76,5 @@ setup(
         [console_scripts]
         ais-tools=ais_tools.cli:cli
     ''',
-    ext_modules=[
-        Extension(
-            "ais_tools.core",
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-            sources=["ais_tools/core/module.c",
-                     "ais_tools/core/methods.c",
-                     "ais_tools/core/join_tagblock.c",
-                     "ais_tools/core/split_tagblock.c",
-                     "ais_tools/core/tagblock_fields.c",
-                     "ais_tools/core/tagblock_decode.c",
-                     "ais_tools/core/tagblock_encode.c",
-                     "ais_tools/core/checksum.c",
-                     "ais_tools/core/strcpy.c",
-                     ],
-            include_dirs=["ais_tools/"],
-            undef_macros=undef_macros,
-        ),
-        Extension(
-            "ais_tools._tagblock",
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-            sources=["ais_tools/core/tagblock.c",
-                     "ais_tools/core/tagblock_fields.c",
-                     "ais_tools/core/tagblock_decode.c",
-                     "ais_tools/core/tagblock_encode.c",
-                     "ais_tools/core/methods.c",
-                     "ais_tools/core/checksum.c",
-                     "ais_tools/core/strcpy.c"],
-            include_dirs=["ais_tools/"],
-            undef_macros=undef_macros,
-        )
-    ],
+    ext_modules=[core_module],
 )

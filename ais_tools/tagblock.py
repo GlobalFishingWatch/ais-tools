@@ -99,11 +99,12 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
 
 
 def update_tagblock(nmea, **kwargs):
-    return _tagblock.update(nmea, kwargs)
+    return core.update_tagblock(nmea, kwargs)
+
 
 def safe_update_tagblock(nmea, **kwargs):
     try:
-        nmea = update_tagblock(nmea, **kwargs)
+        nmea = core.update_tagblock(nmea, kwargs)
     except DecodeError:
         pass
     return nmea

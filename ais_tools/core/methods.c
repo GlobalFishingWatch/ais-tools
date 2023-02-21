@@ -134,3 +134,36 @@ method_encode_tagblock(PyObject *module, PyObject *const *args, Py_ssize_t nargs
 
     return PyUnicode_FromString(tagblock_str);
 }
+
+PyObject *
+method_update_tagblock(PyObject *module,  PyObject *const *args, Py_ssize_t nargs)
+{
+    const char* str;
+    PyObject* dict;
+    char message[MAX_SENTENCE_LENGTH];
+    char updated_message[MAX_SENTENCE_LENGTH];
+
+    if (nargs != 2)
+        return PyErr_Format(PyExc_TypeError, "update expects 2 arguments");
+
+    str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
+    dict = args[1];
+
+    if (safe_strcpy(message, str, ARRAY_LENGTH(message)) >= ARRAY_LENGTH(message))
+        return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
+
+    int message_len = update_tagblock(updated_message, ARRAY_LENGTH(updated_message), message, dict);
+
+    if (message_len < 0)
+        switch(message_len)
+        {
+            case FAIL_STRING_TOO_LONG:
+                return PyErr_Format(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
+            case FAIL_TOO_MANY_FIELDS:
+                return PyErr_Format(PyExc_ValueError, ERR_TOO_MANY_FIELDS);
+            default:
+                return PyErr_Format(PyExc_ValueError, ERR_UNKNOWN);
+        }
+
+    return PyUnicode_FromString(updated_message);
+}

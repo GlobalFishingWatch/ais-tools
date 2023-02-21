@@ -14,6 +14,7 @@
 #define ERR_TAGBLOCK_TOO_LONG  "Tagblock string too long"
 #define ERR_TOO_MANY_FIELDS    "Too many fields"
 #define ERR_NMEA_TOO_LONG      "NMEA string too long"
+#define ERR_UNKNOWN            "Unknown error"
 
 #define MAX_TAGBLOCK_FIELDS  8         // max number of fields allowed in a tagblock
 #define MAX_TAGBLOCK_STR_LEN  1024     // max length of a tagblock string
@@ -42,13 +43,3 @@ bool is_checksum_valid(char* s);
 // tagblock functions
 int join_tagblock(char* buffer, size_t buf_size, const char* tagblock_str, const char* nmea_str);
 int split_tagblock(char* message, const char** tagblock, const char** nmea);
-
-
-// Module methods
-PyObject * method_compute_checksum(PyObject *module, PyObject *args);
-PyObject * method_compute_checksum_str(PyObject *module, PyObject *args);
-PyObject * method_is_checksum_valid(PyObject *module, PyObject *args);
-PyObject * method_join_tagblock(PyObject *module,  PyObject *const *args, Py_ssize_t nargs);
-PyObject * method_split_tagblock(PyObject *module,  PyObject *const *args, Py_ssize_t nargs);
-PyObject * method_decode_tagblock(PyObject *module, PyObject *const *args, Py_ssize_t nargs);
-PyObject * method_encode_tagblock(PyObject *module, PyObject *const *args, Py_ssize_t nargs);

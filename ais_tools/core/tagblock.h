@@ -37,5 +37,5 @@ int encode_fields(PyObject* dict, struct TAGBLOCK_FIELD* fields, size_t max_fiel
 
 int encode_tagblock(char * dest, PyObject *dict, size_t dest_buf_size);
 PyObject * decode_tagblock(char * tagblock_str);
-
+int update_tagblock(char * dest, size_t dest_size, char* message, PyObject * dict);
 

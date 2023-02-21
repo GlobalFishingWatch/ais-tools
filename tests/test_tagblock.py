@@ -188,4 +188,4 @@ def test_update():
     tagblock_str="\\z:1*71\\"
     fields = {'tagblock_text': 'ABC'}
     expected = "z:1,t:ABC*53"
-    assert _tagblock.update(tagblock_str, fields) == expected
+    assert core.update_tagblock(tagblock_str, fields) == expected
