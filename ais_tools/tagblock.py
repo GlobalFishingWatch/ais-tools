@@ -2,9 +2,7 @@ from datetime import datetime
 from datetime import timezone
 
 from ais import DecodeError
-# from ais_tools.core import checksum_str
 from ais_tools.core import is_checksum_valid
-from ais_tools import _tagblock
 from ais_tools import core
 
 

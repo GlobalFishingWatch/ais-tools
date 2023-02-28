@@ -6,13 +6,13 @@
  *
  * Does not write a null terminator
  * dest_end should point to the last position in the dest string buffer.  This method will
- * stops at the character immediately before this position
+ * stop at the character immediately before this position
  *
  * returns a pointer the the position immediately after the last position written in dest
  * you can use the return pointer for a subsequent copy, or if you are finished, write a
  * null char to that position to terminate the string
  */
-char * unsafe_strcpy(char * dest, const char * dest_end, const char * src)
+char * unsafe_strcpy(char * __restrict dest, const char * __restrict dest_end, const char * __restrict src)
 {
     while (dest < dest_end && *src)
         *dest++ = *src++;

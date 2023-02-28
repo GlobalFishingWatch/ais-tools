@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "core.h"
+#include "checksum.h"
 #include "tagblock.h"
 
 PyObject *

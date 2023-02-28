@@ -26,7 +26,7 @@ size_t encode_group_fields(char* buffer, size_t buf_size, struct TAGBLOCK_FIELD*
 }
 
 
-int encode_fields(PyObject* dict, struct TAGBLOCK_FIELD* fields, size_t max_fields, char* buffer, size_t buf_size)
+int encode_fields(struct TAGBLOCK_FIELD* fields, size_t max_fields, PyObject* dict, char* buffer, size_t buf_size)
 {
     PyObject *key, *value;
     Py_ssize_t pos = 0;
@@ -43,10 +43,10 @@ int encode_fields(PyObject* dict, struct TAGBLOCK_FIELD* fields, size_t max_fiel
         const char* key_str = PyUnicode_AsUTF8(PyObject_Str(key));
         const char* value_str = PyUnicode_AsUTF8(PyObject_Str(value));
 
-        size_t group_ordinal = lookup_group_field_key(key_str);
-        if (group_ordinal > 0)
+        int group_field_idx = lookup_group_field_key(key_str);
+        if (group_field_idx >= 0)
         {
-            group_fields[group_ordinal - 1].value = value_str;
+            group_fields[group_field_idx].value = value_str;
         }
         else
         {
@@ -84,11 +84,11 @@ int encode_tagblock(char * dest, PyObject *dict, size_t dest_buf_size)
 
     init_fields (fields, ARRAY_LENGTH(fields));
 
-    int num_fields = encode_fields(dict, fields, ARRAY_LENGTH(fields), value_buffer, ARRAY_LENGTH(value_buffer));
+    int num_fields = encode_fields(fields, ARRAY_LENGTH(fields), dict, value_buffer, ARRAY_LENGTH(value_buffer));
     if (num_fields < 0)
         return FAIL_TOO_MANY_FIELDS;
 
-    int str_len = join_fields(fields, num_fields, dest, dest_buf_size);
+    int str_len = join_fields(dest, dest_buf_size, fields, num_fields);
     if (str_len < 0)
         return FAIL_STRING_TOO_LONG;
     return str_len;

@@ -88,7 +88,7 @@ PyObject * decode_tagblock(char * tagblock_str)
 
     PyObject* dict = PyDict_New();
 
-    num_fields = split_fields(tagblock_str, fields, ARRAY_LENGTH(fields));
+    num_fields = split_fields(fields, tagblock_str, ARRAY_LENGTH(fields));
     if (num_fields < 0)
         status = FAIL;
 
@@ -123,28 +123,3 @@ PyObject * decode_tagblock(char * tagblock_str)
     else
         return NULL;
 }
-
-//PyObject *
-//tagblock_decode(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
-//{
-//    const char *param;
-//    char tagblock_str[MAX_TAGBLOCK_STR_LEN];
-//
-//    if (nargs != 1)
-//        return NULL;
-//
-//    param = PyUnicode_AsUTF8(PyObject_Str(args[0]));
-//
-//    if (safe_strcpy(tagblock_str, param, ARRAY_LENGTH(tagblock_str)) >= ARRAY_LENGTH(tagblock_str))
-//    {
-//        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_TOO_LONG);
-//        return NULL;
-//    }
-//
-//    PyObject* dict = decode_tagblock(tagblock_str);
-//
-//    if (!dict)
-//        PyErr_SetString(PyExc_ValueError, ERR_TAGBLOCK_DECODE);
-//
-//    return dict;
-//}

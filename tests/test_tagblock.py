@@ -3,7 +3,6 @@ import pytest
 from ais_tools import tagblock
 from ais_tools.tagblock import DecodeError
 
-from ais_tools import _tagblock
 from ais_tools import core
 
 @pytest.mark.parametrize("line,expected", [

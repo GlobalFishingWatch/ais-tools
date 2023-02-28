@@ -32,14 +32,6 @@
 
 
 // string copy utils
-char * unsafe_strcpy(char * dest, const char * dest_end, const char * src);
+char * unsafe_strcpy(char * __restrict dest, const char * __restrict est_end, const char * __restrict src);
 size_t safe_strcpy(char * __restrict dst, const char * __restrict src, size_t dsize);
 
-// checksum functions
-int checksum(const char *s);
-char* checksum_str(char * dst, const char* src, size_t dsize);
-bool is_checksum_valid(char* s);
-
-// tagblock functions
-int join_tagblock(char* buffer, size_t buf_size, const char* tagblock_str, const char* nmea_str);
-int split_tagblock(char* message, const char** tagblock, const char** nmea);
