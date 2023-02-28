@@ -37,7 +37,7 @@ int split_tagblock(char* message, const char** tagblock, const char** nmea)
     else
     {
         *tagblock = ptr;
-        for (ptr = &message[1]; *ptr != '\0' && *ptr != *TAGBLOCK_SEPARATOR; ptr++);
+        for (; *ptr != '\0' && *ptr != *TAGBLOCK_SEPARATOR; ptr++);
         tagblock_len = ptr - *tagblock;
         if (*ptr)
         {
