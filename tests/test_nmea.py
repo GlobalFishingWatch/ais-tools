@@ -48,6 +48,7 @@ def test_expand_nmea_fail(nmea):
 
 @pytest.mark.parametrize("nmea", [
     "\\!AIVDM,1,1,,A,BADCHECKSUM,0*00",
+    "\\s:00*49\\!AIVDM,1,1,,A,BADCHECKSUM,0*00",
 ])
 def test_expand_nmea_validate_fail(nmea):
     with pytest.raises(DecodeError):
