@@ -46,6 +46,13 @@ def test_expand_nmea_fail(nmea):
     with pytest.raises(DecodeError):
         tagblock, body, pad = expand_nmea(nmea, validate_checksum=False)
 
+@pytest.mark.parametrize("nmea", [
+    "\\!AIVDM,1,1,,A,BADCHECKSUM,0*00",
+])
+def test_expand_nmea_validate_fail(nmea):
+    with pytest.raises(DecodeError):
+        tagblock, body, pad = expand_nmea(nmea, validate_checksum=True)
+
 
 @pytest.mark.parametrize("nmea", [
     (['!AIVDM,2,1,7,A,@*00']),

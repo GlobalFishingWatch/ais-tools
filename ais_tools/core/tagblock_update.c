@@ -35,9 +35,11 @@ int update_tagblock(char * dest, size_t dest_size, char* message, PyObject * dic
         return FAIL_TOO_MANY_FIELDS;
 
     char updated_tagblock_str[MAX_TAGBLOCK_STR_LEN];
-    join_fields(updated_tagblock_str, ARRAY_LENGTH(updated_tagblock_str), fields, num_fields);
+    int msg_len = join_fields(updated_tagblock_str, ARRAY_LENGTH(updated_tagblock_str), fields, num_fields);
+    if (msg_len < 0)
+        return FAIL_STRING_TOO_LONG;
 
-    int msg_len = join_tagblock(dest, dest_size, updated_tagblock_str, nmea_str);
+    msg_len = join_tagblock(dest, dest_size, updated_tagblock_str, nmea_str);
     if (msg_len < 0)
         return FAIL_STRING_TOO_LONG;
 

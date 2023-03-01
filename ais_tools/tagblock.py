@@ -103,6 +103,6 @@ def update_tagblock(nmea, **kwargs):
 def safe_update_tagblock(nmea, **kwargs):
     try:
         nmea = core.update_tagblock(nmea, kwargs)
-    except DecodeError:
+    except ValueError:
         pass
     return nmea
