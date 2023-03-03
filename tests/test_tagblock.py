@@ -168,7 +168,6 @@ def test_tagblock_decode(tagblock_str, expected):
 
 
 @pytest.mark.parametrize("fields,expected", [
-    (None,'*00'),
     ({},'*00'),
     ({'a': 1}, 'a:1*6A'),
     ({'tagblock_a': 1}, 'a:1*6A'),

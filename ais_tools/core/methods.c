@@ -6,43 +6,44 @@
 #include "tagblock.h"
 
 PyObject *
-method_compute_checksum(PyObject *module, PyObject *args)
+method_compute_checksum(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 {
     const char *str;
-    int c;
 
-    if (!PyArg_ParseTuple(args, "s", &str))
-        return NULL;
-    c = checksum(str);
-    return PyLong_FromLong(c);
+    if (nargs != 1)
+        return PyErr_Format(PyExc_TypeError, "compute_checksum expects 1 argument");
+
+    str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
+    return PyLong_FromLong(checksum(str));
 }
 
 PyObject *
-method_compute_checksum_str(PyObject *module, PyObject *args)
+method_compute_checksum_str(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 {
     const char *str;
     char c_str[3];
 
-    if (!PyArg_ParseTuple(args, "s", &str))
-        return NULL;
+    if (nargs != 1)
+        return PyErr_Format(PyExc_TypeError, "checksum_str expects 1 argument");
+
+    str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
     checksum_str(c_str, str, ARRAY_LENGTH(c_str));
     return PyUnicode_FromString(c_str);
 }
 
 PyObject *
-method_is_checksum_valid(PyObject *module, PyObject *args)
+method_is_checksum_valid(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 {
-    char *str;
+    const char *str;
     char buffer[MAX_SENTENCE_LENGTH];
 
-    if (!PyArg_ParseTuple(args, "s", &str))
-        return NULL;
+    if (nargs != 1)
+        return PyErr_Format(PyExc_TypeError, "checksum_str expects 1 argument");
+
+    str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
 
     if (safe_strcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
-    {
-        PyErr_SetString(PyExc_ValueError, "String too long");
-        return NULL;
-    }
+        return PyErr_Format(PyExc_ValueError, "String too long");
 
     return is_checksum_valid(buffer) ? Py_True: Py_False;
 }
@@ -121,6 +122,8 @@ method_encode_tagblock(PyObject *module, PyObject *const *args, Py_ssize_t nargs
         return PyErr_Format(PyExc_TypeError, "encode expects only 1 argument");
 
     dict = args[0];
+    if (!PyDict_Check(dict))
+        return PyErr_Format(PyExc_ValueError, "encode requires a dict object as the argument");
 
     result = encode_tagblock(tagblock_str, dict, ARRAY_LENGTH(tagblock_str));
 
@@ -149,6 +152,8 @@ method_update_tagblock(PyObject *module,  PyObject *const *args, Py_ssize_t narg
 
     str = PyUnicode_AsUTF8(PyObject_Str(args[0]));
     dict = args[1];
+    if (!PyDict_Check(dict))
+        return PyErr_Format(PyExc_ValueError, "The second argument to update must be a dict");
 
     if (safe_strcpy(message, str, ARRAY_LENGTH(message)) >= ARRAY_LENGTH(message))
         return PyErr_Format(PyExc_ValueError, ERR_NMEA_TOO_LONG);
