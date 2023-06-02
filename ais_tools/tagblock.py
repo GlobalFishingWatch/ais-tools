@@ -132,7 +132,7 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
     if validate_checksum and not is_checksum_valid(tagblock_str):
         raise DecodeError('Invalid checksum')
 
-    for field in tagblock.split(","):
+    for field in [field for field in tagblock.split(",") if field]:
         try:
             key, value = field.split(":")
 

@@ -89,6 +89,7 @@ def test_encode_tagblock(fields, expected):
       'tagblock_sentence': 1,
       'tagblock_groupsize': 2,
       'tagblock_id': 3}),
+    ('s:rMT5858,*0E', {'tagblock_station': 'rMT5858'})  # test for issue #45
 ])
 def test_decode_tagblock(tagblock_str, expected):
     assert expected == tagblock.decode_tagblock(tagblock_str)
