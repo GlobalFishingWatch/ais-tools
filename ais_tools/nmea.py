@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 
 from ais import DecodeError
-from ais_tools.checksum import is_checksum_valid
+from ais_tools.core import is_checksum_valid
 from ais_tools.tagblock import split_tagblock
 from ais_tools.tagblock import decode_tagblock
 
@@ -14,6 +14,10 @@ REGEX_BACKSLASH_BANG = re.compile(r'(\\![^!\\]+)')
 
 def expand_nmea(line, validate_checksum=False):
     tagblock_str, nmea = split_tagblock(line)
+    if not nmea:
+        nmea = tagblock_str
+        tagblock_str = ''
+
     tagblock = decode_tagblock(tagblock_str, validate_checksum=validate_checksum)
 
     nmea = nmea.strip()

@@ -2,13 +2,9 @@ from datetime import datetime
 from datetime import timezone
 
 from ais import DecodeError
-from ais_tools.checksum import checksumstr
-from ais_tools.checksum import is_checksum_valid
+from ais_tools.core import is_checksum_valid
+from ais_tools import core
 
-# import warnings
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore")
-#     from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
@@ -45,8 +41,10 @@ def create_tagblock(station, timestamp=None, add_tagblock_t=True):
     )
     if add_tagblock_t:
         params['T'] = datetime.fromtimestamp(t, tz=timezone.utc).strftime(TAGBLOCK_T_FORMAT)
-    param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
-    return '{}*{}'.format(param_str, checksumstr(param_str))
+    return core.encode_tagblock(params)
+
+    # param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
+    # return '{}*{}'.format(param_str, checksum_str(param_str))
 
 
 def split_tagblock(nmea):
@@ -56,22 +54,17 @@ def split_tagblock(nmea):
     Note that if the nmea is a concatenated multipart message then only the tagblock of
     the first message will be split off
     """
-    tagblock = ''
-    if nmea.startswith("\\") and not nmea.startswith("\\!"):
-        parts = nmea[1:].split("\\", 1)
-        if len(parts) == 2:
-            tagblock, nmea = parts
-    return tagblock, nmea
+    return core.split_tagblock(nmea)
+
 
 
 def join_tagblock(tagblock, nmea):
     """
     Join a tagblock to an AIVDM message that does not already have a tagblock
     """
-    if tagblock and nmea:
-        return "\\{}\\{}".format(tagblock.lstrip('\\'), nmea.lstrip('\\'))
-    else:
-        return "{}{}".format(tagblock, nmea)
+
+    return core.join_tagblock(tagblock, nmea)
+
 
 
 def add_tagblock(tagblock, nmea, overwrite=True):
@@ -87,86 +80,29 @@ def add_tagblock(tagblock, nmea, overwrite=True):
     return join_tagblock(tagblock, nmea)
 
 
-tagblock_fields = {
-    'c': 'tagblock_timestamp',
-    'n': 'tagblock_line_count',
-    'r': 'tagblock_relative_time',
-    'd': 'tagblock_destination',
-    's': 'tagblock_station',
-    't': 'tagblock_text',
-}
-
-tagblock_fields_reversed = {v: k for k, v in tagblock_fields.items()}
-
-tagblock_group_fields = ["tagblock_sentence", "tagblock_groupsize", "tagblock_id"]
-
-
 def encode_tagblock(**kwargs):
-    group_fields = {}
-    fields = {}
-
-    for k, v in kwargs.items():
-        if k in tagblock_group_fields:
-            group_fields[k] = str(v)
-        elif k in tagblock_fields_reversed:
-            fields[tagblock_fields_reversed[k]] = v
-        else:
-            fields[k.replace('tagblock_', '')] = v
-
-    if len(group_fields) == 3:
-        fields['g'] = '-'.join([group_fields[k] for k in tagblock_group_fields])
-
-    base_str = ','.join(["{}:{}".format(k, v) for k, v in fields.items()])
-    return '{}*{}'.format(base_str, checksumstr(base_str))
+    try:
+        return core.encode_tagblock(kwargs)
+    except ValueError as e:
+        raise DecodeError(e)
 
 
 def decode_tagblock(tagblock_str, validate_checksum=False):
-
-    tagblock = tagblock_str.rsplit("*", 1)[0]
-
-    fields = {}
-
-    if not tagblock:
-        return fields
-
     if validate_checksum and not is_checksum_valid(tagblock_str):
         raise DecodeError('Invalid checksum')
-
-    for field in tagblock.split(","):
-        try:
-            key, value = field.split(":")
-
-            if key == 'g':
-                parts = [int(part) for part in value.split("-") if part]
-                if len(parts) != 3:
-                    raise DecodeError('Unable to decode tagblock group')
-                fields.update(dict(zip(tagblock_group_fields, parts)))
-            else:
-                if key in ['n', 'r']:
-                    value = int(value)
-                elif key == 'c':
-                    value = int(value)
-                    if value > 40000000000:
-                        value = value / 1000.0
-
-                fields[tagblock_fields.get(key, key)] = value
-        except ValueError:
-            raise DecodeError('Unable to decode tagblock string')
-
-    return fields
+    try:
+        return core.decode_tagblock(tagblock_str)
+    except ValueError as e:
+        raise DecodeError(e)
 
 
 def update_tagblock(nmea, **kwargs):
-    tagblock_str, nmea = split_tagblock(nmea)
-    tagblock = decode_tagblock(tagblock_str)
-    tagblock.update(kwargs)
-    tagblock_str = encode_tagblock(**tagblock)
-    return join_tagblock(tagblock_str, nmea)
+    return core.update_tagblock(nmea, kwargs)
 
 
 def safe_update_tagblock(nmea, **kwargs):
     try:
-        nmea = update_tagblock(nmea, **kwargs)
-    except DecodeError:
+        nmea = core.update_tagblock(nmea, kwargs)
+    except ValueError:
         pass
     return nmea

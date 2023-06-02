@@ -3,6 +3,7 @@ import cProfile
 import pstats
 from pstats import SortKey
 from ais_tools.aivdm import AIVDM, AisToolsDecoder
+from ais_tools.tagblock import update_tagblock
 # from ais_tools.aivdm import LibaisDecoder
 
 
@@ -15,7 +16,6 @@ message2 = "\\g:1-2-2243,s:66,c:1664582400*47" \
            "\\!AIVDM,2,1,1,B,5:U7dET2B4iE17KOS:0@Di0PTqE>22222222220l1@F65ut8?=lhCU3l,0*71" \
            "\\g:2-2-2243*5A" \
            "\\!AIVDM,2,2,1,B,p4l888888888880,2*36"
-
 
 def libais_vs_aistools():
     tests = [type_1, type_18]
@@ -60,6 +60,10 @@ def full_decode(n):
         msg.add_parser_version()
 
 
+def update_tgblock(n):
+    for i in range(n):
+        update_tagblock(message1, tagblock_text='T')
+
 def run_perf_test(func):
     cProfile.run(func, 'perf-test.stats')
 
@@ -68,7 +72,8 @@ def run_perf_test(func):
 
 
 def main():
-    run_perf_test('decode(10000)')
+    run_perf_test('update_tgblock(1000000)')
+    # run_perf_test('decode(10000)')
     # run_perf_test('full_decode(100000)')
     # checksum_compare()
 
