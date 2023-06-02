@@ -161,7 +161,8 @@ def test_safe_update_tagblock(tagblock_str, new_fields, expected):
     ('d:dest*00', {'tagblock_destination': 'dest'}),
     ('n:42', {'tagblock_line_count': 42}),
     ("c:123456789", {'tagblock_timestamp': 123456789}),
-    ('g:1-2-3', {'tagblock_sentence': 1, 'tagblock_groupsize': 2, 'tagblock_id': 3})
+    ('g:1-2-3', {'tagblock_sentence': 1, 'tagblock_groupsize': 2, 'tagblock_id': 3}),
+    ('s:rMT5858,*0E', {'tagblock_station': 'rMT5858'})
 ])
 def test_tagblock_decode(tagblock_str, expected):
     assert core.decode_tagblock(tagblock_str) == expected
