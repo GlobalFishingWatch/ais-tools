@@ -11,16 +11,21 @@ from ais_tools.cli import join_multipart
 from ais_tools.cli import cli
 from ais_tools.tagblock import split_tagblock
 from ais_tools.tagblock import decode_tagblock
-# from ais_tools.tagblock import parseTagBlock
+import ais_tools
 
 
 def test_help():
     runner = CliRunner()
     result = runner.invoke(cli)
     assert not result.exception
-    print(result.output)
     assert result.output.startswith('Usage')
 
+def test_version():
+    runner = CliRunner()
+    args = '--version'
+    result = runner.invoke(cli, args=args)
+    assert not result.exception
+    assert result.output.strip() == f'Version: {ais_tools.__version__}'
 
 def test_add_tagblock():
 

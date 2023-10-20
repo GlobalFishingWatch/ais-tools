@@ -30,6 +30,8 @@ def expand_nmea(line, validate_checksum=False):
             tagblock['tagblock_sentence'] = int(fields[2])
             if fields[3] != '':
                 tagblock['tagblock_id'] = int(fields[3])
+        else:
+            tagblock['tagblock_group_id'] = tagblock['tagblock_id']
         tagblock['tagblock_channel'] = fields[4]
         body = fields[5]
         pad = int(nmea.split('*')[0][-1])
@@ -73,7 +75,7 @@ def join_multipart(lines):
     raise DecodeError("all lines to be joined must start with the same character, either '\\' or '!'")
 
 
-def safe_join_multipart_stream(lines, max_time_window=500, max_message_window=1000, use_station_id=True):
+def safe_join_multipart_stream(lines, max_time_window=500, max_message_window=1000):
     """
     Same as join_multipart_stream but for any message that cannot decoded, it will just emit
     that message back out and not raise a DecodeError exception
@@ -82,8 +84,7 @@ def safe_join_multipart_stream(lines, max_time_window=500, max_message_window=10
             lines,
             max_time_window=max_time_window,
             max_message_window=max_message_window,
-            ignore_decode_errors=True,
-            use_station_id=use_station_id
+            ignore_decode_errors=True
             )
     for line in lines:
         yield line
@@ -92,8 +93,7 @@ def safe_join_multipart_stream(lines, max_time_window=500, max_message_window=10
 def join_multipart_stream(lines,
                           max_time_window=500,
                           max_message_window=1000,
-                          ignore_decode_errors=False,
-                          use_station_id=True):
+                          ignore_decode_errors=False):
     """
     Takes a stream of nmea text lines and tries to find the matching parts of multi part messages
     which may not be adjacent in the stream and may come out of order.
@@ -124,12 +124,20 @@ def join_multipart_stream(lines,
             # make a key for matching message parts
             # - tagblock_groupsize is the number of parts we are looking for
             # - tagblock_station is the source of the message and may not have a value
-            # - tagblock_id is a sequence number that is the same for all message parts, but it is not unique
+            # - tagblock_id is a sequence number that is the same for all message parts, but it is
+            #               a single digit only so not unique
+            # - tagblock_group_id if present, is a sequence number that is the same for all message parts, and it
+            #                     should be locally unique within the stream. It is a 4-digit number
             # - tagblock_channel is the AIS RF channel (either A or B) that was used for transmission
 
-            station_id = tagblock.get('tagblock_station') if use_station_id else None
-            key = (total_parts, station_id, tagblock.get('tagblock_id'),
-                   tagblock.get('tagblock_channel'))
+            tagblock_group_id = tagblock.get('tagblock_group_id')
+            if tagblock_group_id:
+                # only need this group id
+                key = (total_parts, None, tagblock_group_id, None)
+            else:
+                # no group id present, so use everything else we have to try to make a locally unique signature
+                key = (total_parts, tagblock.get('tagblock_station'), tagblock.get('tagblock_id'),
+                       tagblock.get('tagblock_channel'))
 
             # pack up the message part
             # - tagblock_sentence is the index of this part relative to the other parts, where the first part is 1
