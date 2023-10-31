@@ -3,7 +3,11 @@ import pytest
 from ais_tools.checksum import checksum
 from ais_tools.checksum import is_checksum_valid
 from ais_tools.checksum import checksumstr
-from ais.stream.checksum import checksumStr
+
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from ais.stream.checksum import checksumStr as libais_checksumstr
 
 
 @pytest.mark.parametrize("str,expected", [
@@ -27,7 +31,7 @@ def test_checksum_str(str, expected):
 
     assert actual == expected
     if len(str) > 1:
-        assert actual == checksumStr(str)
+        assert actual == libais_checksumstr(str)
 
 
 @pytest.mark.parametrize("str,expected", [

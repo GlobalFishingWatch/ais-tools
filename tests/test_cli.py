@@ -4,20 +4,28 @@ import json
 import re
 
 from ais_tools.cli import add_tagblock
+from ais_tools.cli import update_tagblock
 from ais_tools.cli import decode
 from ais_tools.cli import encode
 from ais_tools.cli import join_multipart
 from ais_tools.cli import cli
-from ais_tools.tagblock import parseTagBlock
+from ais_tools.tagblock import split_tagblock
+from ais_tools.tagblock import decode_tagblock
+import ais_tools
 
 
 def test_help():
     runner = CliRunner()
     result = runner.invoke(cli)
     assert not result.exception
-    print(result.output)
     assert result.output.startswith('Usage')
 
+def test_version():
+    runner = CliRunner()
+    args = '--version'
+    result = runner.invoke(cli, args=args)
+    assert not result.exception
+    assert result.output.strip() == f'Version: {ais_tools.__version__}'
 
 def test_add_tagblock():
 
@@ -27,7 +35,23 @@ def test_add_tagblock():
     result = runner.invoke(add_tagblock, input=input, args=args)
     assert not result.exception
 
-    tagblock, nmea = parseTagBlock(result.output.strip())
+    tagblock_str, nmea = split_tagblock(result.output.strip())
+    tagblock = decode_tagblock(tagblock_str)
+    # tagblock, nmea = parseTagBlock(result.output.strip())
+    assert nmea == input
+    assert tagblock['tagblock_station'] == 'test'
+
+
+def test_update_tagblock():
+
+    runner = CliRunner()
+    input = '!AIVDM,1,1,,A,B>cSnNP00FVur7UaC7WQ3wS1jCJJ,0*73'
+    args = '--station=test'
+    result = runner.invoke(update_tagblock, input=input, args=args)
+    assert not result.exception
+
+    tagblock_str, nmea = split_tagblock(result.output.strip())
+    tagblock = decode_tagblock(tagblock_str)
     assert nmea == input
     assert tagblock['tagblock_station'] == 'test'
 

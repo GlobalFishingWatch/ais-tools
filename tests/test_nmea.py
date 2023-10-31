@@ -13,7 +13,7 @@ from ais_tools.ais import DecodeError
         {'tagblock_timestamp': 1509502436, 'tagblock_sentence': 1}),
     ("\\g:1-2-4372,s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*32"
      "\\!AIVDM,2,1,2,B,576u>F02>hOUI8AGR20tt<j104p4l62222222216H14@@Hoe0JPEDp1TQH88,0*16",
-        {'tagblock_sentence': 1, 'tagblock_groupsize': 2}),
+        {'tagblock_sentence': 1, 'tagblock_groupsize': 2, 'tagblock_id': 4372, 'tagblock_group_id': 4372}),
     ("\\g:2-2-4372,s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*31"
      "\\!AIVDM,2,2,2,B,88888888880,2*25",
         {'tagblock_sentence': 2, 'tagblock_groupsize': 2}),
@@ -37,14 +37,14 @@ def test_expand_nmea(line, expected):
     '!AIVDM,1,1,'
     "\\s:bad-nmea,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*00",
     "\\s:missing-tagblock-separator,q:u,c:1509502436,T:2017-11-01 02.13.56*50!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*00",
-    "\\s:missing-tagblock-checksum,q:u,c:1509502436,T:2017-11-01 02.13.56\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*00",
     "\\s:missing_field_delimiter,q:u,c1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*7B",
     "\\s:bad_group,q:u,c:1509502436,T:2017-11-01 02.13.56*50\\!AIVDM,BAD,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*0D",
     "\\s:missing_checksum,q:u,c:1509502436,T:2017-11-01 02.13.56\\!AIVDM,BAD,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,0*0D",
+    "\\s:bad-pad-value,q:u,c:1509502436,T:2017-11-01 02.13.56\\!AIVDM,1,1,,A,13`el0gP000H=3JN9jb>4?wb0>`<,BAD*0D",
 ])
 def test_expand_nmea_fail(nmea):
     with pytest.raises(DecodeError):
-        tagblock, body, pad = expand_nmea(nmea)
+        tagblock, body, pad = expand_nmea(nmea, validate_checksum=False)
 
 
 @pytest.mark.parametrize("nmea", [
@@ -129,11 +129,7 @@ def test_join_multipart_stream_triple(nmea):
       '\\g:2-2-1786*55\\!AIVDM,2,2,6,B,88888888880,2*21']),
 ])
 def test_join_multipart_stream_station_id_mismatch(nmea):
-    combined = list(join_multipart_stream(nmea, use_station_id=True))
-    assert len(combined) == 2
-    assert combined == nmea
-
-    combined = list(join_multipart_stream(nmea, use_station_id=False))
+    combined = list(join_multipart_stream(nmea))
     assert len(combined) == 1
     assert combined == [''.join(nmea)]
 
