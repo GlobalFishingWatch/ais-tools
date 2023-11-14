@@ -25,6 +25,7 @@ def expand_nmea(line, validate_checksum=False):
         raise DecodeError('Invalid checksum')
 
     try:
+        tagblock['talker_id'] = fields[0][1:3]
         if 'tagblock_groupsize' not in tagblock:
             tagblock['tagblock_groupsize'] = int(fields[1])
             tagblock['tagblock_sentence'] = int(fields[2])
@@ -129,15 +130,16 @@ def join_multipart_stream(lines,
             # - tagblock_group_id if present, is a sequence number that is the same for all message parts, and it
             #                     should be locally unique within the stream. It is a 4-digit number
             # - tagblock_channel is the AIS RF channel (either A or B) that was used for transmission
+            # - talker_id is the first two characters after the '!'.  For a message "!AIVDM..." the talker_id is "AI"
 
             tagblock_group_id = tagblock.get('tagblock_group_id')
             if tagblock_group_id:
                 # only need this group id
-                key = (total_parts, None, tagblock_group_id, None)
+                key = (total_parts, None, tagblock_group_id, None, None)
             else:
                 # no group id present, so use everything else we have to try to make a locally unique signature
                 key = (total_parts, tagblock.get('tagblock_station'), tagblock.get('tagblock_id'),
-                       tagblock.get('tagblock_channel'))
+                       tagblock.get('tagblock_channel'), tagblock.get('talker_id'))
 
             # pack up the message part
             # - tagblock_sentence is the index of this part relative to the other parts, where the first part is 1
