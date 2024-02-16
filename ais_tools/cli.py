@@ -120,11 +120,12 @@ def update_tagblock(input, output, station, text):
 )
 @click.argument('input', type=click.File('r'), default='-')
 @click.argument('output', type=click.File('w'), default='-')
-def decode(input, output):
+@click.option('-q', '--quiet', is_flag=True, help="Do not emit decode errors to console")
+def decode(input, output, quiet):
     decoder = AIVDM()
     for msg in Message.stream(input):
         msg = decoder.safe_decode(msg)
-        if 'error' in msg:
+        if not quiet and  'error' in msg:
             click.echo(msg['error'], err=True)
         output.write(json.dumps(msg))
         output.write('\n')
