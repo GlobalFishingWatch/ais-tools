@@ -32,6 +32,7 @@ DEPENDENCIES = [
     "requests",
     "bitarray",
     "cbitstruct",
+    "udatetime"
 ]
 
 DEV_DEPENDENCIES = [
