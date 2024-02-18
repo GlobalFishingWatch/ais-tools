@@ -1,8 +1,9 @@
 import pytest
-from ais_tools.normalize import timestamp_to_rfc3339
+from ais_tools.normalize import normalize_timestamp
 from ais_tools.normalize import normalize_longitude
 from ais_tools.normalize import normalize_latitude
-from ais_tools.normalize import normalize_course_heading
+from ais_tools.normalize import normalize_course
+from ais_tools.normalize import normalize_heading
 from ais_tools.normalize import normalize_speed
 from ais_tools.normalize import normalize_text_field
 from ais_tools.normalize import normalize_imo
@@ -24,48 +25,41 @@ from ais_tools.shiptypes import SHIPTYPE_MAP
     (1672531200.123, '2023-01-01T00:00:00Z'),
     (0, '1970-01-01T00:00:00Z'),
 ])
-def test_timestamp_to_rfc3339(t, expected):
-    assert timestamp_to_rfc3339(t) == expected
+def test_normalze_timestamp(t, expected):
+    message = {'tagblock_timestamp': t}
+    assert normalize_timestamp(message) == expected
 
 
-@pytest.mark.parametrize("value,precision,expected", [
-    (0, None, 0),
-    (1.23456789, None, 1.23457),
-    (1.23456789, 2, 1.23),
-    (-180, None, -180),
-    (-180.0, None, -180.0),
-    (180, None, 180),
-    (180.0, None, 180.0),
-    (181, None, None),
-    (999, None, None),
-    (-181, None, None),
+@pytest.mark.parametrize("value,expected", [
+    (0, 0),
+    (1.23456789, 1.23457),
+    (-180, -180),
+    (-180., -180.0),
+    (180, 180),
+    (180.0, 180.0),
+    (181, None),
+    (999, None),
+    (-181, None),
 ])
-def test_normalize_longitude(value, precision, expected):
-    if precision is not None:
-        actual = normalize_longitude(value, precision)
-    else:
-        actual = normalize_longitude(value)
-    assert actual == expected
+def test_normalize_longitude(value, expected):
+    message = {'x': value}
+    assert normalize_longitude(message) == expected
 
 
-@pytest.mark.parametrize("value,precision,expected", [
-    (0, None, 0),
-    (1.23456789, None, 1.23457),
-    (1.23456789, 2, 1.23),
-    (-90, None, -90),
-    (-90.0, None, -90.0),
-    (90, None, 90),
-    (90.0, None, 90.0),
-    (91, None, None),
-    (999, None, None),
-    (-91, None, None),
+@pytest.mark.parametrize("value,expected", [
+    (0, 0),
+    (1.23456789, 1.23457),
+    (-90, -90),
+    (-90.0, -90.0),
+    (90, 90),
+    (90.0, 90.0),
+    (91, None),
+    (999, None),
+    (-91, None),
 ])
-def test_normalize_latitude(value, precision, expected):
-    if precision is not None:
-        actual = normalize_latitude(value, precision)
-    else:
-        actual = normalize_latitude(value)
-    assert actual == expected
+def test_normalize_latitude(value, expected):
+    message = {'y': value}
+    assert normalize_latitude(message) == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -79,8 +73,24 @@ def test_normalize_latitude(value, precision, expected):
     (999, None),
     (-0.01, None),
 ])
-def test_normalize_course_heading(value, expected):
-    assert normalize_course_heading(value) == expected
+def test_normalize_course(value, expected):
+    message = {'cog': value}
+    assert normalize_course(message) == expected
+
+
+@pytest.mark.parametrize("value,expected", [
+    (0, 0),
+    (1.23456789, 1.0),
+    (0, 0),
+    (-0.0, -0.0),
+    (359, 359),
+    (360, None),
+    (999, None),
+    (-0.01, None),
+])
+def test_normalize_heading(value, expected):
+    message = {'true_heading': value}
+    assert normalize_heading(message) == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -94,21 +104,8 @@ def test_normalize_course_heading(value, expected):
     (-0.01, None),
 ])
 def test_normalize_speed(value, expected):
-    assert normalize_speed(value) == expected
-
-
-@pytest.mark.parametrize("value,expected", [
-    (0, 0),
-    (1.23456789, 1.2),
-    (0, 0),
-    (-0.0, -0.0),
-    (102.2, 102.2),
-    (102.3, None),
-    (999, None),
-    (-0.01, None),
-])
-def test_normalize_speed(value, expected):
-    assert normalize_speed(value) == expected
+    message = {'sog': value}
+    assert normalize_speed(message) == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -120,7 +117,8 @@ def test_normalize_speed(value, expected):
     ('@This@is@a@test@', 'This@is@a@test'),
 ])
 def test_normalize_text_field(value, expected):
-    assert normalize_text_field(value) == expected
+    message = {'source_field': value}
+    assert normalize_text_field(message, source_field='source_field') == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -130,7 +128,8 @@ def test_normalize_text_field(value, expected):
     (1073741824, None),
 ])
 def test_normalize_imo(value, expected):
-    assert normalize_imo(value) == expected
+    message = {'imo_num': value}
+    assert normalize_imo(message) == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -138,7 +137,8 @@ def test_normalize_imo(value, expected):
     (99, 'AIS.99'),
 ])
 def test_normalize_message_type(value, expected):
-    assert normalize_message_type(value) == expected
+    message = {'id': value}
+    assert normalize_message_type(message) == expected
 
 
 @pytest.mark.parametrize("message,expected", [
@@ -200,7 +200,7 @@ def test_filter_message(message, expected):
     ({'y': 1.2345678}, {'lat': 1.23457}),
     ({'sog': 1.2345678}, {'speed': 1.2}),
     ({'cog': 1.2345678}, {'course': 1.2}),
-    ({'true_heading': 1.2345678}, {'heading': 1.2}),
+    ({'true_heading': 1.2345678}, {'heading': 1.0}),
     ({'name': 'boaty@@@'}, {'shipname': 'boaty'}),
     ({'callsign': 'BMBF123@@@'}, {'callsign': 'BMBF123'}),
     ({'destination': 'OZ@@@'}, {'destination': 'OZ'}),
@@ -226,4 +226,3 @@ def test_normalize_and_filter_messages():
     expected = [{'type': 'AIS.1', 'ssvid': '1', 'timestamp': '2000-01-01T00:00:00Z'}]
     actual = list(normalize_and_filter_messages(messages))
     assert actual == expected
-

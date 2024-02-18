@@ -1,36 +1,32 @@
 from ais_tools import normalize
 from ais_tools import shiptypes
 
-DEFAULT_MAPPED_FIELDS = (
-    # (old_key, new_key, transform fn)
-    ('uuid', 'msgid', lambda x: x),
-    ('mmsi', 'ssvid', str),
-    ('id', 'type', normalize.normalize_message_type),
-    ('tagblock_timestamp', 'timestamp', normalize.timestamp_to_rfc3339),
-    ('source', 'source', lambda x: x),
-    ('tagblock_station', 'receiver', lambda x: x),
-    ('x', 'lon', normalize.normalize_longitude),
-    ('y', 'lat', normalize.normalize_latitude),
-    ('sog', 'speed', normalize.normalize_speed),
-    ('cog', 'course', normalize.normalize_course_heading),
-    ('true_heading', 'heading', normalize.normalize_course_heading),
-    ('name', 'shipname', normalize.normalize_text_field),
-    ('callsign', 'callsign', normalize.normalize_text_field),
-    ('destination', 'destination', normalize.normalize_text_field),
-    ('imo_num', 'imo', normalize.normalize_imo),
-    ('nav_status', 'status', lambda x: x),
-    ('unit_flag', 'class_b_cs_flag', lambda x: x),
-)
 
 DEFAULT_FIELD_TRANSFORMS = (
-    ('*', normalize.normalize_mapped_fields, {'mapped_fields': DEFAULT_MAPPED_FIELDS}),
+    ('msgid', normalize.map_field, {'source_field': 'uuid'}),
+    ('source', normalize.map_field, {'source_field': 'source'}),
+    ('receiver', normalize.map_field, {'source_field': 'tagblock_station'}),
+    ('type', normalize.normalize_message_type, {}),
+    ('ssvid', normalize.nornalize_ssvid, {}),
+    ('timestamp', normalize.normalize_timestamp, {}),
+    ('lon', normalize.normalize_longitude, {}),
+    ('lat', normalize.normalize_latitude, {}),
+    ('course', normalize.normalize_course, {}),
+    ('heading', normalize.normalize_heading, {}),
+    ('speed', normalize.normalize_speed, {}),
+    ('imo', normalize.normalize_imo, {}),
     ('length', normalize.normalize_length, {}),
     ('width', normalize.normalize_width, {}),
+    ('shipname', normalize.normalize_text_field, {'source_field': 'name'}),
+    ('callsign', normalize.normalize_text_field, {'source_field': 'callsign'}),
+    ('destination', normalize.normalize_text_field, {'source_field': 'destination'}),
     ('shiptype', normalize.normalize_shiptype, {'ship_types': shiptypes.SHIPTYPE_MAP}),
-    ('dedup_key', normalize.normalize_dedup_key, {})
+    ('status', normalize.map_field, {'source_field': 'nav_status'}),
+    ('class_b_cs_flag', normalize.map_field, {'source_field': 'unit_flag'}),
+    ('dedup_key', normalize.normalize_dedup_key, {}),
 )
 
 
-def normalize_and_filter_messages(messages, transforms = DEFAULT_FIELD_TRANSFORMS):
+def normalize_and_filter_messages(messages, transforms=DEFAULT_FIELD_TRANSFORMS):
     yield from map(lambda message: normalize.normalize_message(message, transforms),
                    filter(normalize.filter_message, messages))
