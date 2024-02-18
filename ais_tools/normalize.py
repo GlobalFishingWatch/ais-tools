@@ -10,54 +10,84 @@ SKIP_MESSAGE_IF_FIELD_PRESENT = ['error']
 SKIP_MESSAGE_IF_FIELD_ABSENT = ['id', 'mmsi', 'tagblock_timestamp']
 AIS_TYPES = frozenset([1, 2, 3, 4, 5, 9, 11, 17, 18, 19, 21, 24, 27])
 
+def nornalize_ssvid(message: dict) -> Union[str, None]:
+    value = message.get('mmsi')
+    if value is not None:
+        return str(value)
+    else:
+        return None
 
-def timestamp_to_rfc3339(timestamp: Union[float, int]) -> str:
-    return datetime.utcfromtimestamp(timestamp).isoformat(timespec='seconds') + 'Z'
-
-
-def normalize_longitude(value: float, precision: int = 5) -> Union[float, None]:
-    if -181 < value < 181:
-        return round(value, precision)
+def normalize_timestamp(message: dict) -> Union[str, None]:
+    # convert to RFC3339 string
+    t = message.get('tagblock_timestamp')
+    if t is not None:
+        return datetime.utcfromtimestamp(message['tagblock_timestamp']).isoformat(timespec='seconds') + 'Z'
     else:
         return None
 
 
-def normalize_latitude(value: float, precision: int = 5) -> Union[float, None]:
-    if -91 < value < 91:
-        return round(value, precision)
+def normalize_longitude(message: dict) -> Union[float, None]:
+    value = message.get('x')
+    if value is not None and -181 < value < 181:
+        return round(value, 5)
     else:
         return None
 
 
-def normalize_course_heading(value: float, precision: int = 1) -> Union[float, None]:
-    if 0 <= value < 360:
-        return round(value, precision)
+def normalize_latitude(message: dict) -> Union[float, None]:
+    value = message.get('y')
+    if value is not None and -91 < value < 91:
+        return round(value, 5)
     else:
         return None
 
 
-def normalize_speed(value: float, precision: int = 1) -> Union[float, None]:
-    if 0 <= value < 102.3:
-        return round(value, precision)
+def normalize_course(message: dict) -> Union[float, None]:
+    value = message.get('cog')
+    if value is not None and 0 <= value <= 359.9:
+        return round(value, 1)
     else:
         return None
 
 
-def normalize_text_field(value: str) -> Union[str, None]:
-    value = value.strip('@')
-    if len(value) == 0:
+def normalize_heading(message: dict) -> Union[float, None]:
+    value = message.get('true_heading')
+    if value is not None and 0 <= value <= 359:
+        return round(value, 0)
+    else:
+        return None
+
+
+def normalize_speed(message: dict) -> Union[float, None]:
+    value = message.get('sog')
+    if value is not None and 0.0 <= value <= 102.2:
+        return round(value, 1)
+    else:
+        return None
+
+
+def normalize_text_field(message: dict, source_field: str = None) -> Union[str, None]:
+    value = message.get(source_field)
+    if value is not None:
+        value = value.strip('@')
+        if len(value) == 0:
+            value = None
+    return value
+
+
+def normalize_imo(message: dict) -> Union[int, None]:
+    value = message.get('imo_num')
+    if value is not None and not(1 <= value < 1073741824):
         value = None
     return value
 
 
-def normalize_imo(value: int) -> Union[int, None]:
-    if not(1 <= value < 1073741824):
-        value = None
-    return value
-
-
-def normalize_message_type(value: int) -> str:
-    return f'AIS.{value}'
+def normalize_message_type(message: dict) -> str:
+    value = message.get('id')
+    if value is not None:
+        return f'AIS.{value}'
+    else:
+        return value
 
 
 def normalize_length(message: dict) -> int:
@@ -74,7 +104,6 @@ def normalize_width(message: dict) -> int:
     if dim_c is not None and dim_d is not None:
         return dim_c + dim_d
     return None
-
 
 
 def normalize_shiptype(message: dict, ship_types) -> str:
@@ -100,8 +129,11 @@ def normalize_dedup_key(message: dict) -> str:
     return h.hexdigest()[:16]
 
 
-def normalize_mapped_fields(message: dict, mapped_fields: list):
-    return {new_key: fn(message[old_key]) for old_key, new_key, fn in mapped_fields if old_key in message}
+def map_field(message: dict, source_field: str = None):
+    return message.get(source_field)
+
+# def normalize_mapped_fields(message: dict, mapped_fields: list):
+#     return {new_key: fn(message[old_key]) for old_key, new_key, fn in mapped_fields if old_key in message}
 
 
 def filter_message(message) -> bool:
