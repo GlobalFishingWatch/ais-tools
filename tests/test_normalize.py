@@ -9,6 +9,7 @@ from ais_tools.normalize import normalize_text_field
 from ais_tools.normalize import normalize_imo
 from ais_tools.normalize import normalize_length
 from ais_tools.normalize import normalize_width
+from ais_tools.normalize import normalize_draught
 from ais_tools.normalize import filter_message
 from ais_tools.normalize import normalize_message_type
 from ais_tools.normalize import normalize_dedup_key
@@ -157,6 +158,15 @@ def test_normalize_length(message, expected):
 ])
 def test_normalize_width(message, expected):
     assert normalize_width(message) == expected
+
+
+@pytest.mark.parametrize("message,expected", [
+    ({}, None),
+    ({'draught': 0}, None),
+    ({'draught': 1}, 1),
+])
+def test_normalize_draught(message, expected):
+    assert normalize_draught(message) == expected
 
 
 @pytest.mark.parametrize("message,expected", [
