@@ -106,6 +106,13 @@ def normalize_width(message: dict) -> int:
     return None
 
 
+def normalize_draught(message: dict) -> float:
+    draught = message.get('draught')
+    if draught is not None and draught > 0:
+        return draught
+    return None
+
+
 def normalize_shiptype(message: dict, ship_types) -> str:
     return ship_types.get(message.get('type_and_cargo'))
 

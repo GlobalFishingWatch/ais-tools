@@ -17,6 +17,7 @@ DEFAULT_FIELD_TRANSFORMS = (
     ('imo', normalize.normalize_imo, {}),
     ('length', normalize.normalize_length, {}),
     ('width', normalize.normalize_width, {}),
+    ('draught', normalize.normalize_draught, {}),
     ('shipname', normalize.normalize_text_field, {'source_field': 'name'}),
     ('callsign', normalize.normalize_text_field, {'source_field': 'callsign'}),
     ('destination', normalize.normalize_text_field, {'source_field': 'destination'}),
