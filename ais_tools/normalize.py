@@ -1,23 +1,26 @@
-from typing import Union
+from typing import Union, Optional, Any
 from datetime import datetime
 import hashlib
 import re
-from ais_tools.shiptypes import SHIPTYPE_MAP
+from enum import Enum
 
 
 REGEX_NMEA = re.compile(r'!AIVDM[^*]+\*[0-9A-F]{2}')
 SKIP_MESSAGE_IF_FIELD_PRESENT = ['error']
 SKIP_MESSAGE_IF_FIELD_ABSENT = ['id', 'mmsi', 'tagblock_timestamp']
 AIS_TYPES = frozenset([1, 2, 3, 4, 5, 9, 11, 17, 18, 19, 21, 24, 27])
+POSITION_TYPE = Enum('PositionType', ['NULL', 'VALID', 'UNAVAILABLE', 'INVALID'])
 
-def nornalize_ssvid(message: dict) -> Union[str, None]:
+
+def normalize_ssvid(message: dict) -> Optional[str]:
     value = message.get('mmsi')
     if value is not None:
         return str(value)
     else:
         return None
 
-def normalize_timestamp(message: dict) -> Union[str, None]:
+
+def normalize_timestamp(message: dict) -> Optional[str]:
     # convert to RFC3339 string
     t = message.get('tagblock_timestamp')
     if t is not None:
@@ -26,23 +29,43 @@ def normalize_timestamp(message: dict) -> Union[str, None]:
         return None
 
 
-def normalize_longitude(message: dict) -> Union[float, None]:
-    value = message.get('x')
-    if value is not None and -181 < value < 181:
-        return round(value, 5)
+def coord_type(val: float, _min: float, _max: float, unavailable: float) -> POSITION_TYPE:
+    if val is None:
+        return POSITION_TYPE.NULL
+    elif _min <= val <= _max:
+        return POSITION_TYPE.VALID
+    elif val == unavailable:
+        return POSITION_TYPE.UNAVAILABLE
+    else:
+        return POSITION_TYPE.INVALID
+
+
+def normalize_longitude(message: dict) -> Optional[float]:
+    if coord_type(val := message.get('x'), -180, 180, 181) == POSITION_TYPE.VALID:
+        return round(val, 5)
     else:
         return None
 
 
-def normalize_latitude(message: dict) -> Union[float, None]:
-    value = message.get('y')
-    if value is not None and -91 < value < 91:
-        return round(value, 5)
+def normalize_latitude(message: dict) -> Optional[float]:
+    if coord_type(val := message.get('y'), -90, 90, 91) == POSITION_TYPE.VALID:
+        return round(val, 5)
     else:
         return None
 
 
-def normalize_course(message: dict) -> Union[float, None]:
+def normalize_pos_type(message: dict) -> Optional[str]:
+    x_type = coord_type(message.get('x'), -180, 180, 181)
+    y_type = coord_type(message.get('y'), -90, 90, 91)
+
+    if x_type == y_type:
+        result = x_type.name
+    else:
+        result = POSITION_TYPE.INVALID.name
+    return result if result != 'NULL' else None
+
+
+def normalize_course(message: dict) -> Optional[float]:
     value = message.get('cog')
     if value is not None and 0 <= value <= 359.9:
         return round(value, 1)
@@ -50,7 +73,7 @@ def normalize_course(message: dict) -> Union[float, None]:
         return None
 
 
-def normalize_heading(message: dict) -> Union[float, None]:
+def normalize_heading(message: dict) -> Optional[float]:
     value = message.get('true_heading')
     if value is not None and 0 <= value <= 359:
         return round(value, 0)
@@ -58,7 +81,7 @@ def normalize_heading(message: dict) -> Union[float, None]:
         return None
 
 
-def normalize_speed(message: dict) -> Union[float, None]:
+def normalize_speed(message: dict) -> Optional[float]:
     value = message.get('sog')
     if value is not None and 0.0 <= value <= 102.2:
         return round(value, 1)
@@ -66,7 +89,7 @@ def normalize_speed(message: dict) -> Union[float, None]:
         return None
 
 
-def normalize_text_field(message: dict, source_field: str = None) -> Union[str, None]:
+def normalize_text_field(message: dict, source_field: str = None) -> Optional[str]:
     value = message.get(source_field)
     if value is not None:
         value = value.strip('@')
@@ -75,14 +98,14 @@ def normalize_text_field(message: dict, source_field: str = None) -> Union[str, 
     return value
 
 
-def normalize_imo(message: dict) -> Union[int, None]:
+def normalize_imo(message: dict) -> Optional[int]:
     value = message.get('imo_num')
     if value is not None and not(1 <= value < 1073741824):
         value = None
     return value
 
 
-def normalize_message_type(message: dict) -> str:
+def normalize_message_type(message: dict) -> Optional[str]:
     value = message.get('id')
     if value is not None:
         return f'AIS.{value}'
@@ -90,7 +113,7 @@ def normalize_message_type(message: dict) -> str:
         return value
 
 
-def normalize_length(message: dict) -> int:
+def normalize_length(message: dict) -> Optional[int]:
     dim_a = message.get('dim_a')
     dim_b = message.get('dim_b')
     if dim_a is not None and dim_b is not None:
@@ -98,7 +121,7 @@ def normalize_length(message: dict) -> int:
     return None
 
 
-def normalize_width(message: dict) -> int:
+def normalize_width(message: dict) -> Optional[int]:
     dim_c = message.get('dim_c')
     dim_d = message.get('dim_d')
     if dim_c is not None and dim_d is not None:
@@ -106,18 +129,18 @@ def normalize_width(message: dict) -> int:
     return None
 
 
-def normalize_draught(message: dict) -> float:
+def normalize_draught(message: dict) -> Optional[float]:
     draught = message.get('draught')
     if draught is not None and draught > 0:
         return draught
     return None
 
 
-def normalize_shiptype(message: dict, ship_types) -> str:
+def normalize_shiptype(message: dict, ship_types) -> Optional[str]:
     return ship_types.get(message.get('type_and_cargo'))
 
 
-def normalize_dedup_key(message: dict) -> str:
+def normalize_dedup_key(message: dict) -> Optional[str]:
     """
     Compute a key using nmea and timestamp. This can be used later for deduplication of messages
     that come late or from multiple sources. Tf the same nmea occurs in the same minute it is either
@@ -136,7 +159,7 @@ def normalize_dedup_key(message: dict) -> str:
     return h.hexdigest()[:16]
 
 
-def map_field(message: dict, source_field: str = None):
+def map_field(message: dict, source_field: str = None) -> Optional[Any]:
     return message.get(source_field)
 
 # def normalize_mapped_fields(message: dict, mapped_fields: list):
@@ -166,7 +189,3 @@ def normalize_message(message: dict, transforms: list) -> dict:
             else:
                 new_message[key] = value
     return new_message
-
-
-
-

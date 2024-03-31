@@ -2,6 +2,7 @@ import pytest
 from ais_tools.normalize import normalize_timestamp
 from ais_tools.normalize import normalize_longitude
 from ais_tools.normalize import normalize_latitude
+from ais_tools.normalize import normalize_pos_type
 from ais_tools.normalize import normalize_course
 from ais_tools.normalize import normalize_heading
 from ais_tools.normalize import normalize_speed
@@ -26,7 +27,7 @@ from ais_tools.shiptypes import SHIPTYPE_MAP
     (1672531200.123, '2023-01-01T00:00:00Z'),
     (0, '1970-01-01T00:00:00Z'),
 ])
-def test_normalze_timestamp(t, expected):
+def test_normalize_timestamp(t, expected):
     message = {'tagblock_timestamp': t}
     assert normalize_timestamp(message) == expected
 
@@ -61,6 +62,20 @@ def test_normalize_longitude(value, expected):
 def test_normalize_latitude(value, expected):
     message = {'y': value}
     assert normalize_latitude(message) == expected
+
+
+@pytest.mark.parametrize("x, y, expected", [
+    (0, 0, 'VALID'),
+    (181, 91, 'UNAVAILABLE'),
+    (999, 999, 'INVALID'),
+    (None, None, None),
+    (181, None, 'INVALID'),
+    (999, 0, 'INVALID'),
+    (0, 999, 'INVALID'),
+])
+def test_normalize_pos_type(x, y, expected):
+    message = {'x': x, 'y': y}
+    assert normalize_pos_type(message) == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -206,8 +221,9 @@ def test_filter_message(message, expected):
     ({'tagblock_timestamp': 946684800}, {'timestamp': '2000-01-01T00:00:00Z'}),
     ({'source': 'spire'}, {'source': 'spire'}),
     ({'tagblock_station': 'A123'}, {'receiver': 'A123'}),
-    ({'x': 1.2345678}, {'lon': 1.23457}),
-    ({'y': 1.2345678}, {'lat': 1.23457}),
+    ({'x': 1.2345678, 'y': 1.2345678}, {'lon': 1.23457, 'lat': 1.23457, 'pos_type': 'VALID'}),
+    ({'x': 1.2345678}, {'lon': 1.23457, 'pos_type': 'INVALID'}),
+    ({'x': 181, 'y': 91}, {'pos_type': 'UNAVAILABLE'}),
     ({'sog': 1.2345678}, {'speed': 1.2}),
     ({'cog': 1.2345678}, {'course': 1.2}),
     ({'true_heading': 1.2345678}, {'heading': 1.0}),
