@@ -54,6 +54,7 @@ setup(
     extras_require={'dev': DEV_DEPENDENCIES},
     include_package_data=True,
     install_requires=DEPENDENCIES,
+    python_requires='>=3.8',
     license="Apache 2.0",
     long_description=readme,
     name='ais-tools',
