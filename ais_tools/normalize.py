@@ -5,7 +5,7 @@ import re
 from enum import Enum
 
 
-REGEX_NMEA = re.compile(r'!AIVDM[^*]+\*[0-9A-F]{2}')
+REGEX_NMEA = re.compile(r'!(?:AI|BS|AB)VDM[^*]+\*[0-9A-F]{2}')
 SKIP_MESSAGE_IF_FIELD_PRESENT = ['error']
 SKIP_MESSAGE_IF_FIELD_ABSENT = ['id', 'mmsi', 'tagblock_timestamp']
 AIS_TYPES = frozenset([1, 2, 3, 4, 5, 9, 11, 17, 18, 19, 21, 24, 27])
@@ -151,6 +151,9 @@ def normalize_dedup_key(message: dict) -> Optional[str]:
         return None
 
     nmea = ''.join(re.findall(REGEX_NMEA, message['nmea']))
+    if not nmea:
+        return None     # no nmea found in message
+
     timestamp = int(message['tagblock_timestamp'] / 60)
 
     key = f'{nmea}_{timestamp}'.encode('utf-8')

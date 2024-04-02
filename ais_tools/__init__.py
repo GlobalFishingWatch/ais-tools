@@ -2,7 +2,7 @@
 Tools for managing AIS messages
 """
 
-__version__ = 'v0.1.6.dev4'
+__version__ = 'v0.1.6.dev5'
 __author__ = 'Paul Woods'
 __email__ = 'paul@globalfishingwatch.org'
 __source__ = 'https://github.com/GlobalFishingWatch/ais-tools'
