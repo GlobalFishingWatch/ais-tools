@@ -1,4 +1,6 @@
 import pytest
+import re
+
 from ais_tools.normalize import normalize_timestamp
 from ais_tools.normalize import normalize_longitude
 from ais_tools.normalize import normalize_latitude
@@ -19,6 +21,7 @@ from ais_tools.normalize import normalize_message
 from ais_tools.normalize_transform import normalize_and_filter_messages
 from ais_tools.normalize_transform import DEFAULT_FIELD_TRANSFORMS
 from ais_tools.shiptypes import SHIPTYPE_MAP
+from ais_tools.normalize import REGEX_NMEA
 
 
 @pytest.mark.parametrize("t,expected", [
@@ -184,9 +187,22 @@ def test_normalize_draught(message, expected):
     assert normalize_draught(message) == expected
 
 
+@pytest.mark.parametrize("value, expected", [
+    ('!AIVDM,2,2,2,A,@,0*57', ['!AIVDM,2,2,2,A,@,0*57']),
+    ('Not-included!AIVDM,2,2,2,A,@,0*57Also-not-included', ['!AIVDM,2,2,2,A,@,0*57']),
+    ('!AIVDM,2,2,2,A,@,0*57not-included!AIVDM,2,2,2,A,@,0*57', ['!AIVDM,2,2,2,A,@,0*57', '!AIVDM,2,2,2,A,@,0*57']),
+    ('!BSVDM,2,2,2,A,@,0*57', ['!BSVDM,2,2,2,A,@,0*57']),
+    ('!ABVDM,2,2,2,A,@,0*57', ['!ABVDM,2,2,2,A,@,0*57']),
+])
+def test_nmea_regex(value, expected):
+    assert re.findall(REGEX_NMEA, value) == expected
+
+
 @pytest.mark.parametrize("message,expected", [
     ({'tagblock_timestamp': 1707443048}, None),
     ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, '745f4bde2318c974'),
+    ({'nmea': '!BSVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, 'a6926b3f62eeb7d7'),
+    ({'nmea': '!BSVDM,2,2,2,B,@,0*57', 'tagblock_timestamp': 1707443048}, 'd3972916d1a17048'),
 ])
 def test_normalize_dedup_key(message, expected):
     assert normalize_dedup_key(message) == expected
