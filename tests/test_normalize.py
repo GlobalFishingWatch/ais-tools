@@ -203,6 +203,7 @@ def test_nmea_regex(value, expected):
     ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, '745f4bde2318c974'),
     ({'nmea': '!BSVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, 'a6926b3f62eeb7d7'),
     ({'nmea': '!BSVDM,2,2,2,B,@,0*57', 'tagblock_timestamp': 1707443048}, 'd3972916d1a17048'),
+    ({'nmea': 'invalid', 'tagblock_timestamp': 1707443048}, None),
 ])
 def test_normalize_dedup_key(message, expected):
     assert normalize_dedup_key(message) == expected
