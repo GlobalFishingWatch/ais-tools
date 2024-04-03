@@ -8,7 +8,7 @@ from ais import DecodeError
 from ais_tools.ais import AISMessageTranscoder
 from ais_tools.nmea import split_multipart
 from ais_tools.nmea import expand_nmea
-from ais_tools.checksum import checksumstr
+from ais_tools.core import checksum_str
 from ais_tools.message import Message
 
 
@@ -166,7 +166,7 @@ class AIVDM:
     def encode(self, message):
         body, pad = self.encode_payload(message)
         sentence = "AIVDM,1,1,,A,{},{}".format(body, pad)
-        return Message("!{}*{}".format(sentence, checksumstr(sentence)))
+        return Message("!{}*{}".format(sentence, checksum_str(sentence)))
 
     def encode_payload(self, message):
         return self.encoder.encode_payload(message)

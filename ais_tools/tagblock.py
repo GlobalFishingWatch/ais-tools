@@ -2,8 +2,8 @@ from datetime import datetime
 from datetime import timezone
 
 from ais import DecodeError
-from ais_tools.checksum import checksumstr
-from ais_tools.checksum import is_checksum_valid
+from ais_tools.core import checksum_str
+from ais_tools.core import is_checksum_valid
 
 # import warnings
 # with warnings.catch_warnings():
@@ -46,7 +46,7 @@ def create_tagblock(station, timestamp=None, add_tagblock_t=True):
     if add_tagblock_t:
         params['T'] = datetime.fromtimestamp(t, tz=timezone.utc).strftime(TAGBLOCK_T_FORMAT)
     param_str = ','.join(["{}:{}".format(k, v) for k, v in params.items()])
-    return '{}*{}'.format(param_str, checksumstr(param_str))
+    return '{}*{}'.format(param_str, checksum_str(param_str))
 
 
 def split_tagblock(nmea):
@@ -117,7 +117,7 @@ def encode_tagblock(**kwargs):
         fields['g'] = '-'.join([group_fields[k] for k in tagblock_group_fields])
 
     base_str = ','.join(["{}:{}".format(k, v) for k, v in fields.items()])
-    return '{}*{}'.format(base_str, checksumstr(base_str))
+    return '{}*{}'.format(base_str, checksum_str(base_str))
 
 
 def decode_tagblock(tagblock_str, validate_checksum=False):
