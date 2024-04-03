@@ -4,10 +4,6 @@ from ais_tools.core import checksum
 from ais_tools.core import is_checksum_valid
 from ais_tools.core import checksum_str
 
-# from ais_tools.checksum import checksum
-# from ais_tools.checksum import is_checksum_valid
-# from ais_tools.checksum import checksumstr
-
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
