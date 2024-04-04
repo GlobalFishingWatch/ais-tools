@@ -188,11 +188,22 @@ def test_normalize_draught(message, expected):
 
 
 @pytest.mark.parametrize("value, expected", [
+    ('invalid', []),
+    ('!AIVDM*00', []),
+    ('!AIVDM_*00', ['!AIVDM_*00']),
+    ('!AIVDM_*0', []),
+    ('!XXVDM_*00', []),
+    ('!AIVDX_*00', []),
+    ('!AIVDO_*00', ['!AIVDO_*00']),
+    ('!ABVDM_*00', ['!ABVDM_*00']),
+    ('!ABVDO_*00', ['!ABVDO_*00']),
+    ('!ANVDM_*00', ['!ANVDM_*00']),
+    ('!ANVDO_*00', ['!ANVDO_*00']),
+    ('!BSVDM_*00', ['!BSVDM_*00']),
+    ('!BSVDO_*00', ['!BSVDO_*00']),
     ('!AIVDM,2,2,2,A,@,0*57', ['!AIVDM,2,2,2,A,@,0*57']),
     ('Not-included!AIVDM,2,2,2,A,@,0*57Also-not-included', ['!AIVDM,2,2,2,A,@,0*57']),
     ('!AIVDM,2,2,2,A,@,0*57not-included!AIVDM,2,2,2,A,@,0*57', ['!AIVDM,2,2,2,A,@,0*57', '!AIVDM,2,2,2,A,@,0*57']),
-    ('!BSVDM,2,2,2,A,@,0*57', ['!BSVDM,2,2,2,A,@,0*57']),
-    ('!ABVDM,2,2,2,A,@,0*57', ['!ABVDM,2,2,2,A,@,0*57']),
 ])
 def test_nmea_regex(value, expected):
     assert re.findall(REGEX_NMEA, value) == expected
@@ -206,6 +217,7 @@ def test_nmea_regex(value, expected):
     ({'nmea': 'invalid', 'tagblock_timestamp': 1707443048}, None),
     ({"nmea": "!AIVDM,1,1,,A,H69@rrS3S?SR3G2D000000000000,0*2e",
       "tagblock_timestamp": 1712156268}, '06f1f1b00815aa10'),
+    ({'nmea': '!AIVDM', 'tagblock_timestamp': 0}, None),
 ])
 def test_normalize_dedup_key(message, expected):
     assert normalize_dedup_key(message) == expected
