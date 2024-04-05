@@ -1,4 +1,4 @@
-from typing import Union, Optional, Any
+from typing import Optional, Any
 from datetime import datetime
 import hashlib
 import re
@@ -27,6 +27,24 @@ def normalize_timestamp(message: dict) -> Optional[str]:
         return datetime.utcfromtimestamp(message['tagblock_timestamp']).isoformat(timespec='seconds') + 'Z'
     else:
         return None
+
+
+def normalize_xmit_timestamp(message: dict) -> Optional[str]:
+    def in_range(value, valid_range):
+        return value is not None and valid_range[0] <= value <= valid_range[1]
+
+    fields = {
+        'year': (1, 9999),
+        'month': (1, 12),
+        'day': (1,31),
+        'hour': (0, 23),
+        'minute': (0, 59),
+        'second': (0, 59)
+    }
+    values = [(f, message.get(f), valid_range) for f, valid_range in fields.items()]
+    if all(in_range(value, valid_range) for _, value, valid_range in values):
+        values = {f: value for f, value, _ in values}
+        return datetime(**values).isoformat(timespec='seconds') + 'Z'
 
 
 def coord_type(val: float, _min: float, _max: float, unavailable: float) -> POSITION_TYPE:

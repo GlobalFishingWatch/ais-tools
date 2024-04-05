@@ -9,6 +9,7 @@ DEFAULT_FIELD_TRANSFORMS = (
     ('type', normalize.normalize_message_type, {}),
     ('ssvid', normalize.normalize_ssvid, {}),
     ('timestamp', normalize.normalize_timestamp, {}),
+    ('xmit_timestamp', normalize.normalize_xmit_timestamp, {}),
     ('lon', normalize.normalize_longitude, {}),
     ('lat', normalize.normalize_latitude, {}),
     ('pos_type', normalize.normalize_pos_type, {}),
