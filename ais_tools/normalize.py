@@ -29,7 +29,7 @@ def normalize_timestamp(message: dict) -> Optional[str]:
         return None
 
 
-def normalize_xmit_timestamp(message: dict) -> Optional[str]:
+def normalize_tx_timestamp(message: dict) -> Optional[str]:
     def in_range(value, valid_range):
         return value is not None and valid_range[0] <= value <= valid_range[1]
 
