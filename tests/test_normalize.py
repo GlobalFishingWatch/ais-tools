@@ -2,7 +2,7 @@ import pytest
 import re
 
 from ais_tools.normalize import normalize_timestamp
-from ais_tools.normalize import normalize_xmit_timestamp
+from ais_tools.normalize import normalize_tx_timestamp
 from ais_tools.normalize import normalize_longitude
 from ais_tools.normalize import normalize_latitude
 from ais_tools.normalize import normalize_pos_type
@@ -41,7 +41,7 @@ def test_normalize_timestamp(t, expected):
     (2024, 0, 2, 3, 4, 5, None),
     (2024, 1, 2, 3, 4, 60, None),
 ])
-def test_normalize_xmit_timestamp(year, month, day, hour, minute, second, expected):
+def test_normalize_tx_timestamp(year, month, day, hour, minute, second, expected):
     message = {
         'year': year,
         'month': month,
@@ -50,7 +50,7 @@ def test_normalize_xmit_timestamp(year, month, day, hour, minute, second, expect
         'minute': minute,
         'second': second
     }
-    assert normalize_xmit_timestamp(message) == expected
+    assert normalize_tx_timestamp(message) == expected
 
 
 @pytest.mark.parametrize("value,expected", [
@@ -289,7 +289,7 @@ def test_filter_message(message, expected):
     ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048},
         {'timestamp': '2024-02-09T01:44:08Z', 'dedup_key': '745f4bde2318c974'}),
     ({'year': 2024, 'month': 4, 'day': 3, 'hour': 2, 'minute': 1, 'second': 0},
-        {'xmit_timestamp': '2024-04-03T02:01:00Z'})
+        {'tx_timestamp': '2024-04-03T02:01:00Z'})
 ])
 def test_normalize_message(message, expected):
     assert normalize_message(message, DEFAULT_FIELD_TRANSFORMS) == expected
