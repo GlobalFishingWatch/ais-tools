@@ -2,12 +2,14 @@
 Tools for managing AIS messages
 """
 
-__version__ = 'v0.1.5'
+from importlib.metadata import version
+__version__ = version("ais-tools")
+# __version__ = 'v0.1.6.dev5'
 __author__ = 'Paul Woods'
 __email__ = 'paul@globalfishingwatch.org'
 __source__ = 'https://github.com/GlobalFishingWatch/ais-tools'
 __license__ = """
-Copyright 2023 Global Fishing Watch
+Copyright 2024 Global Fishing Watch
 
 Authors:
 Paul Woods <paul@globalfishingwatch.org>

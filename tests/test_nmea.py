@@ -101,6 +101,8 @@ def test_join_multipart_stream_singleton():
       '\\t:2*00\\!AIVDM,2,2,7,B,@,0*52']),
     (['!AIVDM,2,1,7,B,@,0*51',
       '!AIVDM,2,2,7,B,@,0*52']),
+    (['!BSVDM,2,1,7,B,@,0*51',
+      '!BSVDM,2,2,7,B,@,0*52']),
 ])
 def test_join_multipart_stream_pairs(nmea):
     combined = list(join_multipart_stream(nmea))
@@ -145,14 +147,16 @@ def test_join_multipart_stream_mixed():
         '\\t:6,s:station1*00\\!AIVDM,1,1,1,A,@,0*57',
         '\\t:8.2*00\\!AIVDM,2,2,8,A,@,0*5E',
         '\\t:7.1*00\\!AIVDM,2,1,7,B,@,0*51',
+        '\\t:9.1*00\\!BSVDM,2,1,5,B,@,0*52',
         '\\t:5.1*00\\!AIVDM,2,1,5,B,@,0*53',
-        '\\t:7.2*00\\!AIVDM,2,2,7,B,@,0*52'
+        '\\t:7.2*00\\!AIVDM,2,2,7,B,@,0*52',
+        '\\t:9.2*00\\!BSVDM,2,2,5,B,@,0*52',
     ]
 
     lines = list(join_multipart_stream(nmea))
     actual = [re.findall(r'\\t:([0-9][.]?[0-9]?)', line) for line in lines]
     actual = [a if len(a) > 1 else a[0] for a in actual]
-    expected = ['1', '3', ['2.1', '2.2'], '4', '6', ['5.1', '5.2'], ['7.1', '7.2'], '8.2']
+    expected = ['1', '3', ['2.1', '2.2'], '4', '6', ['5.1', '5.2'], ['7.1', '7.2'], ['9.1', '9.2'], '8.2']
     assert actual == expected
 
 
@@ -188,3 +192,14 @@ def test_join_multipart_stream_fail_not_fail():
     nmea = ['invalid']
     combined = list(join_multipart_stream(nmea, ignore_decode_errors=True))
     assert combined == nmea
+
+
+@pytest.mark.parametrize("line,expected", [
+    ('\\s:rORBCOMM109,c:1426032000,T:2015-03-11 00.00.00*31\\!AIVDM,2,2,2,B,88888888880,2*25', 'AI'),
+    ('!AIVDM,1,1,1,A,@,0*57', 'AI'),
+    ('!BSVDM,1,1,1,A,@,0*57', 'BS'),
+])
+def test_talker_id(line, expected):
+    tagblock, body, pad = expand_nmea(line)
+    assert tagblock['talker_id'] == expected
+

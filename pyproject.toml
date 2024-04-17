@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ais-tools"
+description = "Tools for managing AIS messages"
+readme = "README.md"
+version = "v0.1.7"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Paul Woods", email = "paul@globalfishingwatch.org"},
+]
+requires-python = ">=3.8"
+dependencies = [
+    "libais",
+    "Click",
+    "gpxpy",
+    "requests",
+    "bitarray",
+    "cbitstruct",
+    "udatetime",
+]
+
+[project.urls]
+Repository = "https://github.com/GlobalFishingWatch/ais-tools.git"
+
+[project.optional-dependencies]
+dev = [
+    'pytest',
+    'pytest-cov',
+    'flake8',
+]
+
+[project.scripts]
+ais-tools = "ais_tools.cli:cli"
+
