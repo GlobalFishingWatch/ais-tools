@@ -89,13 +89,3 @@ def test_missing_part():
     msg = decoder.safe_decode(nmea=nmea, best_effort=True)
     assert msg['error'] == 'Expected 2 message parts to decode but found 1'
     assert msg['tagblock_timestamp'] == 1668472438
-
-
-@pytest.mark.parametrize("nmea", [
-    ('\\c:1711942361,s:terrestrial,t:spire*4B\\!AIVDM,1,1,,A,56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp8888880,0*60'),
-    ('\\c:1711952914,s:terrestrial,t:spire*42\\!AIVDM,1,1,,A,56:Ib8P0000000000008DV09F1L4r1TTr374000j1p5320C=02U2ADj0CP000000000000:,0*03'),
-])
-def test_type_5_bad_padding(nmea):
-    decoder = AIVDM()
-    msg = decoder.safe_decode(nmea=nmea, best_effort=True)
-    assert 'error' not in msg

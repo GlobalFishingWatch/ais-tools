@@ -82,6 +82,30 @@ def test_ais8_wrong_pad():
 
 
 @pytest.mark.parametrize("body,pad,expected", [
+    # incorrect padding
+    ('56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp8888880', 0,
+     {'name': 'HUA JIANG 7         '}),
+    # correct padding
+    ('56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp8888880', 2,
+     {'name': 'HUA JIANG 7         '})
+     ])
+def test_ais5(body, pad, expected):
+    msg = AISMessageTranscoder.decode_nmea(body, pad)
+    actual = {k: v for k, v in msg.items() if k in expected}
+    assert actual == expected
+
+
+@pytest.mark.parametrize("body,pad,expected", [
+    # incorrect padding
+    ('56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp88888809999', 0,
+     'TYPE 5 LIBAIS ERR: Ais5: AIS_ERR_BAD_BIT_COUNT'),
+])
+def test_ais5_fail(body, pad, expected):
+    with pytest.raises(DecodeError, match=expected):
+        _ = AISMessageTranscoder.decode_nmea(body, pad)
+
+
+@pytest.mark.parametrize("body,pad,expected", [
     ('9001?BP=h:qJ9vb;:f7EN1h240Rb', 0, {'mmsi': 20298, 'alt': 55, 'sog': 10}),
     ('90009C3dRIM1QSsjSPAa1;h200T4', 0, {'mmsi': 2380, 'alt': 946, 'alt_sensor': 0}),
 ])
