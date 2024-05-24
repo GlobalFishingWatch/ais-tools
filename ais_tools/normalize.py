@@ -1,6 +1,6 @@
 from typing import Optional, Any
 from datetime import datetime
-import hashlib
+import xxhash
 import re
 from enum import Enum
 
@@ -168,16 +168,14 @@ def normalize_dedup_key(message: dict) -> Optional[str]:
     if 'nmea' not in message or 'tagblock_timestamp' not in message:
         return None
 
-    nmea = ''.join(re.findall(REGEX_NMEA, message['nmea']))
+    nmea = ''.join(REGEX_NMEA.findall(message['nmea']))
     if not nmea:
         return None     # no nmea found in message
 
     timestamp = int(message['tagblock_timestamp'] / 60)
 
     key = f'{nmea}_{timestamp}'.encode('utf-8')
-    h = hashlib.sha1()
-    h.update(key)
-    return h.hexdigest()[:16]
+    return xxhash.xxh3_64_hexdigest(key)
 
 
 def map_field(message: dict, source_field: str = None) -> Optional[Any]:

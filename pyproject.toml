@@ -20,6 +20,7 @@ dependencies = [
     "bitarray",
     "cbitstruct",
     "udatetime",
+    "xxhash"
 ]
 
 [project.urls]
