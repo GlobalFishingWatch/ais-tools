@@ -36,7 +36,7 @@ def normalize_tx_timestamp(message: dict) -> Optional[str]:
     fields = {
         'year': (1, 9999),
         'month': (1, 12),
-        'day': (1,31),
+        'day': (1, 31),
         'hour': (0, 23),
         'minute': (0, 59),
         'second': (0, 59)
@@ -44,7 +44,10 @@ def normalize_tx_timestamp(message: dict) -> Optional[str]:
     values = [(f, message.get(f), valid_range) for f, valid_range in fields.items()]
     if all(in_range(value, valid_range) for _, value, valid_range in values):
         values = {f: value for f, value, _ in values}
-        return datetime(**values).isoformat(timespec='seconds') + 'Z'
+        try:
+            return datetime(**values).isoformat(timespec='seconds') + 'Z'
+        except ValueError:
+            return None
 
 
 def coord_type(val: float, _min: float, _max: float, unavailable: float) -> POSITION_TYPE:

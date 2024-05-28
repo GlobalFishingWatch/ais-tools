@@ -289,7 +289,9 @@ def test_filter_message(message, expected):
     ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048},
         {'timestamp': '2024-02-09T01:44:08Z', 'dedup_key': '784dcbf153c04531'}),
     ({'year': 2024, 'month': 4, 'day': 3, 'hour': 2, 'minute': 1, 'second': 0},
-        {'tx_timestamp': '2024-04-03T02:01:00Z'})
+        {'tx_timestamp': '2024-04-03T02:01:00Z'}),
+    ({'year': 2024, 'month': 2, 'day': 31, 'hour': 0, 'minute': 0, 'second': 0},
+        {}),
 ])
 def test_normalize_message(message, expected):
     assert normalize_message(message, DEFAULT_FIELD_TRANSFORMS) == expected
