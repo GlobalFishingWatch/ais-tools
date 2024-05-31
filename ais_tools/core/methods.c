@@ -54,9 +54,9 @@ PyObject *
 method_is_checksum_valid(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 {
     PyObject *py_str;
-    PyObject *result;
     const char *str;
     char buffer[MAX_SENTENCE_LENGTH];
+    size_t len;
 
     if (nargs != 1)
         return PyErr_Format(PyExc_TypeError, "checksum_str expects 1 argument");
@@ -65,12 +65,14 @@ method_is_checksum_valid(PyObject *module, PyObject *const *args, Py_ssize_t nar
 
     str = PyUnicode_AsUTF8(py_str);
 
-    if (safe_strcpy(buffer, str, ARRAY_LENGTH(buffer)) >= ARRAY_LENGTH(buffer))
-        result = PyErr_Format(PyExc_ValueError, "String too long");
-    else
-        result = is_checksum_valid(buffer) ?  Py_NewRef(Py_True) :  Py_NewRef(Py_False);
+    len = safe_strcpy(buffer, str, ARRAY_LENGTH(buffer));
 
     Py_DECREF(py_str);
 
-    return result;
+    if (len >= ARRAY_LENGTH(buffer))
+        return PyErr_Format(PyExc_ValueError, "String too long");
+    else if (is_checksum_valid(buffer))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
