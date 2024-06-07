@@ -33,7 +33,8 @@ def test_decode(nmea, expected):
 @pytest.mark.parametrize("nmea,error", [
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
     ('!', 'No valid AIVDM found in'),
-    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36')
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36'),
+    ('!AIVDM,1,1,,A,1000,0*28', 'AISTOOLS ERR: Ais1_2_3: AIS_ERR_BAD_BIT_COUNT'),
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()
