@@ -19,7 +19,9 @@ from ais_tools.message import Message
     ('\\s:66,c:1663246931*35\\!AIVDM,1,1,,,9001?BP=h:qJ9vb;:f7EN1h240Rb,0*3F',
         {'alt_sensor': 0, 'assigned_mode': False}),
     ('\\c:1712130370,s:dynamic,t:spire*55\\!AIVDM,1,1,,A,403wboivQ1WfE`4gnt5MJT?024rp,0*24',
-     {'year': 2024, 'month': 4, 'day': 3, 'hour': 7, 'minute': 46, 'second': 21})
+     {'year': 2024, 'month': 4, 'day': 3, 'hour': 7, 'minute': 46, 'second': 21}),
+    ('\\s:rMT4097,t:ais-listener,c:1697012399*7E\\!AIVDM,1,1,,A,13UuUj0P00QgDCLEiGAcOOwl2<0Igw;,0*28',
+     {'id': 1, 'mmsi': 241133000}),
 ])
 def test_decode(nmea, expected):
     decoder = AIVDM()
