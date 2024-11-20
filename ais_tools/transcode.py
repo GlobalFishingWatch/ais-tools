@@ -30,7 +30,7 @@ def bits_to_nmea(bits):
         pad = 0
     else:
         bits = bits + (pad * bitarray('0'))
-    return ''.join(bits.iterdecode(ASCII8toAIS6_decode_tree)), pad
+    return ''.join(bits.decode(ASCII8toAIS6_decode_tree)), pad
 
 
 def nmea_to_bits(body, pad):
@@ -73,7 +73,7 @@ class NmeaBits:
             bits = self.bits
         else:
             bits = self.bits + (pad * bitarray('0'))
-        return ''.join(bits.iterdecode(ASCII8toAIS6_decode_tree)), pad
+        return ''.join(bits.decode(ASCII8toAIS6_decode_tree)), pad
 
     def pack(self, struct, message):
         self.pack_into(struct, self.offset, message)
@@ -225,4 +225,4 @@ class ASCII6Field(EncodedField):
         bits = bitarray()
         bits.frombytes(value)
         bits = bits[:self.nbits]
-        return ''.join(bits.iterdecode(ASCII8toASCII6_decode_tree))
+        return ''.join(bits.decode(ASCII8toASCII6_decode_tree))

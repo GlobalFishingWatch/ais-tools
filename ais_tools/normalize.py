@@ -1,6 +1,6 @@
 from typing import Optional, Any
 from datetime import datetime
-import hashlib
+import xxhash
 import re
 from enum import Enum
 
@@ -36,7 +36,7 @@ def normalize_tx_timestamp(message: dict) -> Optional[str]:
     fields = {
         'year': (1, 9999),
         'month': (1, 12),
-        'day': (1,31),
+        'day': (1, 31),
         'hour': (0, 23),
         'minute': (0, 59),
         'second': (0, 59)
@@ -44,7 +44,10 @@ def normalize_tx_timestamp(message: dict) -> Optional[str]:
     values = [(f, message.get(f), valid_range) for f, valid_range in fields.items()]
     if all(in_range(value, valid_range) for _, value, valid_range in values):
         values = {f: value for f, value, _ in values}
-        return datetime(**values).isoformat(timespec='seconds') + 'Z'
+        try:
+            return datetime(**values).isoformat(timespec='seconds') + 'Z'
+        except ValueError:
+            return None
 
 
 def coord_type(val: float, _min: float, _max: float, unavailable: float) -> POSITION_TYPE:
@@ -168,16 +171,14 @@ def normalize_dedup_key(message: dict) -> Optional[str]:
     if 'nmea' not in message or 'tagblock_timestamp' not in message:
         return None
 
-    nmea = ''.join(re.findall(REGEX_NMEA, message['nmea']))
+    nmea = ''.join(REGEX_NMEA.findall(message['nmea']))
     if not nmea:
         return None     # no nmea found in message
 
     timestamp = int(message['tagblock_timestamp'] / 60)
 
     key = f'{nmea}_{timestamp}'.encode('utf-8')
-    h = hashlib.sha1()
-    h.update(key)
-    return h.hexdigest()[:16]
+    return xxhash.xxh3_64_hexdigest(key)
 
 
 def map_field(message: dict, source_field: str = None) -> Optional[Any]:

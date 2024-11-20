@@ -19,7 +19,9 @@ from ais_tools.message import Message
     ('\\s:66,c:1663246931*35\\!AIVDM,1,1,,,9001?BP=h:qJ9vb;:f7EN1h240Rb,0*3F',
         {'alt_sensor': 0, 'assigned_mode': False}),
     ('\\c:1712130370,s:dynamic,t:spire*55\\!AIVDM,1,1,,A,403wboivQ1WfE`4gnt5MJT?024rp,0*24',
-     {'year': 2024, 'month': 4, 'day': 3, 'hour': 7, 'minute': 46, 'second': 21})
+     {'year': 2024, 'month': 4, 'day': 3, 'hour': 7, 'minute': 46, 'second': 21}),
+    ('\\s:rMT4097,t:ais-listener,c:1697012399*7E\\!AIVDM,1,1,,A,13UuUj0P00QgDCLEiGAcOOwl2<0Igw;,0*28',
+     {'id': 1, 'mmsi': 241133000}),
 ])
 def test_decode(nmea, expected):
     decoder = AIVDM()
@@ -31,7 +33,8 @@ def test_decode(nmea, expected):
 @pytest.mark.parametrize("nmea,error", [
     ('!AIVDM,2,1,1,B,@,0*57', 'Expected 2 message parts to decode but found 1'),
     ('!', 'No valid AIVDM found in'),
-    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36')
+    ('!AIVDM,1,1,,A,B99999,0*5D', 'AISTOOLS ERR: Not enough bits to decode.  Need at least 149 bits, got only 36'),
+    ('!AIVDM,1,1,,A,1000,0*28', 'AISTOOLS ERR: Ais1_2_3: AIS_ERR_BAD_BIT_COUNT'),
 ])
 def test_decode_fail(nmea, error):
     decoder = AIVDM()

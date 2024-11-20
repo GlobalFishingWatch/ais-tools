@@ -3,6 +3,7 @@ import cProfile
 import pstats
 from pstats import SortKey
 from ais_tools.aivdm import AIVDM, AisToolsDecoder
+from ais_tools.normalize import normalize_dedup_key
 # from ais_tools.aivdm import LibaisDecoder
 
 
@@ -60,6 +61,14 @@ def full_decode(n):
         msg.add_parser_version()
 
 
+def test_normalize_dedup_key(n):
+    msg = {
+        'tagblock_timestamp': 123456789,
+        'nmea': "\\!AIVDM,2,1,1,B,5:U7dET2B4iE17KOS:0@Di0PTqE>22222222220l1@F65ut8?=lhCU3l,0*71"
+    }
+    for i in range (n):
+        _ = normalize_dedup_key(msg)
+
 def run_perf_test(func):
     cProfile.run(func, 'perf-test.stats')
 
@@ -68,7 +77,7 @@ def run_perf_test(func):
 
 
 def main():
-    run_perf_test('decode(10000)')
+    run_perf_test('test_normalize_dedup_key(1000000)')
     # run_perf_test('full_decode(100000)')
     # checksum_compare()
 

@@ -229,12 +229,12 @@ def test_nmea_regex(value, expected):
 
 @pytest.mark.parametrize("message,expected", [
     ({'tagblock_timestamp': 1707443048}, None),
-    ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, '745f4bde2318c974'),
-    ({'nmea': '!BSVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, 'a6926b3f62eeb7d7'),
-    ({'nmea': '!BSVDM,2,2,2,B,@,0*57', 'tagblock_timestamp': 1707443048}, 'd3972916d1a17048'),
+    ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, '784dcbf153c04531'),
+    ({'nmea': '!BSVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048}, 'da0adb5959aec091'),
+    ({'nmea': '!BSVDM,2,2,2,B,@,0*57', 'tagblock_timestamp': 1707443048}, '70bbc54a4bfc5daa'),
     ({'nmea': 'invalid', 'tagblock_timestamp': 1707443048}, None),
     ({"nmea": "!AIVDM,1,1,,A,H69@rrS3S?SR3G2D000000000000,0*2e",
-      "tagblock_timestamp": 1712156268}, '06f1f1b00815aa10'),
+      "tagblock_timestamp": 1712156268}, 'e804595091021cd8'),
     ({'nmea': '!AIVDM', 'tagblock_timestamp': 0}, None),
 ])
 def test_normalize_dedup_key(message, expected):
@@ -287,9 +287,11 @@ def test_filter_message(message, expected):
     ({'dim_c': 1, 'dim_d': 1}, {'width': 2}),
     ({'type_and_cargo': 30}, {'shiptype': 'Fishing'}),
     ({'nmea': '!AIVDM,2,2,2,A,@,0*57', 'tagblock_timestamp': 1707443048},
-        {'timestamp': '2024-02-09T01:44:08Z', 'dedup_key': '745f4bde2318c974'}),
+        {'timestamp': '2024-02-09T01:44:08Z', 'dedup_key': '784dcbf153c04531'}),
     ({'year': 2024, 'month': 4, 'day': 3, 'hour': 2, 'minute': 1, 'second': 0},
-        {'tx_timestamp': '2024-04-03T02:01:00Z'})
+        {'tx_timestamp': '2024-04-03T02:01:00Z'}),
+    ({'year': 2024, 'month': 2, 'day': 31, 'hour': 0, 'minute': 0, 'second': 0},
+        {}),
 ])
 def test_normalize_message(message, expected):
     assert normalize_message(message, DEFAULT_FIELD_TRANSFORMS) == expected

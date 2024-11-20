@@ -17,9 +17,10 @@ dependencies = [
     "Click",
     "gpxpy",
     "requests",
-    "bitarray",
+    "bitarray>=3.0.0",
     "cbitstruct",
     "udatetime",
+    "xxhash"
 ]
 
 [project.urls]

@@ -1,5 +1,6 @@
 from ais_tools.transcode import DecodeError
 from ais_tools.transcode import ASCII8toAIS6
+from ais_tools import ais_1_2_3
 from ais_tools import ais5
 from ais_tools import ais8
 from ais_tools import ais9
@@ -19,6 +20,9 @@ encode_fn = {
 }
 
 decode_fn = {
+    1: ais_1_2_3.ais_1_2_3_decode,
+    2: ais_1_2_3.ais_1_2_3_decode,
+    3: ais_1_2_3.ais_1_2_3_decode,
     5: ais5.ais5_decode,
     8: ais8.ais8_decode,
     9: ais9.ais9_decode,
