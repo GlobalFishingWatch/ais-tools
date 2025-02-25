@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ais-tools"
 description = "Tools for managing AIS messages"
 readme = "README.md"
-version = "v0.1.7"
+version = "v0.1.8dev"
 license = {file = "LICENSE"}
 authors = [
     {name = "Paul Woods", email = "paul@globalfishingwatch.org"},
