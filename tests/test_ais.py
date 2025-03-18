@@ -87,7 +87,10 @@ def test_ais8_wrong_pad():
      {'name': 'HUA JIANG 7         '}),
     # correct padding
     ('56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp8888880', 2,
-     {'name': 'HUA JIANG 7         '})
+     {'name': 'HUA JIANG 7         '}),
+    # too many bits - one extra char
+    ('538UMb82F1cOD9MOD019E<4@U8000000000000157av:E58k0?SAC2C30@00000000000080', 0,
+     {'name': 'RUSADIR@@@@@@@@@@@@@'})
      ])
 def test_ais5(body, pad, expected):
     msg = AISMessageTranscoder.decode_nmea(body, pad)
@@ -96,8 +99,11 @@ def test_ais5(body, pad, expected):
 
 
 @pytest.mark.parametrize("body,pad,expected", [
-    # incorrect padding
-    ('56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp88888809999', 0,
+    # not enough bits
+    ('56:=31`000008QaF220QD60`T4pN3N2222222216>pN5@50e0ES2@C`6EC`1hCQp888888', 0,
+     'TYPE 5 LIBAIS ERR: Ais5: AIS_ERR_BAD_BIT_COUNT'),
+    # too many bits - 2 extra chars
+    ('538UMb82F1cOD9MOD019E<4@U8000000000000157av:E58k0?SAC2C30@000000000000800', 0,
      'TYPE 5 LIBAIS ERR: Ais5: AIS_ERR_BAD_BIT_COUNT'),
 ])
 def test_ais5_fail(body, pad, expected):
