@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+from datetime import UTC
 import re
 
 from ais import DecodeError
@@ -115,7 +116,7 @@ def join_multipart_stream(lines,
             else:
                 raise
 
-        now = datetime.utcnow().timestamp()
+        now = datetime.now(UTC).timestamp()
         total_parts = tagblock['tagblock_groupsize']
 
         if total_parts == 1:
