@@ -66,12 +66,13 @@ def test_decode():
 
 
 def test_decode_fail():
-    runner = CliRunner(mix_stderr=False)
+    # runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     input = 'INVALID NMEA'
     result = runner.invoke(decode, input=input)
     assert not result.exception
     assert result.stderr.strip() == 'no valid AIVDM message detected'
-    msg = json.loads(result.output)
+    msg = json.loads(result.stdout)
     assert msg['error'] == 'no valid AIVDM message detected'
 
 
@@ -84,12 +85,13 @@ def test_encode():
 
 
 def test_encode_fail():
-    runner = CliRunner(mix_stderr=False)
+    # runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     input = 'INVALID JSON'
     result = runner.invoke(encode, input=input)
     assert not result.exception
     assert result.stderr.strip() == 'AISTOOLS ERR: Failed to encode unknown message type None'
-    assert result.output.strip() == '!AIVDM,1,1,,A,I0000000@002a97a0,5*16'
+    assert result.stdout.strip() == '!AIVDM,1,1,,A,I0000000@002a97a0,5*16'
 
 
 def test_join_multipart():
