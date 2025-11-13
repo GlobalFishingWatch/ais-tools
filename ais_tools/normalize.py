@@ -1,5 +1,5 @@
 from typing import Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import xxhash
 import re
 from enum import Enum
@@ -24,7 +24,8 @@ def normalize_timestamp(message: dict) -> Optional[str]:
     # convert to RFC3339 string
     t = message.get('tagblock_timestamp')
     if t is not None:
-        return datetime.utcfromtimestamp(message['tagblock_timestamp']).isoformat(timespec='seconds') + 'Z'
+        t = datetime.fromtimestamp(t, tz=timezone.utc)
+        return t.isoformat(timespec='seconds').replace("+00:00", "Z")
     else:
         return None
 
