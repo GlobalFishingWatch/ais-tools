@@ -33,7 +33,7 @@ becomes
 ```text
 \tagblock\!AIVDM_part_one\tagblock\!AIVDM_part_two
 ```
-    
+
 ## Install
 ```console
 $ pip install git+https://github.com/GlobalFishingWatch/ais-tools
@@ -45,14 +45,14 @@ $ ais-tools --help
 ```
 ### Decode
 Decode nmea in a file as json to stdout
-```
+```console
 $ ais-tools decode ./sample/sample.nmea
 ```
 
 ### Add tagblock
 Used to add a tagblock to AIVDM messages. this is intended to be used with 
 a real time stream of messages as they are received, for instance from an 
-AIS RF signal decoder of\r from a udp stream.  The default action is to apply 
+AIS RF signal decoder or from a udp stream.  The default action is to apply 
 the current timestamp
 
 ```console
@@ -63,7 +63,7 @@ outputs something like
 
 ```console
 \\c:1577762601537,s:my-station,T:2019-12-30 22.23.21*5D\\!AIVDM,1,1,,A,15NTES0P00J>tC4@@FOhMgvD0D0M,0*49
-``` 
+```
 
 ### Join Multipart
   Match up multipart nmea messages
