@@ -1,4 +1,5 @@
 ![build](https://github.com/GlobalFishingWatch/ais-tools/workflows/Python%20package/badge.svg)
+[![GitHub release](https://img.shields.io/github/v/release/GlobalFishingWatch/ais-tools)](https://github.com/GlobalFishingWatch/ais-tools/releases)
 ![python](https://img.shields.io/badge/python-3.10+-blue.svg)
 [![codecov](https://codecov.io/gh/GlobalFishingWatch/ais-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/GlobalFishingWatch/ais-tools)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -9,27 +10,33 @@ Tools for encoding and decoding AIS messages
 Uses https://github.com/schwehr/libais as the base decoder
 
 ## Multi-sentence messages
-The strategy for handing multi-sentence messages, such as AIS type 5, is to group the sentence parts into a single unit as early as possible in the processing chain.  Ideally this happens at the AIS receiver or at the point when these messages are streaming in real-time and the tagblock with timestamp is added to the !AIVDM payload.
 
-This can be done in a text stream by simply concatenating the sentence parts into a single line of text.  In a JSON encoded message, this can also be done by providing a list in the nmea attribute.
+Multi-sentence messages (such as AIS type 5) should be grouped into a single
+unit as early as possible in the processing chain — ideally at the AIS receiver
+or when adding tagblocks to a real-time stream.
 
-For example:
+Concatenate the sentence parts into a single line of text. In JSON input, the
+`nmea` field should contain the concatenated string.
 
-the following two line message
+### Plain AIVDM messages
+
+The two-line message:
 ```text
 !AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E
 !AIVDM,2,2,1,B,00000000000,2*26
 ```
-becomes
+becomes:
 ```text
 !AIVDM,2,1,1,B,56:`@2h00001`dQP001`PDpMPTs7SH000000001@0000000000<000000000,0*3E!AIVDM,2,2,1,B,00000000000,2*26
 ```
-messages with tagblock are also concatenated including the tagblock so
+
+### Messages with tagblocks
+
 ```text
 \tagblock\!AIVDM_part_one
 \tagblock\!AIVDM_part_two
 ```
-becomes
+becomes:
 ```text
 \tagblock\!AIVDM_part_one\tagblock\!AIVDM_part_two
 ```
