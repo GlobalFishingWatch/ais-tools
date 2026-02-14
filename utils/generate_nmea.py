@@ -4,8 +4,7 @@ import copy
 import operator
 import math
 from math import floor
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from functools import reduce
 
 from gpxpy.gpx import GPXTrackPoint
@@ -143,7 +142,7 @@ def cli():
 @click.option('--interval_s', '-i', type=click.FLOAT, default=0.1, show_default="0.1 seconds")
 @click.option('--start-time', '-t',
               type=click.DateTime(formats=['%H:%M:%S']),
-              default=datetime.utcnow().strftime('%H:%M:%S'),
+              default=datetime.now(timezone.utc).strftime('%H:%M:%S'),
               show_default="now")
 def line(lat1, lon1, lat2, lon2, speed_kn, interval_s, start_time):
     points = interpolate_line(
@@ -165,7 +164,7 @@ def line(lat1, lon1, lat2, lon2, speed_kn, interval_s, start_time):
 @click.option('--interval_s', '-i', type=click.FLOAT, default=0.1, show_default="0.1 seconds")
 @click.option('--start-time', '-t',
               type=click.DateTime(formats=['%H:%M:%S']),
-              default=datetime.utcnow().strftime('%H:%M:%S'),
+              default=datetime.now(timezone.utc).strftime('%H:%M:%S'),
               show_default="now")
 def circle(latitude, longitude, radius_m, total_dist_m, speed_kn, start_time, interval_s):
     points = interpolate_circle(
