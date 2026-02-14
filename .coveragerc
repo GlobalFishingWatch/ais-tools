@@ -1,6 +1,6 @@
 [run]
 omit =
-    venv/*
+    .venv/*
     setup.py
 
 [report]

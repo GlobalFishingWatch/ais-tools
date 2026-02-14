@@ -7,7 +7,8 @@ name = "ais-tools"
 description = "Tools for managing AIS messages"
 readme = "README.md"
 version = "1.0.0dev"
-license = {file = "LICENSE"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
     {name = "Paul Woods", email = "paul@globalfishingwatch.org"},
 ]
@@ -35,4 +36,7 @@ dev = [
 
 [project.scripts]
 ais-tools = "ais_tools.cli:cli"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "sample*", "src*"]
 
