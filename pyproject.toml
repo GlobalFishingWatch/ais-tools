@@ -51,3 +51,9 @@ ignore = ["E501"]
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
+[tool.coverage.run]
+omit = [".venv/*", "setup.py"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
+
