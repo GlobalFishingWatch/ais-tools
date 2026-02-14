@@ -1,8 +1,12 @@
+import sys
+import os
 import unittest
 import math
 from datetime import datetime
 from gpxpy.gpx import GPXTrackSegment
 from gpxpy.gpx import GPXTrackPoint
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'utils'))
 
 from generate_nmea import nmea_checksum
 from generate_nmea import generate_gga
