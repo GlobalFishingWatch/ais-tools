@@ -109,11 +109,11 @@ for msg in Message.stream(nmea):
 ## Developing
 
 ```console
-git clone https://github.com/SkyTruth/ais-tools
+git clone https://github.com/GlobalFishingWatch/ais-tools
 cd ais-tools
-virtualenv venv
-source venv/bin/activate
-pip install -e .\[dev\]
-flake8 . --exclude ./venv/ --max-line-length=127
-pytest  --cov=./
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+ruff check .
+pytest --cov=./
 ```
