@@ -6,8 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "ais-tools"
 description = "Tools for managing AIS messages"
 readme = "README.md"
-version = "v0.2.0dev"
-license = {file = "LICENSE"}
+version = "1.0.0dev"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
     {name = "Paul Woods", email = "paul@globalfishingwatch.org"},
 ]
@@ -30,9 +31,23 @@ Repository = "https://github.com/GlobalFishingWatch/ais-tools.git"
 dev = [
     'pytest',
     'pytest-cov',
-    'flake8',
+    'ruff',
 ]
 
 [project.scripts]
 ais-tools = "ais_tools.cli:cli"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "sample*", "src*"]
+
+[tool.ruff]
+line-length = 127
+exclude = ["utils", "src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
