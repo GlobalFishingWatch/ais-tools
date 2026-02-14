@@ -31,7 +31,7 @@ Repository = "https://github.com/GlobalFishingWatch/ais-tools.git"
 dev = [
     'pytest',
     'pytest-cov',
-    'flake8',
+    'ruff',
 ]
 
 [project.scripts]
@@ -39,4 +39,15 @@ ais-tools = "ais_tools.cli:cli"
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "sample*", "src*"]
+
+[tool.ruff]
+line-length = 127
+exclude = ["utils", "src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
