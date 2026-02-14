@@ -51,6 +51,9 @@ ignore = ["E501"]
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.coverage.run]
 omit = [".venv/*", "setup.py"]
 
