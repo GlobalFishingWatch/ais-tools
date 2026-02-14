@@ -40,3 +40,6 @@ venv/
 .DS_Store
 
 /perf-test.stats
+
+# Large sample data files
+sample/data/
