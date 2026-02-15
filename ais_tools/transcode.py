@@ -42,10 +42,15 @@ def nmea_to_bits(body, pad):
 
 
 class NmeaBits:
+    """
+    A bit buffer for packing and unpacking AIS message fields.
+
+    Wraps a bitarray with an offset-tracked cursor for sequential
+    pack/unpack operations using NmeaStruct definitions.
+    """
+
     def __init__(self, initializer):
-        """
-           initialized with a integer length in bits or with a bitarray
-        """
+        """Initialize with a bit length (int) or an existing bitarray."""
         if isinstance(initializer, bitarray):
             self.bits = initializer.copy()
         else:
@@ -106,6 +111,8 @@ class NmeaBits:
 
 
 class NmeaStruct:
+    """Defines a message structure as an ordered sequence of NmeaField instances."""
+
     def __init__(self, *args):
         self.fields = list(args)
         self.names = [f.name for f in self.fields]
@@ -117,6 +124,8 @@ class NmeaStruct:
 
 
 class NmeaField:
+    """Base class for defining NMEA field types. Default type is unsigned int."""
+
     def __init__(self, name, nbits, default=None):
         self.name = name
         self.nbits = nbits
@@ -129,6 +138,8 @@ class NmeaField:
 
 
 class EncodedField(NmeaField):
+    """Base class for fields that require encoding/decoding between Python values and raw bits."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.format_type = 'r'

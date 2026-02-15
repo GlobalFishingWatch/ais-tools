@@ -1,3 +1,7 @@
+"""
+Normalize decoded AIS messages into a consistent schema with validated fields.
+"""
+
 from typing import Optional, Any
 from datetime import datetime, timezone
 import xxhash

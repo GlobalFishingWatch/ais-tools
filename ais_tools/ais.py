@@ -1,3 +1,7 @@
+"""
+Routes AIS message encoding and decoding to type-specific handlers.
+"""
+
 from ais_tools.transcode import DecodeError
 from ais_tools.transcode import ASCII8toAIS6
 from ais_tools import ais_1_2_3
@@ -34,6 +38,13 @@ decode_fn = {
 
 
 class AISMessageTranscoder:
+    """
+    Routes encoding and decoding to the appropriate handler based on AIS message type.
+
+    Supported decode types: 1, 2, 3, 5, 8, 9, 18, 19, 24, 25.
+    Supported encode types: 8, 9, 18, 19, 24, 25.
+    """
+
     @staticmethod
     def can_encode(message):
         return message.get('id') in encode_fn
