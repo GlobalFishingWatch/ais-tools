@@ -159,6 +159,18 @@ def encode(input, output):
 
 
 @cli.command(
+    short_help="Run performance benchmarks",
+    help="Run a suite of benchmarks and display a results table showing throughput for the main operations."
+)
+@click.option('-n', '--iterations', type=int, default=None,
+              help="Override the default iteration count for all benchmarks")
+def benchmark(iterations):
+    from ais_tools.benchmark import run_benchmarks, format_results
+    results = run_benchmarks(iterations=iterations)
+    click.echo(format_results(results))
+
+
+@cli.command(
     short_help="Match up multipart nmea messages",
     help="Match up multipart nmea messages\n" + join_multipart_stream.__doc__)
 @click.argument('input', type=click.File('r'), default='-')
