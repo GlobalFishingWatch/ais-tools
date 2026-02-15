@@ -17,6 +17,12 @@ REGEX_BACKSLASH_BANG = re.compile(r'(\\![^!\\]+)')
 
 
 def expand_nmea(line, validate_checksum=False):
+    """
+    Parse a single NMEA sentence into its components.
+
+    Returns (tagblock, body, pad) where tagblock is a dict of parsed tagblock
+    fields, body is the encoded AIS payload, and pad is the number of fill bits.
+    """
     tagblock_str, nmea = split_tagblock(line)
     tagblock = decode_tagblock(tagblock_str, validate_checksum=validate_checksum)
 
