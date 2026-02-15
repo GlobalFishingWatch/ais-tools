@@ -9,11 +9,6 @@ from ais import DecodeError
 from ais_tools.core import checksum_str
 from ais_tools.core import is_checksum_valid
 
-# import warnings
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore")
-#     from ais.stream import parseTagBlock                # noqa: F401
-
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
 
