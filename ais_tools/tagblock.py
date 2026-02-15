@@ -1,14 +1,13 @@
+"""
+Utilities for encoding, decoding, and manipulating NMEA tagblocks.
+"""
+
 from datetime import datetime
 from datetime import timezone
 
 from ais import DecodeError
 from ais_tools.core import checksum_str
 from ais_tools.core import is_checksum_valid
-
-# import warnings
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore")
-#     from ais.stream import parseTagBlock                # noqa: F401
 
 TAGBLOCK_T_FORMAT = '%Y-%m-%d %H.%M.%S'
 
@@ -38,6 +37,7 @@ def safe_tagblock_timestamp(line):
 
 
 def create_tagblock(station, timestamp=None, add_tagblock_t=True):
+    """Create a new tagblock string with station ID and timestamp."""
     t = timestamp or datetime.now().timestamp()
     params = dict(
         c=round(t*1000),
@@ -102,6 +102,7 @@ tagblock_group_fields = ["tagblock_sentence", "tagblock_groupsize", "tagblock_id
 
 
 def encode_tagblock(**kwargs):
+    """Encode keyword arguments into a tagblock string with checksum."""
     group_fields = {}
     fields = {}
 
@@ -121,7 +122,7 @@ def encode_tagblock(**kwargs):
 
 
 def decode_tagblock(tagblock_str, validate_checksum=False):
-
+    """Parse a tagblock string into a dict of field names and values."""
     tagblock = tagblock_str.rsplit("*", 1)[0]
 
     fields = {}
@@ -157,6 +158,7 @@ def decode_tagblock(tagblock_str, validate_checksum=False):
 
 
 def update_tagblock(nmea, **kwargs):
+    """Decode the existing tagblock, merge in kwargs, and re-encode."""
     tagblock_str, nmea = split_tagblock(nmea)
     tagblock = decode_tagblock(tagblock_str)
     tagblock.update(kwargs)
@@ -165,6 +167,7 @@ def update_tagblock(nmea, **kwargs):
 
 
 def safe_update_tagblock(nmea, **kwargs):
+    """Like update_tagblock but returns the original nmea on DecodeError."""
     try:
         nmea = update_tagblock(nmea, **kwargs)
     except DecodeError:

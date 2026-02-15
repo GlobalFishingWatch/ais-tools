@@ -1,3 +1,7 @@
+"""
+Command-line interface for ais-tools.
+"""
+
 import click
 import json
 

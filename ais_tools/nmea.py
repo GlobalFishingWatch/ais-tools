@@ -1,5 +1,9 @@
+"""
+Utilities for parsing, splitting, and joining NMEA sentences including multi-part messages.
+"""
+
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 
 from ais import DecodeError
@@ -13,6 +17,12 @@ REGEX_BACKSLASH_BANG = re.compile(r'(\\![^!\\]+)')
 
 
 def expand_nmea(line, validate_checksum=False):
+    """
+    Parse a single NMEA sentence into its components.
+
+    Returns (tagblock, body, pad) where tagblock is a dict of parsed tagblock
+    fields, body is the encoded AIS payload, and pad is the number of fill bits.
+    """
     tagblock_str, nmea = split_tagblock(line)
     tagblock = decode_tagblock(tagblock_str, validate_checksum=validate_checksum)
 
@@ -115,7 +125,7 @@ def join_multipart_stream(lines,
             else:
                 raise
 
-        now = datetime.utcnow().timestamp()
+        now = datetime.now(timezone.utc).timestamp()
         total_parts = tagblock['tagblock_groupsize']
 
         if total_parts == 1:
