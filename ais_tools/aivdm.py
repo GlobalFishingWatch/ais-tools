@@ -2,6 +2,8 @@
 Tools for decoding AIS messages in AIVDM format
 """
 
+from __future__ import annotations
+
 import ais as libais
 from ais import DecodeError
 
@@ -14,7 +16,7 @@ from ais_tools.message import Message
 
 class LibaisDecoder:
     @staticmethod
-    def validate_field_types(msg):
+    def validate_field_types(msg: dict) -> dict:
         """
         validate data types for some fields which are returned by libais with incorrect types
         under some error conditions
@@ -28,7 +30,7 @@ class LibaisDecoder:
         return msg
 
     @staticmethod
-    def decode_payload(body, pad):
+    def decode_payload(body: str, pad: int) -> dict:
         res = libais.decode(body, pad)
         return LibaisDecoder.validate_field_types(res)
 
@@ -37,7 +39,7 @@ class AisToolsDecoder:
     def __init__(self):
         self.transcoder = AISMessageTranscoder()
 
-    def decode_payload(self, body, pad):
+    def decode_payload(self, body: str, pad: int) -> dict:
         aistools_err = None
 
         if self.transcoder.can_decode(body, pad):
@@ -56,7 +58,7 @@ class AisToolsEncoder:
     def __init__(self):
         self.transcoder = AISMessageTranscoder()
 
-    def encode_payload(self, message):
+    def encode_payload(self, message: dict) -> tuple[str, int]:
         if not self.transcoder.can_encode(message):
             raise DecodeError(f'AISTOOLS ERR: Failed to encode unknown message type {message.get("id")}')
 
@@ -69,11 +71,11 @@ class AIVDM:
 
     On construction, pass in the encoder and decoder to use
     """
-    def __init__(self, decoder=None, encoder=None):
+    def __init__(self, decoder: AisToolsDecoder | None = None, encoder: AisToolsEncoder | None = None) -> None:
         self.decoder = decoder or AisToolsDecoder()
         self.encoder = encoder or AisToolsEncoder()
 
-    def safe_decode(self, nmea, best_effort=False):
+    def safe_decode(self, nmea: str, best_effort: bool = False) -> Message:
         """
         Attempt to decode an AIVDM message using AIVDM.decode().   If a error occurs and DecodeError is raised,
         suppress the exception and instead return a dict:
@@ -90,7 +92,7 @@ class AIVDM:
             msg['error'] = str(e)
         return msg
 
-    def decode(self, nmea, safe_decode_payload=False, validate_checksum=False):
+    def decode(self, nmea: str, safe_decode_payload: bool = False, validate_checksum: bool = False) -> Message:
         """
         Decode a single line of nmea that contains:
             a single-part AIVDM message, with or without prepended tagblock
@@ -142,7 +144,7 @@ class AIVDM:
 
         return msg
 
-    def decode_payload(self, body, pad):
+    def decode_payload(self, body: str, pad: int) -> dict:
         """
         decode just the payload part of an AIVDM message
 
@@ -155,7 +157,7 @@ class AIVDM:
         """
         return self.decoder.decode_payload(body, pad)
 
-    def safe_encode(self, message):
+    def safe_encode(self, message: dict) -> Message:
         try:
             return self.encode(message)
         except DecodeError as e:
@@ -163,10 +165,10 @@ class AIVDM:
             msg['error'] = str(e)
             return msg
 
-    def encode(self, message):
+    def encode(self, message: dict) -> Message:
         body, pad = self.encode_payload(message)
         sentence = "AIVDM,1,1,,A,{},{}".format(body, pad)
         return Message("!{}*{}".format(sentence, checksum_str(sentence)))
 
-    def encode_payload(self, message):
+    def encode_payload(self, message: dict) -> tuple[str, int]:
         return self.encoder.encode_payload(message)

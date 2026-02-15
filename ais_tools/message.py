@@ -2,7 +2,10 @@
 utilities for manipulating AIS messages as NMEA strings, json strings or dicts
 """
 
+from __future__ import annotations
+
 import json
+from typing import Any, Iterable, Iterator
 from urllib.parse import quote as url_quote
 import posixpath as pp
 import uuid
@@ -20,15 +23,15 @@ class UUID:
 
     UUID_URL_BASE = 'ais-tools'
 
-    def __init__(self, *args):
+    def __init__(self, *args: str) -> None:
         self.uuid = self.create_uuid(*args)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.uuid)
 
     # Create a uuid using the given string(s) which are assembled into a url using UUID_URL_BASE
     @classmethod
-    def create_uuid(cls, *args):
+    def create_uuid(cls, *args: str) -> uuid.UUID:
         args = list(map(url_quote, args))
         return uuid.uuid5(uuid.NAMESPACE_URL, pp.join(cls.UUID_URL_BASE, *args).lower())
 
@@ -42,7 +45,7 @@ class Message(dict):
     Multi-part messages should be pre-concatenated.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         if 'nmea' not in kwargs:
             kwargs['nmea'] = ''
         super().__init__(**kwargs)
@@ -72,32 +75,32 @@ class Message(dict):
                 raise ValueError("Unable to convert {} to NMEA message".format(message))
 
     @property
-    def nmea(self):
+    def nmea(self) -> str:
         return self.get('nmea', '')
 
-    def add_source(self, source, overwrite=False):
+    def add_source(self, source: str, overwrite: bool = False) -> Message:
         if self.get('source') is None or overwrite:
             self['source'] = source
         return self
 
-    def create_uuid(self, fields=default_uuid_fields):
+    def create_uuid(self, fields: tuple[str, ...] = default_uuid_fields) -> str:
         name = '|'.join((str(self.get(f, '')) for f in fields))
         hex = md5(bytes(name, "utf-8")).digest().hex()
         return '%s-%s-%s-%s-%s' % (
             hex[:8], hex[8:12], hex[12:16], hex[16:20], hex[20:32]
         )
 
-    def add_uuid(self, overwrite=False, fields=default_uuid_fields):
+    def add_uuid(self, overwrite: bool = False, fields: tuple[str, ...] = default_uuid_fields) -> Message:
         if self.get('uuid') is None or overwrite:
             self['uuid'] = self.create_uuid(fields=fields)
         return self
 
-    def add_parser_version(self, overwrite=False):
+    def add_parser_version(self, overwrite: bool = False) -> Message:
         if self.get('parser') is None or overwrite:
             self['parser'] = 'ais-tools-' + ais_tools.__version__
         return self
 
     @classmethod
-    def stream(cls, messages):
+    def stream(cls, messages: Iterable[str]) -> Iterator[Message]:
         for msg in messages:
             yield Message(msg)
