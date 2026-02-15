@@ -1,4 +1,7 @@
+from click.testing import CliRunner
+
 from ais_tools.benchmark import run_benchmarks, format_results, BENCHMARKS
+from ais_tools.cli import benchmark
 
 
 def test_run_benchmarks():
@@ -19,3 +22,12 @@ def test_format_results():
     assert 'Iterations' in lines[0]
     assert 'Ops/sec' in lines[0]
     assert len(lines) == len(BENCHMARKS) + 1  # header + one row per benchmark
+
+
+def test_benchmark_cli():
+    runner = CliRunner()
+    result = runner.invoke(benchmark, args=['-n', '10'])
+    assert not result.exception
+    lines = result.output.strip().split('\n')
+    assert lines[0].startswith('Benchmark')
+    assert len(lines) == len(BENCHMARKS) + 1
