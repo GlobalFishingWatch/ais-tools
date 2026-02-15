@@ -1,3 +1,7 @@
+"""
+Utilities for parsing, splitting, and joining NMEA sentences including multi-part messages.
+"""
+
 from collections import defaultdict
 from datetime import datetime, timezone
 import re

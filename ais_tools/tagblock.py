@@ -1,3 +1,7 @@
+"""
+Utilities for encoding, decoding, and manipulating NMEA tagblocks.
+"""
+
 from datetime import datetime
 from datetime import timezone
 

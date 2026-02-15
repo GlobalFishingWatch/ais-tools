@@ -34,6 +34,14 @@ class UUID:
 
 
 class Message(dict):
+    """
+    A dict subclass representing an AIS message.
+
+    Can be constructed from an NMEA string, a JSON string, or a dict.
+    The 'nmea' key holds the raw NMEA sentence(s) as a single string.
+    Multi-part messages should be pre-concatenated.
+    """
+
     def __init__(self, *args, **kwargs):
         if 'nmea' not in kwargs:
             kwargs['nmea'] = ''
