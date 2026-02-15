@@ -33,7 +33,7 @@ char* checksum_str(char * __restrict dst, const char* __restrict src, size_t dsi
         return NULL;
 
     int c = checksum(src);
-    sprintf(dst, "%02X", c);
+    snprintf(dst, dsize, "%02X", c);
     return dst;
 }
 

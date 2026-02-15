@@ -39,7 +39,7 @@ venv/
 # OSX
 .DS_Store
 
-/perf-test.stats
+perf-test.stats
 
 # Large sample data files
 sample/data/
