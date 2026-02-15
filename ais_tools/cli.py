@@ -159,6 +159,16 @@ def encode(input, output):
 
 
 @cli.command(
+    short_help="Run performance benchmarks",
+    help="Run a suite of benchmarks and display a results table showing throughput for the main operations."
+)
+def benchmark():
+    from ais_tools.benchmark import run_benchmarks, format_results
+    results = run_benchmarks()
+    click.echo(format_results(results))
+
+
+@cli.command(
     short_help="Match up multipart nmea messages",
     help="Match up multipart nmea messages\n" + join_multipart_stream.__doc__)
 @click.argument('input', type=click.File('r'), default='-')
